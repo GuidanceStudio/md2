@@ -246,14 +246,18 @@ def generate_css(theme_config=None):
 
         /* Sidebar collapse toggle */
         #sidebar-toggle {{
-            display: block; padding: 8px; text-align: center;
-            cursor: pointer; border: none; background: var(--sidebar-hover);
-            color: var(--sidebar-text); border-top: 1px solid var(--sidebar-border);
-            font-size: 0.9rem; transition: background 0.2s;
+            position: fixed; top: 50%; left: 280px; z-index: 1002;
+            transform: translateY(-50%); padding: 6px 4px;
+            cursor: pointer; border: 1px solid var(--sidebar-border);
+            border-left: none; background: var(--sidebar-bg);
+            color: var(--sidebar-text); font-size: 0.85rem;
+            border-radius: 0 6px 6px 0;
+            box-shadow: 2px 0 4px rgba(0,0,0,0.06);
+            transition: left 0.3s ease, background 0.2s;
         }}
-        #sidebar-toggle:hover {{ background: var(--sidebar-border); }}
+        #sidebar-toggle:hover {{ background: var(--sidebar-hover); }}
         #sidebar.collapsed {{ width: 0; overflow: hidden; padding: 0; border: none; }}
-        #sidebar.collapsed + #main {{ flex: 1; }}
+        #sidebar.collapsed ~ #sidebar-toggle {{ left: 0; }}
 
         /* Slide indicator */
         #slide-indicator {{
@@ -330,6 +334,8 @@ def generate_css(theme_config=None):
 
         @media (max-width: 1024px) {{
             #sidebar {{ width: 220px; }}
+            #sidebar-toggle {{ left: 220px; }}
+            #sidebar.collapsed ~ #sidebar-toggle {{ left: 0; }}
             #main {{ padding: 30px 40px; }}
         }}
 
@@ -412,8 +418,8 @@ def render_presentation(markdown_text, theme_config=None):
             <li><a href="#cover">{cover_title}</a></li>
             {sidebar_items}
         </ul>
-        <button id="sidebar-toggle" onclick="toggleSidebar()" title="Toggle Sidebar">&#171;</button>
     </div>
+    <button id="sidebar-toggle" onclick="toggleSidebar()" title="Toggle Sidebar">&#171;</button>
     """
 
     # Build Main Content HTML
