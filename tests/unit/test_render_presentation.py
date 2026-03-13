@@ -194,3 +194,51 @@ def test_html_sanitized_in_slides():
 def test_custom_theme_passed_to_css():
     result = _render(theme_config={"bg_color": "#abcdef"})
     assert "#abcdef" in result["css"]
+
+
+# --- Milestone 9: Parser extensions ---
+
+def test_fenced_code_blocks():
+    md = "# T\n\n---\n\n## S\n\n```\nsome code\n```"
+    result = _render(md)
+    assert "<pre>" in result["body_html"]
+    assert "<code>" in result["body_html"]
+
+
+def test_fenced_code_with_language():
+    md = "# T\n\n---\n\n## S\n\n```python\nprint(1)\n```"
+    result = _render(md)
+    assert "<pre>" in result["body_html"]
+    assert "<code" in result["body_html"]
+
+
+def test_autolink_url():
+    md = "# T\n\n---\n\n## S\n\nhttps://example.com here"
+    result = _render(md)
+    assert 'href="https://example.com"' in result["body_html"]
+
+
+def test_autolink_no_double_wrap():
+    md = "# T\n\n---\n\n## S\n\n[click](https://example.com)"
+    result = _render(md)
+    assert result["body_html"].count('href="https://example.com"') == 1
+
+
+def test_footnotes_rendered():
+    md = "# T\n\n---\n\n## S\n\nText[^1]\n\n[^1]: Footnote text"
+    result = _render(md)
+    assert "Footnote text" in result["body_html"]
+
+
+# --- Milestone 10: Cover typography ---
+
+def test_cover_text_centered():
+    css = _render()["css"]
+    assert "text-align: center" in css
+
+
+# --- Milestone 11: Sidebar toggle ---
+
+def test_sidebar_has_toggle_button():
+    result = _render()
+    assert "sidebar-toggle" in result["body_html"]

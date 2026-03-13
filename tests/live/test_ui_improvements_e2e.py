@@ -47,3 +47,50 @@ def test_css_has_scroll_snap(tmp_path):
 def test_css_has_tablet_breakpoint(tmp_path):
     html = _cli_html(tmp_path)
     assert "max-width: 1024px" in html
+
+
+# --- Milestone 9-13 live tests ---
+
+def test_output_has_keyboard_navigation(tmp_path):
+    html = _cli_html(tmp_path)
+    assert "ArrowDown" in html
+    assert "ArrowUp" in html
+
+
+def test_output_has_slide_indicator(tmp_path):
+    html = _cli_html(tmp_path)
+    assert 'id="slide-indicator"' in html
+
+
+def test_output_has_print_styles(tmp_path):
+    html = _cli_html(tmp_path)
+    assert "@media print" in html
+
+
+def test_output_has_favicon(tmp_path):
+    html = _cli_html(tmp_path)
+    assert '<link rel="icon"' in html
+
+
+def test_output_has_og_tags(tmp_path):
+    html = _cli_html(tmp_path)
+    assert 'og:title' in html
+    assert 'og:description' in html
+
+
+def test_output_has_lang_attribute(tmp_path):
+    html = _cli_html(tmp_path)
+    assert 'lang="it"' in html
+
+
+def test_fenced_code_e2e(tmp_path):
+    md = "# T\n\n---\n\n## S\n\n```python\nprint('hello')\n```"
+    html = _cli_html(tmp_path, md)
+    assert "<pre>" in html
+    assert "<code" in html
+
+
+def test_autolink_e2e(tmp_path):
+    md = "# T\n\n---\n\n## S\n\nhttps://example.com here"
+    html = _cli_html(tmp_path, md)
+    assert 'href="https://example.com"' in html

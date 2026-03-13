@@ -45,12 +45,31 @@ Se hai installato lo script globalmente, puoi generare la presentazione HTML dir
 
     md2 nomefile.md
 
+### Opzioni
+
+    md2 nomefile.md --lang en
+
+| Flag     | Default | Descrizione                        |
+|----------|---------|------------------------------------|
+| `--lang` | `it`    | Attributo `lang` dell'HTML generato |
+
 ### Sviluppo (Locale)
 In alternativa, usa il target `run` di `make` specificando il file Markdown:
 
     make run FILE=nomefile.md
 
 Il comando genererà un file `nomefile.html` nella stessa directory.
+
+### Navigazione da tastiera
+
+L'HTML generato supporta le seguenti scorciatoie:
+
+| Tasto                      | Azione                     |
+|----------------------------|----------------------------|
+| `↓` / `→` / `PgDn`        | Slide successiva           |
+| `↑` / `←` / `PgUp`        | Slide precedente           |
+| `Home`                     | Torna alla cover           |
+| `End`                      | Vai all'ultima slide       |
 
 ## Test
 

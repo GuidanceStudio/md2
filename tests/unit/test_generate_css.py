@@ -165,3 +165,49 @@ def test_tablet_breakpoint():
 def test_max_width_content():
     css = generate_css()
     assert "max-width: 960px" in css
+
+
+# --- Milestone 10-13 CSS tests ---
+
+def test_cover_h1_clamp():
+    css = generate_css()
+    assert "clamp(1.8rem, 5vw, 3.5rem)" in css
+
+
+def test_print_stylesheet():
+    css = generate_css()
+    assert "@media print" in css
+
+
+def test_print_hides_sidebar():
+    css = generate_css()
+    assert "#sidebar" in css
+    # The print block should hide sidebar
+    assert "display: none !important" in css
+
+
+def test_print_page_break():
+    css = generate_css()
+    assert "page-break-after" in css
+
+
+def test_slide_indicator_style():
+    css = generate_css()
+    assert "#slide-indicator" in css
+
+
+def test_sidebar_collapse_button():
+    css = generate_css()
+    assert "#sidebar-toggle" in css
+    assert "#sidebar.collapsed" in css
+
+
+def test_fade_in_animation():
+    css = generate_css()
+    assert "@keyframes fadeIn" in css
+    assert ".content.visible" in css
+
+
+def test_footnote_styles():
+    css = generate_css()
+    assert ".footnote" in css

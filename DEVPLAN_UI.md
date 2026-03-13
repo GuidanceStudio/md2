@@ -210,7 +210,7 @@ Tutte le modifiche vanno applicate in `md2.py`, nella funzione `generate_css()` 
 
 ---
 
-## Milestone 14: Test per le nuove milestone (9-13)
+## Milestone 14: Test per le nuove milestone (9-13) ✅
 
 ### 14.1 Unit test aggiuntivi — `test_render_presentation.py`
 

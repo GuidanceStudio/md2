@@ -25,3 +25,27 @@ def test_output_filename_derived():
     base_name = os.path.splitext("test_file.md")[0]
     output = f"{base_name}.html"
     assert output == "test_file.html"
+
+
+def test_lang_flag_default(tmp_path):
+    md_file = tmp_path / "test.md"
+    md_file.write_text("# Test\n\n---\n\n## Slide\nContent", encoding="utf-8")
+    subprocess.run(
+        [sys.executable, "-c",
+         f"import sys; sys.argv = ['md2', '{md_file}']; from md2 import main; main()"],
+        capture_output=True, text=True, cwd=str(tmp_path)
+    )
+    html = (tmp_path / "test.html").read_text(encoding="utf-8")
+    assert 'lang="it"' in html
+
+
+def test_lang_flag_custom(tmp_path):
+    md_file = tmp_path / "test.md"
+    md_file.write_text("# Test\n\n---\n\n## Slide\nContent", encoding="utf-8")
+    subprocess.run(
+        [sys.executable, "-c",
+         f"import sys; sys.argv = ['md2', '{md_file}', '--lang', 'en']; from md2 import main; main()"],
+        capture_output=True, text=True, cwd=str(tmp_path)
+    )
+    html = (tmp_path / "test.html").read_text(encoding="utf-8")
+    assert 'lang="en"' in html
