@@ -251,8 +251,8 @@ def generate_css(theme_config=None):
 
         /* Sidebar collapse toggle — fixed on sidebar edge */
         #sidebar-toggle {{
-            position: fixed; top: 50%; left: 280px; z-index: 1002;
-            transform: translateY(-50%); padding: 6px 4px;
+            position: fixed; top: 12px; left: 280px; z-index: 1002;
+            padding: 6px 4px;
             cursor: pointer; border: 1px solid var(--sidebar-border);
             border-left: none; background: var(--sidebar-bg);
             color: var(--sidebar-text); font-size: 0.85rem;
