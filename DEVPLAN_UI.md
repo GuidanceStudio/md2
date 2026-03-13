@@ -249,6 +249,45 @@ Tutte le modifiche vanno applicate in `md2.py`, nella funzione `generate_css()` 
 
 ---
 
+## Milestone 15: Sidebar UX — default aperta, toggle in alto, shortcut guide
+
+### 15.1 Sidebar aperta di default
+- Rimuovere il ripristino da `localStorage` all'avvio che poteva lasciare la sidebar chiusa
+- La sidebar parte sempre aperta; lo stato collapsed viene comunque salvato in `localStorage` per la sessione corrente, ma al primo caricamento è sempre visibile
+
+### 15.2 Pulsante toggle in alto nella sidebar
+- Spostare il bottone `«`/`»` dalla posizione attuale (fixed a metà altezza sul bordo della sidebar) all'interno della sidebar, in alto
+- Stile: riga in cima alla sidebar con il bottone allineato a destra, padding coerente con i link
+- Quando la sidebar è collapsed, il bottone diventa un'icona fixed in alto a sinistra (`»`) per riaprirla
+- Assicurarsi che su mobile il bottone resti nascosto (si usa l'hamburger)
+
+### 15.3 Shortcut guide in fondo alla sidebar
+- Aggiungere un blocco `<div id="sidebar-shortcuts">` in fondo alla sidebar (dopo la lista link, prima del toggle)
+- Contenuto: mini-guida con le scorciatoie da tastiera, in formato compatto:
+  - `↓` `→` Slide successiva
+  - `↑` `←` Slide precedente
+  - `Home` Prima slide
+  - `End` Ultima slide
+- Stile: font-size ridotto (`0.75rem`), colore attenuato (`opacity: 0.5`), padding `15px 20px`, bordo superiore sottile
+- La guida scompare quando la sidebar è collapsed
+- Su mobile: nascosta (troppo piccola per essere utile)
+
+### 15.4 Test
+
+**Unit test — `test_generate_css.py`:**
+- **test_sidebar_shortcuts_style**: il CSS contiene regole per `#sidebar-shortcuts`
+- **test_sidebar_toggle_top**: il CSS per `#sidebar-toggle` non usa più `top: 50%`
+
+**Unit test — `test_render_presentation.py`:**
+- **test_sidebar_has_shortcuts_guide**: il body_html contiene `id="sidebar-shortcuts"`
+- **test_sidebar_shortcuts_content**: il body_html contiene le stringhe degli shortcut (es. `↓`, `↑`, `Home`, `End`)
+
+**Live test — `test_ui_improvements_e2e.py`:**
+- **test_sidebar_open_by_default**: l'HTML generato NON contiene codice JS che aggiunge `collapsed` all'avvio
+- **test_sidebar_has_shortcut_guide_e2e**: l'HTML contiene `sidebar-shortcuts` con testo delle scorciatoie
+
+---
+
 ## Milestone 7: Unit Test (`tests/unit/`) ✅
 
 Test delle funzioni pure, senza I/O su disco.
