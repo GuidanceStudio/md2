@@ -142,7 +142,7 @@ Tutte le modifiche vanno applicate in `md2.py`, nella funzione `generate_css()` 
 
 ---
 
-## Milestone 10: Tipografia Cover e Contenuto
+## Milestone 10: Tipografia Cover e Contenuto ✅
 
 ### 10.1 Titolo cover con `clamp()`
 - Cambiare `.cover h1` da `font-size: 3.5rem` fisso a `clamp(1.8rem, 5vw, 3.5rem)` per evitare overflow su schermi stretti

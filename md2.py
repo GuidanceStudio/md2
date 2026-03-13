@@ -196,9 +196,9 @@ def generate_css(theme_config=None):
         /* Cover Slide */
         .cover {{
             height: 100vh; display: flex; flex-direction: column;
-            justify-content: center; align-items: center;
+            justify-content: center; align-items: center; text-align: center;
         }}
-        .cover h1 {{ font-size: 3.5rem; margin-bottom: 0; color: var(--cover-title-color); }}
+        .cover h1 {{ font-size: clamp(1.8rem, 5vw, 3.5rem); margin-bottom: 0; color: var(--cover-title-color); }}
         .cover hr {{
             width: 80px; height: 3px; background: #3498db;
             border: none; margin: 20px auto 30px;
@@ -294,7 +294,7 @@ def generate_css(theme_config=None):
             #sidebar.active {{ left: 0; }}
             #main {{ padding: 20px; }}
             #theme-toggle {{ display: flex; top: auto; bottom: 20px; right: 20px; }}
-            .cover h1 {{ font-size: 2rem; }}
+            .cover h1 {{ font-size: clamp(1.5rem, 6vw, 2rem); }}
             .slide h2 {{ font-size: 1.5rem; }}
             .slide h3 {{ font-size: 1.2rem; }}
             .slide p, .slide li, .slide td {{ font-size: 1rem; line-height: 1.7; }}
