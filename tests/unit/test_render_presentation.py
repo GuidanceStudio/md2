@@ -1,0 +1,196 @@
+from md2 import render_presentation
+
+
+SAMPLE_MD = """# My Presentation
+
+Cover text here.
+
+---
+
+## Introduction
+First slide content.
+
+---
+
+## Details
+Second slide content.
+
+---
+
+## Conclusion
+Final slide.
+"""
+
+
+def _render(md=SAMPLE_MD, **kwargs):
+    return render_presentation(md, **kwargs)
+
+
+# --- Cover ---
+
+def test_cover_title_extraction():
+    result = _render()
+    assert result["title"] == "My Presentation"
+
+
+def test_cover_default_title():
+    result = _render("Some text without H1\n\n---\n\n## Slide")
+    assert result["title"] == "Presentation"
+
+
+def test_cover_content():
+    result = _render()
+    assert "Cover text here" in result["body_html"]
+
+
+# --- Slides ---
+
+def test_slide_splitting():
+    result = _render()
+    assert 'id="slide-0"' in result["body_html"]
+    assert 'id="slide-1"' in result["body_html"]
+    assert 'id="slide-2"' in result["body_html"]
+
+
+def test_slide_titles():
+    result = _render()
+    assert "Introduction" in result["body_html"]
+    assert "Details" in result["body_html"]
+    assert "Conclusion" in result["body_html"]
+
+
+def test_slide_default_title():
+    md = "# Cover\n\n---\n\nContent without H2"
+    result = _render(md)
+    assert "Slide 1" in result["body_html"]
+
+
+# --- Sidebar ---
+
+def test_sidebar_contains_all_titles():
+    result = _render()
+    html = result["body_html"]
+    assert "Introduction" in html
+    assert "Details" in html
+    assert "Conclusion" in html
+
+
+def test_sidebar_contains_cover_link():
+    result = _render()
+    assert 'href="#cover"' in result["body_html"]
+
+
+# --- Markdown rendering ---
+
+def test_markdown_tables_rendered():
+    md = "# T\n\n---\n\n## S\n\n| A | B |\n|---|---|\n| 1 | 2 |"
+    result = _render(md)
+    assert "<table>" in result["body_html"]
+
+
+def test_markdown_code_blocks_rendered():
+    md = "# T\n\n---\n\n## S\n\n    indented code block"
+    result = _render(md)
+    assert "<code>" in result["body_html"]
+
+
+def test_markdown_lists_rendered():
+    md = "# T\n\n---\n\n## S\n\n- item1\n- item2"
+    result = _render(md)
+    assert "<ul>" in result["body_html"]
+    assert "<li>" in result["body_html"]
+
+
+def test_markdown_links_rendered():
+    md = "# T\n\n---\n\n## S\n\n[click](https://example.com)"
+    result = _render(md)
+    assert '<a href="https://example.com">' in result["body_html"]
+
+
+def test_markdown_images_rendered():
+    md = "# T\n\n---\n\n## S\n\n![alt](img.png)"
+    result = _render(md)
+    assert "<img" in result["body_html"]
+    assert 'src="img.png"' in result["body_html"]
+
+
+def test_markdown_blockquote_rendered():
+    md = "# T\n\n---\n\n## S\n\n> quoted text"
+    result = _render(md)
+    assert "<blockquote>" in result["body_html"]
+
+
+def test_markdown_inline_code_rendered():
+    md = "# T\n\n---\n\n## S\n\nUse `variable` here"
+    result = _render(md)
+    assert "<code>" in result["body_html"]
+    assert "variable" in result["body_html"]
+
+
+# --- Structure ---
+
+def test_empty_input():
+    result = _render("")
+    assert "title" in result
+    assert "body_html" in result
+    assert "css" in result
+
+
+def test_single_slide_no_separator():
+    result = _render("# Only Cover\n\nSome content")
+    assert result["title"] == "Only Cover"
+    assert "slide-0" not in result["body_html"]
+
+
+def test_result_structure():
+    result = _render()
+    assert "title" in result
+    assert "body_html" in result
+    assert "css" in result
+
+
+def test_result_title_type():
+    result = _render()
+    assert isinstance(result["title"], str)
+
+
+def test_result_css_type():
+    result = _render()
+    assert isinstance(result["css"], str)
+    assert len(result["css"]) > 0
+
+
+def test_slide_ids_sequential():
+    result = _render()
+    html = result["body_html"]
+    assert 'id="slide-0"' in html
+    assert 'id="slide-1"' in html
+    assert 'id="slide-2"' in html
+
+
+def test_cover_has_correct_classes():
+    result = _render()
+    assert 'class="slide cover"' in result["body_html"]
+    assert 'id="cover"' in result["body_html"]
+
+
+def test_multiple_slides():
+    md = "# T\n" + "\n---\n\n## S{}\ncontent\n".format("") * 5
+    # Build 5 slides
+    slides = "\n".join([f"\n---\n\n## Slide {i}\ncontent" for i in range(5)])
+    md = "# T\n" + slides
+    result = _render(md)
+    for i in range(5):
+        assert f'id="slide-{i}"' in result["body_html"]
+
+
+def test_html_sanitized_in_slides():
+    md = "# T\n\n---\n\n## S\n\n<script>alert(1)</script>Safe text"
+    result = _render(md)
+    assert "<script>" not in result["body_html"]
+    assert "Safe text" in result["body_html"]
+
+
+def test_custom_theme_passed_to_css():
+    result = _render(theme_config={"bg_color": "#abcdef"})
+    assert "#abcdef" in result["css"]
