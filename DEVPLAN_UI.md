@@ -125,6 +125,130 @@ Tutte le modifiche vanno applicate in `md2.py`, nella funzione `generate_css()` 
 
 ---
 
+## Milestone 9: Markdown Parser — Estensioni mancanti ✅
+
+### 9.1 Fenced code blocks
+- Aggiungere l'estensione `fenced_code` alla chiamata `markdown.markdown()` in `render_presentation()`
+- Blocchi ` ``` ` devono produrre `<pre><code>` correttamente
+- Supportare l'attributo di linguaggio (` ```python `) per futuri syntax highlighting
+
+### 9.2 Autolink
+- Aggiungere un'estensione o post-processing per convertire URL nudi (`https://...`) in `<a href="...">` cliccabili
+- Usare l'estensione custom o regex: trovare URL che non sono già dentro un tag `<a>` e wrappare
+
+### 9.3 Footnotes
+- Aggiungere l'estensione `footnotes` al parser markdown
+- Stilizzare le footnote nel CSS: font-size ridotto, separatore `<hr>` sottile prima delle note
+
+---
+
+## Milestone 10: Tipografia Cover e Contenuto
+
+### 10.1 Titolo cover con `clamp()`
+- Cambiare `.cover h1` da `font-size: 3.5rem` fisso a `clamp(1.8rem, 5vw, 3.5rem)` per evitare overflow su schermi stretti
+
+### 10.2 Allineamento testo cover
+- Aggiungere `text-align: center` al `<div>` contenuto della cover per coerenza con il layout centrato flex
+
+---
+
+## Milestone 11: Navigazione e UX avanzata
+
+### 11.1 Navigazione da tastiera
+- Aggiungere listener JavaScript per le frecce:
+  - `ArrowDown` / `ArrowRight` / `PageDown`: scroll alla slide successiva
+  - `ArrowUp` / `ArrowLeft` / `PageUp`: scroll alla slide precedente
+  - `Home`: torna alla cover
+  - `End`: vai all'ultima slide
+- Usare `scrollIntoView({ behavior: 'smooth' })` sugli elementi `.slide`
+
+### 11.2 Sidebar collassabile su desktop
+- Aggiungere un bottone toggle sulla sidebar (icona SVG `«`/`»`)
+- Click: sidebar si riduce a `0` con transizione, il main prende tutto lo spazio
+- Salvare la preferenza in `localStorage`
+
+### 11.3 Indicatore slide corrente
+- Aggiungere un elemento fisso in basso a destra che mostra "2 / 4" (slide corrente / totale)
+- Aggiornato dall'`IntersectionObserver` già presente
+- Stile discreto: font-size piccolo, colore attenuato, `opacity: 0.6`
+
+---
+
+## Milestone 12: Stile e polish
+
+### 12.1 Print stylesheet
+- Aggiungere `@media print` con:
+  - Nascondere sidebar, theme-toggle, menu-toggle, progress-bar, indicatore slide
+  - Rimuovere `min-height: 100vh` dalle slide
+  - Ogni slide come `page-break-after: always`
+  - Layout single-column, `max-width: 100%`
+  - Colori forzati a nero su bianco
+
+### 12.2 Favicon inline
+- Aggiungere un `<link rel="icon">` con data-uri SVG nel `<head>` per evitare il 404 nel browser
+- Icona semplice: un quadrato con "M" stilizzato o un documento
+
+### 12.3 Transizione contenuto slide
+- Aggiungere un'animazione CSS di fade-in sul `.content` delle slide quando entrano nel viewport
+- Usare `@keyframes fadeIn` con `opacity: 0 → 1` e `transform: translateY(10px) → 0`
+- Triggare via `IntersectionObserver` aggiungendo classe `.visible`
+
+---
+
+## Milestone 13: Meta e struttura HTML
+
+### 13.1 Attributo `lang` dinamico
+- Aggiungere un parametro opzionale `--lang` al CLI (default: `it`)
+- Usare il valore nel tag `<html lang="...">`
+
+### 13.2 Meta tag Open Graph
+- Aggiungere nel `<head>`:
+  - `<meta property="og:title" content="...">` (titolo della presentazione)
+  - `<meta property="og:type" content="website">`
+  - `<meta property="og:description" content="...">` (prime righe del contenuto cover)
+- Opzionale: `<meta name="description" content="...">`
+
+---
+
+## Milestone 14: Test per le nuove milestone (9-13)
+
+### 14.1 Unit test aggiuntivi — `test_render_presentation.py`
+
+- **test_fenced_code_blocks**: ` ```code``` ` produce `<pre><code>`
+- **test_fenced_code_with_language**: ` ```python ` produce `<code class="language-python">` o simile
+- **test_autolink_url**: URL nudi `https://example.com` diventano `<a href="...">`
+- **test_autolink_no_double_wrap**: URL già in `[testo](url)` non vengono wrappati due volte
+- **test_footnotes_rendered**: `[^1]` e `[^1]: testo` producono footnote HTML
+- **test_cover_text_centered**: il contenuto cover contiene `text-align: center`
+
+### 14.2 Unit test aggiuntivi — `test_generate_css.py`
+
+- **test_print_stylesheet**: il CSS contiene `@media print`
+- **test_print_hides_sidebar**: nel `@media print` la sidebar ha `display: none`
+- **test_print_page_break**: nel `@media print` le slide hanno `page-break-after`
+- **test_cover_h1_clamp**: `.cover h1` usa `clamp()` per il font-size
+- **test_slide_indicator_style**: il CSS contiene regole per `#slide-indicator`
+- **test_sidebar_collapse_button**: il CSS contiene regole per il toggle sidebar desktop
+- **test_fade_in_animation**: il CSS contiene `@keyframes fadeIn`
+
+### 14.3 Unit test aggiuntivi — `test_main_cli.py`
+
+- **test_lang_flag_default**: senza `--lang`, l'HTML ha `lang="it"`
+- **test_lang_flag_custom**: con `--lang en`, l'HTML ha `lang="en"`
+
+### 14.4 Live test aggiuntivi — `test_ui_improvements_e2e.py`
+
+- **test_output_has_keyboard_navigation**: il JavaScript contiene `ArrowDown` e `ArrowUp`
+- **test_output_has_slide_indicator**: l'HTML contiene `id="slide-indicator"`
+- **test_output_has_print_styles**: il CSS contiene `@media print`
+- **test_output_has_favicon**: l'HTML contiene `<link rel="icon"`
+- **test_output_has_og_tags**: l'HTML contiene `og:title`
+- **test_output_has_lang_attribute**: l'HTML contiene `lang="it"` (default)
+- **test_fenced_code_e2e**: markdown con ` ``` ` produce `<pre><code>` nell'HTML finale
+- **test_autolink_e2e**: URL nudi nell'HTML finale sono cliccabili (`<a href=`)
+
+---
+
 ## Milestone 7: Unit Test (`tests/unit/`) ✅
 
 Test delle funzioni pure, senza I/O su disco.

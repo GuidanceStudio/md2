@@ -47,6 +47,25 @@ def sanitize_html(html_content):
         strip=True
     )
 
+def autolink(html_content):
+    """
+    Converts bare URLs in HTML text into clickable <a> links.
+    Skips URLs already inside href/src attributes.
+    """
+    def _replace_url(match):
+        prefix = match.group(1)
+        url = match.group(2)
+        # Skip if preceded by = or quote (inside an attribute value)
+        if prefix in ('"', "'", '='):
+            return match.group(0)
+        return f'{prefix}<a href="{url}" target="_blank" rel="noopener">{url}</a>'
+
+    return re.sub(
+        r'("|\'|=|^|.?)(https?://[^\s<>\'"]+)',
+        _replace_url,
+        html_content
+    )
+
 def generate_css(theme_config=None):
     """
     Generates the CSS string based on the provided theme configuration.
@@ -225,6 +244,17 @@ def generate_css(theme_config=None):
         }}
         .slide a:hover {{ color: #2980b9; border-bottom-style: solid; }}
 
+        /* Footnotes */
+        .footnote {{
+            font-size: clamp(0.75rem, 1.3vh, 0.9rem);
+            color: var(--text-color); opacity: 0.8;
+        }}
+        .footnote hr {{
+            border: none; border-top: 1px solid var(--slide-border);
+            margin: 2em 0 1em;
+        }}
+        .footnote ol {{ padding-left: 20px; }}
+
         /* Mobile & UI Elements */
         #theme-toggle {{
             position: fixed; top: 20px; right: 20px; z-index: 1000;
@@ -309,9 +339,9 @@ def render_presentation(markdown_text, theme_config=None):
             slide_title = lines[0][3:].strip()
             slide_body = '\n'.join(lines[1:])
 
-        # Convert and Sanitize
-        raw_html = markdown.markdown(slide_body, extensions=['tables', 'sane_lists', 'nl2br'])
-        clean_html = sanitize_html(raw_html)
+        # Convert, Sanitize, and Autolink
+        raw_html = markdown.markdown(slide_body, extensions=['tables', 'sane_lists', 'nl2br', 'fenced_code', 'footnotes'])
+        clean_html = autolink(sanitize_html(raw_html))
 
         slides_data.append({
             "id": f"slide-{i}",
@@ -319,9 +349,9 @@ def render_presentation(markdown_text, theme_config=None):
             "content": clean_html
         })
 
-    # Convert and Sanitize Cover
-    cover_raw = markdown.markdown(cover_content, extensions=['tables', 'sane_lists', 'nl2br'])
-    cover_clean = sanitize_html(cover_raw)
+    # Convert, Sanitize, and Autolink Cover
+    cover_raw = markdown.markdown(cover_content, extensions=['tables', 'sane_lists', 'nl2br', 'fenced_code', 'footnotes'])
+    cover_clean = autolink(sanitize_html(cover_raw))
 
     # Build Sidebar HTML
     sidebar_items = ''.join([f'<li><a href="#{s["id"]}">{s["title"]}</a></li>' for s in slides_data])

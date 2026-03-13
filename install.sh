@@ -25,17 +25,24 @@ if ! command_exists uv; then
     export PATH="$HOME/.local/bin:$PATH"
 fi
 
-echo "Installazione di md2 con uv..."
-uv tool install . --force
+if command_exists md2; then
+    echo "md2 trovato, aggiornamento in corso..."
+    ACTION="Aggiornamento"
+else
+    echo "Installazione di md2 con uv..."
+    ACTION="Installazione"
+fi
+
+uv tool install . --force --reinstall
 
 if [ $? -eq 0 ]; then
-    echo "Installazione completata! Ora puoi usare il comando 'md2'."
+    echo "$ACTION completato! Ora puoi usare il comando 'md2'."
     echo ""
     echo "ATTENZIONE: Se ricevi l'errore 'command not found', assicurati che ~/.local/bin sia nel tuo PATH."
     echo "Puoi aggiungerlo eseguendo questo comando nel tuo terminale:"
     echo "  export PATH=\"\$HOME/.local/bin:\$PATH\""
     echo "Per renderlo permanente, aggiungi quella riga al file ~/.bashrc o ~/.zshrc."
 else
-    echo "Installazione fallita."
+    echo "$ACTION fallito."
     exit 1
 fi
