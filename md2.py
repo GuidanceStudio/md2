@@ -445,6 +445,7 @@ def main():
     """
     parser = argparse.ArgumentParser(description="Convert a Markdown file to an HTML presentation.")
     parser.add_argument("filename", help="The input Markdown file")
+    parser.add_argument("--lang", default="it", help="HTML lang attribute (default: it)")
     args = parser.parse_args()
 
     if not os.path.exists(args.filename):
@@ -460,13 +461,31 @@ def main():
     # Call the core engine
     result = render_presentation(content)
 
+    # Extract OG description from first non-empty lines of cover
+    og_desc_lines = []
+    for line in content.split('\n'):
+        line = line.strip()
+        if line.startswith('#') or line == '---':
+            if line == '---':
+                break
+            continue
+        if line:
+            og_desc_lines.append(line)
+        if len(og_desc_lines) >= 2:
+            break
+    og_description = ' '.join(og_desc_lines)[:200] if og_desc_lines else result['title']
+
     # Wrap in full HTML shell (with inline JS for local testing)
     full_html = f"""<!DOCTYPE html>
-<html lang="en">
+<html lang="{args.lang}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{result['title']}</title>
+    <meta name="description" content="{og_description}">
+    <meta property="og:title" content="{result['title']}">
+    <meta property="og:type" content="website">
+    <meta property="og:description" content="{og_description}">
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='15' fill='%233498db'/><text x='50' y='68' font-size='60' font-family='Arial' fill='white' text-anchor='middle' font-weight='bold'>M</text></svg>">
     <style>{result['css']}</style>
 </head>

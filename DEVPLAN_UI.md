@@ -195,7 +195,7 @@ Tutte le modifiche vanno applicate in `md2.py`, nella funzione `generate_css()` 
 
 ---
 
-## Milestone 13: Meta e struttura HTML
+## Milestone 13: Meta e struttura HTML ✅
 
 ### 13.1 Attributo `lang` dinamico
 - Aggiungere un parametro opzionale `--lang` al CLI (default: `it`)
