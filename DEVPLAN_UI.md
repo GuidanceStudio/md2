@@ -174,7 +174,7 @@ Tutte le modifiche vanno applicate in `md2.py`, nella funzione `generate_css()` 
 
 ---
 
-## Milestone 12: Stile e polish
+## Milestone 12: Stile e polish ✅
 
 ### 12.1 Print stylesheet
 - Aggiungere `@media print` con:

@@ -299,6 +299,35 @@ def generate_css(theme_config=None):
             border-radius: 5px; font-size: 1.2rem; box-shadow: 0 2px 5px rgba(0,0,0,0.2);
         }}
 
+        /* Fade-in animation */
+        @keyframes fadeIn {{
+            from {{ opacity: 0; transform: translateY(10px); }}
+            to {{ opacity: 1; transform: translateY(0); }}
+        }}
+        .slide .content.visible {{
+            animation: fadeIn 0.4s ease forwards;
+        }}
+
+        /* Print stylesheet */
+        @media print {{
+            #sidebar, #theme-toggle, #menu-toggle, #progress-bar,
+            #slide-indicator, #sidebar-toggle {{ display: none !important; }}
+            body {{ display: block; height: auto; overflow: visible; }}
+            #main {{
+                overflow: visible; padding: 0;
+                scroll-snap-type: none;
+            }}
+            .slide {{
+                min-height: auto; page-break-after: always;
+                scroll-snap-align: none; border-bottom: none;
+                padding: 20px 0; max-width: 100%;
+            }}
+            .slide:last-child {{ page-break-after: avoid; }}
+            .cover {{ height: auto; page-break-after: always; }}
+            * {{ color: #000 !important; background: #fff !important;
+                 box-shadow: none !important; }}
+        }}
+
         @media (max-width: 1024px) {{
             #sidebar {{ width: 220px; }}
             #main {{ padding: 30px 40px; }}
@@ -438,6 +467,7 @@ def main():
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{result['title']}</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='15' fill='%233498db'/><text x='50' y='68' font-size='60' font-family='Arial' fill='white' text-anchor='middle' font-weight='bold'>M</text></svg>">
     <style>{result['css']}</style>
 </head>
 <body>
@@ -542,6 +572,17 @@ def main():
             }});
         }}, {{ root: mainEl, threshold: 0.3 }});
         slides.forEach(function(slide) {{ indicatorObserver.observe(slide); }});
+
+        // Fade-in animation for slide content
+        const contents = document.querySelectorAll('.slide .content');
+        const fadeObserver = new IntersectionObserver(function(entries) {{
+            entries.forEach(function(entry) {{
+                if (entry.isIntersecting) {{
+                    entry.target.classList.add('visible');
+                }}
+            }});
+        }}, {{ root: mainEl, threshold: 0.1 }});
+        contents.forEach(function(el) {{ fadeObserver.observe(el); }});
 
         // Keyboard navigation
         document.addEventListener('keydown', function(e) {{
