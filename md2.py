@@ -244,6 +244,26 @@ def generate_css(theme_config=None):
         }}
         .slide a:hover {{ color: #2980b9; border-bottom-style: solid; }}
 
+        /* Sidebar collapse toggle */
+        #sidebar-toggle {{
+            display: block; padding: 8px; text-align: center;
+            cursor: pointer; border: none; background: var(--sidebar-hover);
+            color: var(--sidebar-text); border-top: 1px solid var(--sidebar-border);
+            font-size: 0.9rem; transition: background 0.2s;
+        }}
+        #sidebar-toggle:hover {{ background: var(--sidebar-border); }}
+        #sidebar.collapsed {{ width: 0; overflow: hidden; padding: 0; border: none; }}
+        #sidebar.collapsed + #main {{ flex: 1; }}
+
+        /* Slide indicator */
+        #slide-indicator {{
+            position: fixed; bottom: 20px; right: 70px; z-index: 1000;
+            font-size: 0.8rem; color: var(--text-color); opacity: 0.6;
+            background: var(--sidebar-bg); padding: 4px 10px;
+            border-radius: 12px; border: 1px solid var(--sidebar-border);
+            pointer-events: none;
+        }}
+
         /* Footnotes */
         .footnote {{
             font-size: clamp(0.75rem, 1.3vh, 0.9rem);
@@ -286,6 +306,8 @@ def generate_css(theme_config=None):
 
         @media (max-width: 768px) {{
             #menu-toggle {{ display: block; }}
+            #sidebar-toggle {{ display: none; }}
+            #slide-indicator {{ display: none; }}
             #sidebar {{
                 position: fixed; left: -100%; top: 0; height: 100%; width: 80%;
                 max-width: 300px; z-index: 1000; transition: left 0.3s ease;
@@ -361,6 +383,7 @@ def render_presentation(markdown_text, theme_config=None):
             <li><a href="#cover">{cover_title}</a></li>
             {sidebar_items}
         </ul>
+        <button id="sidebar-toggle" onclick="toggleSidebar()" title="Toggle Sidebar">&#171;</button>
     </div>
     """
 
@@ -432,6 +455,9 @@ def main():
 
     {result['body_html']}
 
+    <!-- Slide Indicator -->
+    <div id="slide-indicator"></div>
+
     <!-- Theme Toggle -->
     <button id="theme-toggle" onclick="toggleTheme()" title="Toggle Theme">
         <svg id="theme-icon-sun" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="display:none;">
@@ -481,6 +507,61 @@ def main():
             }});
         }}, {{ root: mainEl, threshold: 0.3 }});
         slides.forEach(function(slide) {{ observer.observe(slide); }});
+
+        // Sidebar collapse
+        function toggleSidebar() {{
+            const sidebar = document.getElementById('sidebar');
+            const btn = document.getElementById('sidebar-toggle');
+            sidebar.classList.toggle('collapsed');
+            btn.innerHTML = sidebar.classList.contains('collapsed') ? '&#187;' : '&#171;';
+            localStorage.setItem('sidebar-collapsed', sidebar.classList.contains('collapsed'));
+        }}
+        // Restore sidebar state
+        if (localStorage.getItem('sidebar-collapsed') === 'true') {{
+            const sidebar = document.getElementById('sidebar');
+            sidebar.classList.add('collapsed');
+            document.getElementById('sidebar-toggle').innerHTML = '&#187;';
+        }}
+
+        // Slide indicator
+        const slideIndicator = document.getElementById('slide-indicator');
+        const totalSlides = slides.length;
+        let currentSlideIndex = 0;
+        function updateIndicator(index) {{
+            currentSlideIndex = index;
+            slideIndicator.textContent = (index + 1) + ' / ' + totalSlides;
+        }}
+        updateIndicator(0);
+        // Update indicator from IntersectionObserver
+        const indicatorObserver = new IntersectionObserver(function(entries) {{
+            entries.forEach(function(entry) {{
+                if (entry.isIntersecting) {{
+                    const idx = Array.from(slides).indexOf(entry.target);
+                    if (idx >= 0) updateIndicator(idx);
+                }}
+            }});
+        }}, {{ root: mainEl, threshold: 0.3 }});
+        slides.forEach(function(slide) {{ indicatorObserver.observe(slide); }});
+
+        // Keyboard navigation
+        document.addEventListener('keydown', function(e) {{
+            const allSlides = Array.from(slides);
+            if (e.key === 'ArrowDown' || e.key === 'ArrowRight' || e.key === 'PageDown') {{
+                e.preventDefault();
+                const next = Math.min(currentSlideIndex + 1, allSlides.length - 1);
+                allSlides[next].scrollIntoView({{ behavior: 'smooth' }});
+            }} else if (e.key === 'ArrowUp' || e.key === 'ArrowLeft' || e.key === 'PageUp') {{
+                e.preventDefault();
+                const prev = Math.max(currentSlideIndex - 1, 0);
+                allSlides[prev].scrollIntoView({{ behavior: 'smooth' }});
+            }} else if (e.key === 'Home') {{
+                e.preventDefault();
+                allSlides[0].scrollIntoView({{ behavior: 'smooth' }});
+            }} else if (e.key === 'End') {{
+                e.preventDefault();
+                allSlides[allSlides.length - 1].scrollIntoView({{ behavior: 'smooth' }});
+            }}
+        }});
     </script>
 </body>
 </html>"""

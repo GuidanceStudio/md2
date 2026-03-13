@@ -152,7 +152,7 @@ Tutte le modifiche vanno applicate in `md2.py`, nella funzione `generate_css()` 
 
 ---
 
-## Milestone 11: Navigazione e UX avanzata
+## Milestone 11: Navigazione e UX avanzata ✅
 
 ### 11.1 Navigazione da tastiera
 - Aggiungere listener JavaScript per le frecce:
