@@ -84,6 +84,20 @@ def test_only_separators():
     assert "body_html" in result
 
 
+def test_title_html_escaped(tmp_path):
+    md = '# Title with "quotes" & <angles>\n\n---\n\n## Slide\nContent'
+    md_file = tmp_path / "esc.md"
+    md_file.write_text(md, encoding="utf-8")
+    subprocess.run(
+        [sys.executable, "-c",
+         f"import sys; sys.argv = ['md2', '{md_file}']; from md2 import main; main()"],
+        capture_output=True, text=True, cwd=str(tmp_path)
+    )
+    html = (tmp_path / "esc.html").read_text(encoding="utf-8")
+    # OG meta content should have escaped quotes/angles
+    assert '&quot;' in html or '&#x27;' in html or '&amp;' in html
+
+
 def test_xss_in_markdown():
     md = "# T\n\n---\n\n## S\n\n<script>document.cookie</script>\n\nSafe text"
     html = _full_html(md)

@@ -1,4 +1,4 @@
-from md2 import render_presentation
+from md2 import render_presentation, process_markdown, autolink
 
 
 SAMPLE_MD = """# My Presentation
@@ -242,3 +242,36 @@ def test_cover_text_centered():
 def test_sidebar_has_toggle_button():
     result = _render()
     assert "sidebar-toggle" in result["body_html"]
+
+
+# --- Simplify: process_markdown helper ---
+
+def test_process_markdown_basic():
+    html = process_markdown("Hello **world**")
+    assert "<strong>world</strong>" in html
+
+
+def test_process_markdown_autolinks():
+    html = process_markdown("Visit https://example.com today")
+    assert 'href="https://example.com"' in html
+
+
+def test_process_markdown_sanitizes():
+    html = process_markdown("<script>alert(1)</script>Safe")
+    assert "<script>" not in html
+    assert "Safe" in html
+
+
+# --- Simplify: autolink lookbehind ---
+
+def test_autolink_skips_href():
+    assert autolink('<a href="https://x.com">').count("https://x.com") == 1
+
+
+def test_autolink_skips_src():
+    assert autolink('<img src="https://x.com/i.png">').count("https://x.com") == 1
+
+
+def test_autolink_wraps_bare_url():
+    result = autolink("<p>https://x.com here</p>")
+    assert '<a href="https://x.com"' in result

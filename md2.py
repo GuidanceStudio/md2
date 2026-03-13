@@ -1,4 +1,5 @@
 import argparse
+import html
 import os
 import re
 import sys
@@ -28,6 +29,10 @@ ALLOWED_ATTRIBUTES = {
     'iframe': ['src', 'width', 'height', 'allowfullscreen', 'frameborder', 'allow']
 }
 
+MD_EXTENSIONS = ['tables', 'sane_lists', 'nl2br', 'fenced_code', 'footnotes']
+
+_SLIDE_SPLIT_RE = re.compile(r'\n+[ \t]*---[ \t]*\n+')
+
 DEFAULT_THEME = {
     "bg_color": "#f9f9f9",
     "text_color": "#333",
@@ -47,24 +52,24 @@ def sanitize_html(html_content):
         strip=True
     )
 
+_AUTOLINK_RE = re.compile(r'(?<!["\x27=])(https?://[^\s<>\x27"]+)')
+
+
 def autolink(html_content):
     """
     Converts bare URLs in HTML text into clickable <a> links.
-    Skips URLs already inside href/src attributes.
+    Skips URLs already inside href/src attributes (preceded by = or quotes).
     """
-    def _replace_url(match):
-        prefix = match.group(1)
-        url = match.group(2)
-        # Skip if preceded by = or quote (inside an attribute value)
-        if prefix in ('"', "'", '='):
-            return match.group(0)
-        return f'{prefix}<a href="{url}" target="_blank" rel="noopener">{url}</a>'
-
-    return re.sub(
-        r'("|\'|=|^|.?)(https?://[^\s<>\'"]+)',
-        _replace_url,
+    return _AUTOLINK_RE.sub(
+        r'<a href="\1" target="_blank" rel="noopener">\1</a>',
         html_content
     )
+
+def process_markdown(text):
+    """Converts markdown text to sanitized, autolinked HTML."""
+    raw_html = markdown.markdown(text, extensions=MD_EXTENSIONS)
+    return autolink(sanitize_html(raw_html))
+
 
 def generate_css(theme_config=None):
     """
@@ -369,7 +374,7 @@ def render_presentation(markdown_text, theme_config=None):
     Returns a dictionary containing the HTML body and the CSS.
     """
     # Split by '---' surrounded by newlines
-    raw_slides = re.split(r'\n+[ \t]*---[ \t]*\n+', markdown_text)
+    raw_slides = _SLIDE_SPLIT_RE.split(markdown_text)
 
     slides_data = []
     cover_title = "Presentation"
@@ -396,9 +401,7 @@ def render_presentation(markdown_text, theme_config=None):
             slide_title = lines[0][3:].strip()
             slide_body = '\n'.join(lines[1:])
 
-        # Convert, Sanitize, and Autolink
-        raw_html = markdown.markdown(slide_body, extensions=['tables', 'sane_lists', 'nl2br', 'fenced_code', 'footnotes'])
-        clean_html = autolink(sanitize_html(raw_html))
+        clean_html = process_markdown(slide_body)
 
         slides_data.append({
             "id": f"slide-{i}",
@@ -406,9 +409,7 @@ def render_presentation(markdown_text, theme_config=None):
             "content": clean_html
         })
 
-    # Convert, Sanitize, and Autolink Cover
-    cover_raw = markdown.markdown(cover_content, extensions=['tables', 'sane_lists', 'nl2br', 'fenced_code', 'footnotes'])
-    cover_clean = autolink(sanitize_html(cover_raw))
+    cover_clean = process_markdown(cover_content)
 
     # Build Sidebar HTML
     sidebar_items = ''.join([f'<li><a href="#{s["id"]}">{s["title"]}</a></li>' for s in slides_data])
@@ -479,7 +480,8 @@ def main():
             og_desc_lines.append(line)
         if len(og_desc_lines) >= 2:
             break
-    og_description = ' '.join(og_desc_lines)[:200] if og_desc_lines else result['title']
+    og_description = html.escape(' '.join(og_desc_lines)[:200] if og_desc_lines else result['title'])
+    safe_title = html.escape(result['title'])
 
     # Wrap in full HTML shell (with inline JS for local testing)
     full_html = f"""<!DOCTYPE html>
@@ -487,9 +489,9 @@ def main():
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{result['title']}</title>
+    <title>{safe_title}</title>
     <meta name="description" content="{og_description}">
-    <meta property="og:title" content="{result['title']}">
+    <meta property="og:title" content="{safe_title}">
     <meta property="og:type" content="website">
     <meta property="og:description" content="{og_description}">
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='15' fill='%233498db'/><text x='50' y='68' font-size='60' font-family='Arial' fill='white' text-anchor='middle' font-weight='bold'>M</text></svg>">
@@ -545,10 +547,22 @@ def main():
             progressBar.style.width = progress + '%';
         }});
 
-        // IntersectionObserver for active sidebar link
+        // Slide tracking state
         const slides = document.querySelectorAll('.slide');
+        const slidesArray = Array.from(slides);
         const sidebarLinks = document.querySelectorAll('#sidebar a');
-        const observer = new IntersectionObserver(function(entries) {{
+        const slideIndicator = document.getElementById('slide-indicator');
+        const totalSlides = slides.length;
+        let currentSlideIndex = 0;
+
+        function updateIndicator(index) {{
+            currentSlideIndex = index;
+            slideIndicator.textContent = (index + 1) + ' / ' + totalSlides;
+        }}
+        updateIndicator(0);
+
+        // Single IntersectionObserver for sidebar active link + slide indicator
+        const slideObserver = new IntersectionObserver(function(entries) {{
             entries.forEach(function(entry) {{
                 if (entry.isIntersecting) {{
                     const id = entry.target.id;
@@ -558,10 +572,20 @@ def main():
                             link.classList.add('active');
                         }}
                     }});
+                    const idx = slidesArray.indexOf(entry.target);
+                    if (idx >= 0) updateIndicator(idx);
                 }}
             }});
         }}, {{ root: mainEl, threshold: 0.3 }});
-        slides.forEach(function(slide) {{ observer.observe(slide); }});
+        slides.forEach(function(slide) {{ slideObserver.observe(slide); }});
+
+        // Fade-in animation for slide content
+        const fadeObserver = new IntersectionObserver(function(entries) {{
+            entries.forEach(function(entry) {{
+                if (entry.isIntersecting) entry.target.classList.add('visible');
+            }});
+        }}, {{ root: mainEl, threshold: 0.1 }});
+        document.querySelectorAll('.slide .content').forEach(function(el) {{ fadeObserver.observe(el); }});
 
         // Sidebar collapse
         function toggleSidebar() {{
@@ -571,61 +595,25 @@ def main():
             btn.innerHTML = sidebar.classList.contains('collapsed') ? '&#187;' : '&#171;';
             localStorage.setItem('sidebar-collapsed', sidebar.classList.contains('collapsed'));
         }}
-        // Restore sidebar state
         if (localStorage.getItem('sidebar-collapsed') === 'true') {{
-            const sidebar = document.getElementById('sidebar');
-            sidebar.classList.add('collapsed');
+            document.getElementById('sidebar').classList.add('collapsed');
             document.getElementById('sidebar-toggle').innerHTML = '&#187;';
         }}
 
-        // Slide indicator
-        const slideIndicator = document.getElementById('slide-indicator');
-        const totalSlides = slides.length;
-        let currentSlideIndex = 0;
-        function updateIndicator(index) {{
-            currentSlideIndex = index;
-            slideIndicator.textContent = (index + 1) + ' / ' + totalSlides;
-        }}
-        updateIndicator(0);
-        // Update indicator from IntersectionObserver
-        const indicatorObserver = new IntersectionObserver(function(entries) {{
-            entries.forEach(function(entry) {{
-                if (entry.isIntersecting) {{
-                    const idx = Array.from(slides).indexOf(entry.target);
-                    if (idx >= 0) updateIndicator(idx);
-                }}
-            }});
-        }}, {{ root: mainEl, threshold: 0.3 }});
-        slides.forEach(function(slide) {{ indicatorObserver.observe(slide); }});
-
-        // Fade-in animation for slide content
-        const contents = document.querySelectorAll('.slide .content');
-        const fadeObserver = new IntersectionObserver(function(entries) {{
-            entries.forEach(function(entry) {{
-                if (entry.isIntersecting) {{
-                    entry.target.classList.add('visible');
-                }}
-            }});
-        }}, {{ root: mainEl, threshold: 0.1 }});
-        contents.forEach(function(el) {{ fadeObserver.observe(el); }});
-
         // Keyboard navigation
         document.addEventListener('keydown', function(e) {{
-            const allSlides = Array.from(slides);
             if (e.key === 'ArrowDown' || e.key === 'ArrowRight' || e.key === 'PageDown') {{
                 e.preventDefault();
-                const next = Math.min(currentSlideIndex + 1, allSlides.length - 1);
-                allSlides[next].scrollIntoView({{ behavior: 'smooth' }});
+                slidesArray[Math.min(currentSlideIndex + 1, slidesArray.length - 1)].scrollIntoView({{ behavior: 'smooth' }});
             }} else if (e.key === 'ArrowUp' || e.key === 'ArrowLeft' || e.key === 'PageUp') {{
                 e.preventDefault();
-                const prev = Math.max(currentSlideIndex - 1, 0);
-                allSlides[prev].scrollIntoView({{ behavior: 'smooth' }});
+                slidesArray[Math.max(currentSlideIndex - 1, 0)].scrollIntoView({{ behavior: 'smooth' }});
             }} else if (e.key === 'Home') {{
                 e.preventDefault();
-                allSlides[0].scrollIntoView({{ behavior: 'smooth' }});
+                slidesArray[0].scrollIntoView({{ behavior: 'smooth' }});
             }} else if (e.key === 'End') {{
                 e.preventDefault();
-                allSlides[allSlides.length - 1].scrollIntoView({{ behavior: 'smooth' }});
+                slidesArray[slidesArray.length - 1].scrollIntoView({{ behavior: 'smooth' }});
             }}
         }});
     </script>
