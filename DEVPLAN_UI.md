@@ -249,7 +249,7 @@ Tutte le modifiche vanno applicate in `md2.py`, nella funzione `generate_css()` 
 
 ---
 
-## Milestone 15: Sidebar UX — default aperta, toggle in alto, shortcut guide
+## Milestone 15: Sidebar UX — default aperta, toggle in alto, shortcut guide ✅
 
 ### 15.1 Sidebar aperta di default
 - Rimuovere il ripristino da `localStorage` all'avvio che poteva lasciare la sidebar chiusa

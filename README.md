@@ -134,7 +134,8 @@ Oltre alla sintassi base (heading, bold, italic, link, immagini, liste), md2 sup
 ### Interfaccia generata
 
 - **Sidebar navigabile** con link a ogni slide e indicatore slide attiva
-- **Sidebar collassabile** (bottone `«`/`»` sul bordo, stato salvato in localStorage)
+- **Sidebar collassabile** (bottone `«` in alto nella sidebar, bottone `»` fisso per riaprirla)
+- **Guida shortcut** nella sidebar — mostra le scorciatoie da tastiera in fondo al menu
 - **Indicatore slide** — mostra "2 / 5" in basso a destra
 - **Barra di progresso** — linea blu in cima alla pagina
 - **Dark mode** — toggle sole/luna in alto a destra

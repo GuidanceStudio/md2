@@ -296,3 +296,18 @@ def test_process_markdown_footnotes():
 def test_process_markdown_table():
     html = process_markdown("| A | B |\n|---|---|\n| 1 | 2 |")
     assert "<table>" in html
+
+
+# --- Milestone 15: Sidebar UX ---
+
+def test_sidebar_has_shortcuts_guide():
+    result = _render()
+    assert 'id="sidebar-shortcuts"' in result["body_html"]
+
+
+def test_sidebar_shortcuts_content():
+    result = _render()
+    html = result["body_html"]
+    # Should contain arrow symbols and Home/End
+    assert "Home" in html
+    assert "End" in html

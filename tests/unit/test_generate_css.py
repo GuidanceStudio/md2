@@ -211,3 +211,18 @@ def test_fade_in_animation():
 def test_footnote_styles():
     css = generate_css()
     assert ".footnote" in css
+
+
+def test_sidebar_shortcuts_style():
+    css = generate_css()
+    assert "#sidebar-shortcuts" in css
+
+
+def test_sidebar_toggle_not_fixed_center():
+    css = generate_css()
+    # Toggle should NOT use top: 50% anymore (moved to sidebar header)
+    # Check that #sidebar-toggle does not contain "top: 50%"
+    import re
+    toggle_block = re.search(r'#sidebar-toggle\s*\{[^}]+\}', css)
+    assert toggle_block is not None
+    assert "top: 50%" not in toggle_block.group(0)

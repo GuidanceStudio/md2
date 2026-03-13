@@ -100,7 +100,7 @@ def test_output_has_sidebar_collapse(tmp_path):
     html = _cli_html(tmp_path)
     assert 'id="sidebar-toggle"' in html
     assert "toggleSidebar" in html
-    assert "localStorage" in html
+    assert 'id="sidebar-reopen"' in html
 
 
 def test_output_has_fade_in(tmp_path):
@@ -113,6 +113,19 @@ def test_output_has_print_stylesheet(tmp_path):
     html = _cli_html(tmp_path)
     assert "@media print" in html
     assert "page-break-after" in html
+
+
+def test_sidebar_open_by_default(tmp_path):
+    html = _cli_html(tmp_path)
+    # Should NOT contain localStorage restore that auto-collapses sidebar
+    assert "localStorage.getItem" not in html
+
+
+def test_sidebar_has_shortcut_guide_e2e(tmp_path):
+    html = _cli_html(tmp_path)
+    assert "sidebar-shortcuts" in html
+    assert "Home" in html
+    assert "End" in html
 
 
 def test_output_has_og_description(tmp_path):
