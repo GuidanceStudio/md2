@@ -275,3 +275,24 @@ def test_autolink_skips_src():
 def test_autolink_wraps_bare_url():
     result = autolink("<p>https://x.com here</p>")
     assert '<a href="https://x.com"' in result
+
+
+def test_autolink_skips_equals():
+    result = autolink('data=https://x.com/path')
+    assert "<a " not in result
+
+
+def test_process_markdown_fenced_code():
+    html = process_markdown("```python\nprint(1)\n```")
+    assert "<pre>" in html
+    assert "<code" in html
+
+
+def test_process_markdown_footnotes():
+    html = process_markdown("Text[^1]\n\n[^1]: My footnote")
+    assert "My footnote" in html
+
+
+def test_process_markdown_table():
+    html = process_markdown("| A | B |\n|---|---|\n| 1 | 2 |")
+    assert "<table>" in html

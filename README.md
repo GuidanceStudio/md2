@@ -120,6 +120,31 @@ Per rimuovere l'ambiente virtuale e i file generati:
 
     make clean
 
+## Funzionalità
+
+### Markdown supportato
+
+Oltre alla sintassi base (heading, bold, italic, link, immagini, liste), md2 supporta:
+
+- **Fenced code blocks** — ` ```python ... ``` ` con attributo di linguaggio
+- **Tabelle** — sintassi standard con `|` e `---`
+- **Footnotes** — `[^1]` nel testo e `[^1]: nota` in fondo alla slide
+- **Autolink** — URL nudi (`https://...`) vengono automaticamente convertiti in link cliccabili
+
+### Interfaccia generata
+
+- **Sidebar navigabile** con link a ogni slide e indicatore slide attiva
+- **Sidebar collassabile** (bottone `«`/`»` sul bordo, stato salvato in localStorage)
+- **Indicatore slide** — mostra "2 / 5" in basso a destra
+- **Barra di progresso** — linea blu in cima alla pagina
+- **Dark mode** — toggle sole/luna in alto a destra
+- **Scroll-snap** — ogni slide occupa l'intero viewport
+- **Fade-in** — il contenuto delle slide appare con animazione
+- **Print** — `Ctrl+P` produce un layout pulito senza UI, una slide per pagina
+- **Meta tag Open Graph** — titolo e descrizione per la condivisione
+- **Favicon inline** — nessun 404 nel browser
+- **Responsive** — breakpoint a 1024px (tablet) e 768px (mobile) con menu hamburger
+
 ## Struttura del file Markdown
 
 Lo script interpreta il file Markdown secondo le seguenti regole:

@@ -94,3 +94,29 @@ def test_autolink_e2e(tmp_path):
     md = "# T\n\n---\n\n## S\n\nhttps://example.com here"
     html = _cli_html(tmp_path, md)
     assert 'href="https://example.com"' in html
+
+
+def test_output_has_sidebar_collapse(tmp_path):
+    html = _cli_html(tmp_path)
+    assert 'id="sidebar-toggle"' in html
+    assert "toggleSidebar" in html
+    assert "localStorage" in html
+
+
+def test_output_has_fade_in(tmp_path):
+    html = _cli_html(tmp_path)
+    assert "@keyframes fadeIn" in html
+    assert "content.visible" in html or ".visible" in html
+
+
+def test_output_has_print_stylesheet(tmp_path):
+    html = _cli_html(tmp_path)
+    assert "@media print" in html
+    assert "page-break-after" in html
+
+
+def test_output_has_og_description(tmp_path):
+    md = "# Title\n\nMy cover description.\n\n---\n\n## S\nContent"
+    html = _cli_html(tmp_path, md)
+    assert 'og:description' in html
+    assert 'My cover description' in html
