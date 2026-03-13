@@ -308,6 +308,7 @@ def test_sidebar_has_shortcuts_guide():
 def test_sidebar_shortcuts_content():
     result = _render()
     html = result["body_html"]
-    # Should contain arrow symbols and Home/End
+    assert "Next" in html
+    assert "Prev" in html
     assert "Home" in html
     assert "End" in html

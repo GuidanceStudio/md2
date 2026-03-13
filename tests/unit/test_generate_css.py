@@ -218,11 +218,7 @@ def test_sidebar_shortcuts_style():
     assert "#sidebar-shortcuts" in css
 
 
-def test_sidebar_toggle_not_fixed_center():
+def test_sidebar_toggle_fixed_edge():
     css = generate_css()
-    # Toggle should NOT use top: 50% anymore (moved to sidebar header)
-    # Check that #sidebar-toggle does not contain "top: 50%"
-    import re
-    toggle_block = re.search(r'#sidebar-toggle\s*\{[^}]+\}', css)
-    assert toggle_block is not None
-    assert "top: 50%" not in toggle_block.group(0)
+    assert "left: 280px" in css
+    assert "#sidebar.collapsed ~ #sidebar-toggle" in css

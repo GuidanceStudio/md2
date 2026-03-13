@@ -249,29 +249,20 @@ def generate_css(theme_config=None):
         }}
         .slide a:hover {{ color: #2980b9; border-bottom-style: solid; }}
 
-        /* Sidebar collapse toggle — inside sidebar header */
-        #sidebar-header {{
-            display: flex; justify-content: flex-end; padding: 8px 12px;
-            border-bottom: 1px solid var(--sidebar-border);
-        }}
+        /* Sidebar collapse toggle — fixed on sidebar edge */
         #sidebar-toggle {{
-            cursor: pointer; border: none; background: none;
-            color: var(--sidebar-text); font-size: 1rem; padding: 4px 8px;
-            border-radius: 4px; transition: background 0.2s;
+            position: fixed; top: 50%; left: 280px; z-index: 1002;
+            transform: translateY(-50%); padding: 6px 4px;
+            cursor: pointer; border: 1px solid var(--sidebar-border);
+            border-left: none; background: var(--sidebar-bg);
+            color: var(--sidebar-text); font-size: 0.85rem;
+            border-radius: 0 6px 6px 0;
+            box-shadow: 2px 0 4px rgba(0,0,0,0.06);
+            transition: left 0.3s ease, background 0.2s;
         }}
         #sidebar-toggle:hover {{ background: var(--sidebar-hover); }}
         #sidebar.collapsed {{ width: 0; overflow: hidden; padding: 0; border: none; }}
-
-        /* Reopen button — visible only when sidebar is collapsed */
-        #sidebar-reopen {{
-            display: none; position: fixed; top: 12px; left: 12px; z-index: 1002;
-            cursor: pointer; border: 1px solid var(--sidebar-border);
-            background: var(--sidebar-bg); color: var(--sidebar-text);
-            font-size: 1rem; padding: 4px 8px; border-radius: 4px;
-            box-shadow: 2px 0 4px rgba(0,0,0,0.06); transition: background 0.2s;
-        }}
-        #sidebar-reopen:hover {{ background: var(--sidebar-hover); }}
-        #sidebar.collapsed ~ #sidebar-reopen {{ display: block; }}
+        #sidebar.collapsed ~ #sidebar-toggle {{ left: 0; }}
 
         /* Sidebar shortcuts guide */
         #sidebar-shortcuts {{
@@ -342,7 +333,7 @@ def generate_css(theme_config=None):
         /* Print stylesheet */
         @media print {{
             #sidebar, #theme-toggle, #menu-toggle, #progress-bar,
-            #slide-indicator, #sidebar-reopen {{ display: none !important; }}
+            #slide-indicator, #sidebar-toggle {{ display: none !important; }}
             body {{ display: block; height: auto; overflow: visible; }}
             #main {{
                 overflow: visible; padding: 0;
@@ -361,13 +352,14 @@ def generate_css(theme_config=None):
 
         @media (max-width: 1024px) {{
             #sidebar {{ width: 220px; }}
+            #sidebar-toggle {{ left: 220px; }}
+            #sidebar.collapsed ~ #sidebar-toggle {{ left: 0; }}
             #main {{ padding: 30px 40px; }}
         }}
 
         @media (max-width: 768px) {{
             #menu-toggle {{ display: block; }}
-            #sidebar-header {{ display: none; }}
-            #sidebar-reopen {{ display: none !important; }}
+            #sidebar-toggle {{ display: none; }}
             #sidebar-shortcuts {{ display: none; }}
             #slide-indicator {{ display: none; }}
             #sidebar {{
@@ -437,20 +429,17 @@ def render_presentation(markdown_text, theme_config=None):
     sidebar_items = ''.join([f'<li><a href="#{s["id"]}">{s["title"]}</a></li>' for s in slides_data])
     sidebar_html = f"""
     <div id="sidebar">
-        <div id="sidebar-header">
-            <button id="sidebar-toggle" onclick="toggleSidebar()" title="Chiudi sidebar">&#171;</button>
-        </div>
         <ul>
             <li><a href="#cover">{cover_title}</a></li>
             {sidebar_items}
         </ul>
         <div id="sidebar-shortcuts">
-            <kbd>&#8595;</kbd> <kbd>&#8594;</kbd> Successiva<br>
-            <kbd>&#8593;</kbd> <kbd>&#8592;</kbd> Precedente<br>
-            <kbd>Home</kbd> Prima &middot; <kbd>End</kbd> Ultima
+            <kbd>&#8595;</kbd> <kbd>&#8594;</kbd> Next<br>
+            <kbd>&#8593;</kbd> <kbd>&#8592;</kbd> Prev<br>
+            <kbd>Home</kbd> / <kbd>End</kbd>
         </div>
     </div>
-    <button id="sidebar-reopen" onclick="toggleSidebar()" title="Apri sidebar">&#187;</button>
+    <button id="sidebar-toggle" onclick="toggleSidebar()" title="Toggle Sidebar">&#171;</button>
     """
 
     # Build Main Content HTML
@@ -619,7 +608,10 @@ def main():
 
         // Sidebar collapse (always open by default)
         function toggleSidebar() {{
-            document.getElementById('sidebar').classList.toggle('collapsed');
+            const sidebar = document.getElementById('sidebar');
+            const btn = document.getElementById('sidebar-toggle');
+            sidebar.classList.toggle('collapsed');
+            btn.innerHTML = sidebar.classList.contains('collapsed') ? '&#187;' : '&#171;';
         }}
 
         // Keyboard navigation

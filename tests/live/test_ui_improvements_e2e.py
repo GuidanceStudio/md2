@@ -100,7 +100,6 @@ def test_output_has_sidebar_collapse(tmp_path):
     html = _cli_html(tmp_path)
     assert 'id="sidebar-toggle"' in html
     assert "toggleSidebar" in html
-    assert 'id="sidebar-reopen"' in html
 
 
 def test_output_has_fade_in(tmp_path):
