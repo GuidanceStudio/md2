@@ -47,12 +47,14 @@ Se hai installato lo script globalmente, puoi generare la presentazione HTML dir
 
 ### Opzioni
 
-    md2 nomefile.md --lang en
+    md2 nomefile.md --lang en --dark --template corporate
 
-| Flag     | Default | Descrizione                        |
-|----------|---------|------------------------------------|
-| `--lang` | `it`    | Attributo `lang` dell'HTML generato |
-| `--dark` | off     | Usa il tema scuro come default     |
+| Flag               | Default | Descrizione                                       |
+|--------------------|---------|---------------------------------------------------|
+| `--lang`           | `it`    | Attributo `lang` dell'HTML generato                |
+| `--dark`           | off     | Usa il tema scuro come default                     |
+| `--template NOME`  | —       | Usa un template da `~/.md2/templates/NOME/`        |
+| `--init-templates` | —       | (Re)copia il template default in `~/.md2/templates/` |
 
 ### Sviluppo (Locale)
 In alternativa, usa il target `run` di `make` specificando il file Markdown:
@@ -83,7 +85,8 @@ I test usano `pytest` e sono divisi in **unit** (funzioni pure, senza I/O) e **l
     │   ├── test_sanitize_html.py      # sanitizzazione HTML e prevenzione XSS
     │   ├── test_generate_css.py       # generazione CSS, temi, dark mode, responsive
     │   ├── test_render_presentation.py # parsing markdown, slide, sidebar, struttura HTML
-    │   └── test_main_cli.py           # parsing argomenti CLI
+    │   ├── test_main_cli.py           # parsing argomenti CLI
+    │   └── test_template_system.py    # sistema template, --template, --init-templates
     └── live/
         ├── test_conversion_e2e.py     # conversione completa file → HTML
         ├── test_edge_cases_e2e.py     # file vuoti, unicode, XSS, casi limite
@@ -262,3 +265,88 @@ Tag HTML sicuri vengono preservati: `<iframe>` per embed video/mappe, `<img>` co
 - **Meta tag Open Graph** — titolo e descrizione per la condivisione
 - **Favicon inline** — nessun 404 nel browser
 - **Responsive** — breakpoint a 1024px (tablet) e 768px (mobile) con menu hamburger
+
+## Template personalizzati
+
+md2 usa un sistema di template basato su [Jinja2](https://jinja.palletsprojects.com/). Al primo avvio, il template default viene copiato in `~/.md2/templates/default/` — puoi modificarlo o crearne di nuovi.
+
+### Struttura di un template
+
+```
+~/.md2/templates/
+├── default/                    ← template default (copiato automaticamente)
+│   ├── base.html               ← template principale con {% block %}
+│   ├── style.css               ← CSS completo
+│   └── components/
+│       ├── head.html           ← <head> con meta, OG, favicon, <style>
+│       ├── sidebar.html        ← sidebar con lista slide e shortcut
+│       ├── cover.html          ← slide di copertina
+│       ├── slide.html          ← singola slide (usata nel for loop)
+│       ├── controls.html       ← progress bar, indicator, theme toggle
+│       └── scripts.html        ← JavaScript
+└── mio-template/               ← template custom
+    └── base.html
+```
+
+### Creare un template custom
+
+**Metodo 1 — Copia e modifica:**
+
+```bash
+cp -r ~/.md2/templates/default ~/.md2/templates/mio-template
+# Modifica i file a piacere
+md2 presentazione.md --template mio-template
+```
+
+**Metodo 2 — Ereditarietà (solo override):**
+
+Crea `~/.md2/templates/mio-template/base.html`:
+
+```jinja2
+{% extends "default/base.html" %}
+
+{% block sidebar %}{% endblock %}
+{% block controls %}{% endblock %}
+```
+
+Questo template eredita tutto dal default e rimuove sidebar e controlli. Puoi sovrascrivere qualsiasi blocco.
+
+### Blocchi disponibili
+
+| Blocco          | Contenuto                                      |
+|-----------------|-------------------------------------------------|
+| `head`          | Contenuto di `<head>` (meta, title, CSS)        |
+| `css`           | Solo il CSS (dentro `<style>`)                   |
+| `controls`      | Progress bar, hamburger, indicator, theme toggle |
+| `sidebar`       | Sidebar completa con lista slide e shortcut      |
+| `main`          | Container principale con cover e slide           |
+| `cover`         | Slide di copertina                               |
+| `slides`        | Loop delle slide                                 |
+| `scripts`       | Blocco `<script>` con tutto il JS                |
+
+### Variabili di contesto
+
+Queste variabili sono disponibili in tutti i template:
+
+| Variabile          | Tipo    | Descrizione                                |
+|--------------------|---------|--------------------------------------------|
+| `title`            | string  | Titolo della presentazione (HTML-escaped)  |
+| `og_description`   | string  | Meta description per Open Graph            |
+| `lang`             | string  | Attributo lang (`it`, `en`, ...)            |
+| `dark_mode`        | bool    | `true` se `--dark` è attivo                |
+| `cover.title`      | string  | Titolo della copertina                     |
+| `cover.content`    | string  | HTML del contenuto della copertina         |
+| `slides`           | list    | Lista delle slide                          |
+| `slides[].id`      | string  | ID HTML della slide (`slide-0`, `slide-1`) |
+| `slides[].title`   | string  | Titolo della slide                         |
+| `slides[].content` | string  | HTML del contenuto della slide             |
+
+### Aggiornare il template default
+
+Dopo un aggiornamento di md2, puoi rigenerare il template default con:
+
+```bash
+md2 --init-templates
+```
+
+Questo sovrascrive `~/.md2/templates/default/` con la versione bundled aggiornata. I template custom non vengono toccati.

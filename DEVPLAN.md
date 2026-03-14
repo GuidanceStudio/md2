@@ -399,7 +399,7 @@ template = env.get_template(f"{template_name}/base.html")
 
 ---
 
-## Milestone 23: README — documentazione sistema template
+## Milestone 23: README — documentazione sistema template ✅
 
 ### Cosa aggiungere
 
