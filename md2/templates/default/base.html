@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="{{ lang }}">
+<head>
+{% block head %}{% include "components/head.html" %}{% endblock %}
+</head>
+<body{% if dark_mode %} class="dark-mode"{% endif %}>
+{% block controls %}{% include "components/controls.html" %}{% endblock %}
+
+{% block sidebar %}{% include "components/sidebar.html" %}{% endblock %}
+
+{% block main %}
+    <div id="main">
+{% block cover %}{% include "components/cover.html" %}{% endblock %}
+{% block slides %}
+        {% for slide in slides %}
+        {% include "components/slide.html" %}
+        {% endfor %}
+{% endblock %}
+    </div>
+{% endblock %}
+
+{% block scripts %}
+    <script>
+{% include "components/scripts.html" %}
+    </script>
+{% endblock %}
+</body>
+</html>

@@ -168,7 +168,7 @@ Il README attuale ha sezioni "Markdown supportato" e "Struttura del file Markdow
 
 ---
 
-## Milestone 21: Ristrutturazione a pacchetto + refactoring Jinja2
+## Milestone 21: Ristrutturazione a pacchetto + refactoring Jinja2 ✅
 
 Oggi `md2.py` è un singolo file che costruisce HTML/CSS/JS con f-string Python. Questo milestone converte il progetto in un pacchetto Python con template Jinja2, separando dati da presentazione.
 

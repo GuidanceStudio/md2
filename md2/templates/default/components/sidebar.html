@@ -1,0 +1,16 @@
+    <div id="sidebar">
+        <ul>
+            <li><a href="#cover">{{ cover.title }}</a></li>
+            {% for slide in slides %}
+            <li><a href="#{{ slide.id }}">{{ slide.title }}</a></li>
+            {% endfor %}
+        </ul>
+        <div id="sidebar-shortcuts">
+            <kbd>&#8595;</kbd> <kbd>&#8594;</kbd> Next<br>
+            <kbd>&#8593;</kbd> <kbd>&#8592;</kbd> Prev<br>
+            <kbd>Home</kbd> / <kbd>End</kbd><br>
+            <kbd>S</kbd> Toggle Sidebar<br>
+            <kbd>D</kbd> Toggle Theme
+        </div>
+    </div>
+    <button id="sidebar-toggle" onclick="toggleSidebar()" title="Toggle Sidebar">&#171;</button>

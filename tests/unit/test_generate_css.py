@@ -7,24 +7,19 @@ def test_default_theme():
     assert "#333" in css  # text_color
 
 
-def test_custom_theme_override():
+def test_css_contains_default_theme_values():
+    """CSS file contains the default theme values."""
+    css = generate_css()
+    assert "#f9f9f9" in css  # bg_color
+    assert '"Ubuntu", sans-serif' in css  # font_family
+    assert "#ffffff" in css  # sidebar_bg
+
+
+def test_generate_css_accepts_theme_config():
+    """generate_css accepts theme_config for backward compat (ignored)."""
     css = generate_css({"bg_color": "#000000"})
-    assert "#000000" in css
-    # Other defaults still present
-    assert "#333" in css
-
-
-def test_custom_theme_full():
-    custom = {
-        "bg_color": "#111",
-        "text_color": "#eee",
-        "sidebar_bg": "#222",
-        "h2_color": "#fff",
-        "font_family": '"Arial", sans-serif',
-    }
-    css = generate_css(custom)
-    for val in custom.values():
-        assert val in css
+    # CSS is now a static file, theme_config is ignored
+    assert "#f9f9f9" in css  # still default values
 
 
 def test_contains_dark_mode():

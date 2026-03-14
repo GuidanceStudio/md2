@@ -1,0 +1,91 @@
+        function toggleTheme() {
+            document.body.classList.toggle('dark-mode');
+            const isDark = document.body.classList.contains('dark-mode');
+            document.getElementById('theme-icon-sun').style.display = isDark ? 'block' : 'none';
+            document.getElementById('theme-icon-moon').style.display = isDark ? 'none' : 'block';
+        }
+        function toggleMenu() {
+            const sidebar = document.getElementById('sidebar');
+            sidebar.classList.toggle('active');
+        }
+
+        // Progress bar
+        const mainEl = document.getElementById('main');
+        const progressBar = document.getElementById('progress-bar');
+        mainEl.addEventListener('scroll', function() {
+            const scrollTop = mainEl.scrollTop;
+            const scrollHeight = mainEl.scrollHeight - mainEl.clientHeight;
+            const progress = scrollHeight > 0 ? (scrollTop / scrollHeight) * 100 : 0;
+            progressBar.style.width = progress + '%';
+        });
+
+        // Slide tracking state
+        const slides = document.querySelectorAll('.slide');
+        const slidesArray = Array.from(slides);
+        const sidebarLinks = document.querySelectorAll('#sidebar a');
+        const slideIndicator = document.getElementById('slide-indicator');
+        const totalSlides = slides.length;
+        let currentSlideIndex = 0;
+
+        function updateIndicator(index) {
+            currentSlideIndex = index;
+            slideIndicator.textContent = (index + 1) + ' / ' + totalSlides;
+        }
+        updateIndicator(0);
+
+        // Single IntersectionObserver for sidebar active link + slide indicator
+        const slideObserver = new IntersectionObserver(function(entries) {
+            entries.forEach(function(entry) {
+                if (entry.isIntersecting) {
+                    const id = entry.target.id;
+                    sidebarLinks.forEach(function(link) {
+                        link.classList.remove('active');
+                        if (link.getAttribute('href') === '#' + id) {
+                            link.classList.add('active');
+                        }
+                    });
+                    const idx = slidesArray.indexOf(entry.target);
+                    if (idx >= 0) updateIndicator(idx);
+                }
+            });
+        }, { root: mainEl, threshold: 0.3 });
+        slides.forEach(function(slide) { slideObserver.observe(slide); });
+
+        // Fade-in animation for slide content
+        const fadeObserver = new IntersectionObserver(function(entries) {
+            entries.forEach(function(entry) {
+                if (entry.isIntersecting) entry.target.classList.add('visible');
+            });
+        }, { root: mainEl, threshold: 0.1 });
+        document.querySelectorAll('.slide .content').forEach(function(el) { fadeObserver.observe(el); });
+
+        // Sidebar collapse (always open by default)
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const btn = document.getElementById('sidebar-toggle');
+            sidebar.classList.toggle('collapsed');
+            btn.innerHTML = sidebar.classList.contains('collapsed') ? '&#187;' : '&#171;';
+        }
+
+        // Keyboard navigation
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'ArrowDown' || e.key === 'ArrowRight' || e.key === 'PageDown') {
+                e.preventDefault();
+                slidesArray[Math.min(currentSlideIndex + 1, slidesArray.length - 1)].scrollIntoView({ behavior: 'smooth' });
+            } else if (e.key === 'ArrowUp' || e.key === 'ArrowLeft' || e.key === 'PageUp') {
+                e.preventDefault();
+                slidesArray[Math.max(currentSlideIndex - 1, 0)].scrollIntoView({ behavior: 'smooth' });
+            } else if (e.key === 'Home') {
+                e.preventDefault();
+                slidesArray[0].scrollIntoView({ behavior: 'smooth' });
+            } else if (e.key === 'End') {
+                e.preventDefault();
+                slidesArray[slidesArray.length - 1].scrollIntoView({ behavior: 'smooth' });
+            } else if (e.key === 's' || e.key === 'S') {
+                e.preventDefault();
+                toggleSidebar();
+            } else if (e.key === 'd' || e.key === 'D') {
+                e.preventDefault();
+                toggleTheme();
+            }
+        });

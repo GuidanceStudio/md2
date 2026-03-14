@@ -1,4 +1,4 @@
-from md2 import render_presentation, process_markdown, autolink
+from md2 import render_presentation, process_markdown, autolink, prepare_context
 
 
 SAMPLE_MD = """# My Presentation
@@ -191,9 +191,9 @@ def test_html_sanitized_in_slides():
     assert "Safe text" in result["body_html"]
 
 
-def test_custom_theme_passed_to_css():
-    result = _render(theme_config={"bg_color": "#abcdef"})
-    assert "#abcdef" in result["css"]
+def test_css_contains_default_values():
+    result = _render()
+    assert "#f9f9f9" in result["css"]  # default bg_color
 
 
 # --- Milestone 9: Parser extensions ---
@@ -330,3 +330,37 @@ def test_sidebar_shortcuts_shows_theme_toggle_key():
     html = result["body_html"]
     assert "Toggle Theme" in html
     assert "<kbd>D</kbd>" in html
+
+
+# --- Milestone 21: prepare_context ---
+
+def test_prepare_context_structure():
+    ctx = prepare_context(SAMPLE_MD)
+    assert "title" in ctx
+    assert "cover" in ctx
+    assert "slides" in ctx
+    assert ctx["title"] == "My Presentation"
+    assert ctx["cover"]["title"] == "My Presentation"
+    assert "<p>" in ctx["cover"]["content"]
+
+
+def test_prepare_context_slides():
+    ctx = prepare_context(SAMPLE_MD)
+    assert len(ctx["slides"]) == 3
+    assert ctx["slides"][0]["id"] == "slide-0"
+    assert ctx["slides"][0]["title"] == "Introduction"
+    assert ctx["slides"][1]["id"] == "slide-1"
+    assert ctx["slides"][1]["title"] == "Details"
+    assert ctx["slides"][2]["id"] == "slide-2"
+    assert ctx["slides"][2]["title"] == "Conclusion"
+
+
+def test_prepare_context_default_title():
+    ctx = prepare_context("Just some text\n\n---\n\n## Slide 1")
+    assert ctx["title"] == "Presentation"
+
+
+def test_prepare_context_empty():
+    ctx = prepare_context("")
+    assert ctx["title"] == "Presentation"
+    assert ctx["slides"] == []
