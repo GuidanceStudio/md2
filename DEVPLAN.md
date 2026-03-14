@@ -126,3 +126,42 @@ Quando le slide sono molte, l'intero sidebar scrolla via portando con sé le ist
 - La lista slide scrolla indipendentemente
 - Le istruzioni restano sempre visibili in fondo alla sidebar
 - Toggle sidebar, tema dark/light, mobile continuano a funzionare
+
+---
+
+## Milestone 20: README — documentazione completa formato Markdown e funzionalità supportate
+
+Il README attuale ha sezioni "Markdown supportato" e "Struttura del file Markdown" ma sono incomplete e frammentate. Servono informazioni chiare e complete su come scrivere il file `.md` per ottenere una buona presentazione, e su cosa esattamente il tool supporta.
+
+### Cosa aggiornare nel README
+
+1. **Sezione "Struttura del file Markdown"** — riscrivere con struttura chiara:
+   - **Copertina**: tutto il contenuto prima del primo `---`. Il primo `# H1` diventa il titolo della presentazione e della pagina HTML. Il resto appare centrato nella slide di copertina. Se non c'è `# H1`, il titolo di default è "Presentation"
+   - **Separatore slide**: `---` su riga separata (con righe vuote sopra e sotto). Ogni `---` crea una nuova slide
+   - **Titolo slide**: il primo `## H2` di ogni sezione diventa il titolo della slide e la voce nella sidebar. Se assente, la slide viene chiamata "Slide N"
+   - **Sotto-sezioni**: `### H3` e `#### H4` sono supportati dentro le slide come sotto-titoli
+
+2. **Sezione "Markdown supportato"** — espandere con tutti gli elementi effettivamente supportati:
+   - **Testo base**: paragrafi, **bold**, *italic*, ~~strikethrough~~, `inline code`
+   - **Heading**: `# H1` (solo cover), `## H2` (titolo slide), `### H3`, `#### H4` (sotto-sezioni)
+   - **Liste**: puntate (`-` / `*`) e numerate (`1.`), anche annidate
+   - **Link**: `[testo](url)` — aperti in nuova tab con `target="_blank"`
+   - **Immagini**: `![alt](url)` — centrate, responsive, con bordi arrotondati e ombra
+   - **Tabelle**: sintassi standard con `|` e `---`, con allineamento colonne (`:---`, `:---:`, `---:`)
+   - **Blocchi di codice**: fenced con ` ```linguaggio ``` `, con font monospace e syntax highlighting base
+   - **Blockquote**: `>` con bordino laterale blu
+   - **Footnotes**: `[^1]` nel testo e `[^1]: nota` in fondo alla slide
+   - **Autolink**: URL nudi (`https://...`) convertiti automaticamente in link cliccabili
+   - **Newline**: a capo singolo (`nl2br`) — un singolo invio nel markdown produce un `<br>` nell'HTML
+   - **HTML inline**: tag sicuri vengono preservati (`iframe` per embed, `img` con attributi). Tag pericolosi (`script`, `onclick`, etc.) vengono rimossi per sicurezza
+
+3. **Sezione "Interfaccia generata"** — verificare che sia aggiornata con tutte le feature attuali, in particolare:
+   - Aggiungere shortcut `D` per toggle tema nella tabella navigazione tastiera
+   - Verificare che la lista delle feature UI sia completa
+
+4. **Esempio completo** — aggiornare l'esempio nella sezione "Struttura del file Markdown" per mostrare più elementi supportati (tabella, code block, blockquote, immagine, footnote, liste annidate)
+
+### Cosa NON fare
+- Non tradurre in inglese — il README è in italiano
+- Non aggiungere sezioni non necessarie
+- Non duplicare informazioni già presenti altrove nel README
