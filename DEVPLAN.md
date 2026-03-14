@@ -106,3 +106,23 @@ Aggiungere una scorciatoia da tastiera per alternare tra tema chiaro e scuro nel
 - **Toggle body class**: aggiungere/rimuovere `dark-mode` dal `<body>` al keypress
 - **Compatibilità con --dark**: lo shortcut deve funzionare sia quando si parte dal tema light che dal dark
 - **Test unitario**: verificare che il JS generato contenga il listener per il toggle tema
+
+---
+
+## Milestone 19: Sidebar scroll — lista slide scrollabile con istruzioni fisse in fondo
+
+Quando le slide sono molte, l'intero sidebar scrolla via portando con sé le istruzioni shortcut. L'utente perde il riferimento ai comandi da tastiera.
+
+**Soluzione**: approccio CSS-only con flexbox. La `<ul>` delle slide prende lo scroll interno, le istruzioni restano ancorate in fondo.
+
+### Modifiche CSS in `md2.py`
+
+1. **`#sidebar`** (~riga 137): rimuovere `overflow-y: auto`, aggiungere `overflow: hidden` — il container non scrolla più
+2. **`#sidebar ul`** (~riga 149): aggiungere `flex: 1; overflow-y: auto` — la lista scrolla internamente
+3. **`#sidebar-shortcuts`** (~riga 270): sostituire `margin-top: auto` con `flex-shrink: 0` — le istruzioni non si comprimono e restano fisse in fondo
+
+### Verifica
+- Generare una presentazione con 20+ slide
+- La lista slide scrolla indipendentemente
+- Le istruzioni restano sempre visibili in fondo alla sidebar
+- Toggle sidebar, tema dark/light, mobile continuano a funzionare
