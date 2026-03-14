@@ -318,7 +318,7 @@ def load_template(template_name=None):
 
 ---
 
-## Milestone 22: Sistema template utente — `--template` e `--init-templates`
+## Milestone 22: Sistema template utente — `--template` e `--init-templates` ✅
 
 ### 22.1 Auto-setup `~/.md2/templates/default/`
 
