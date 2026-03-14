@@ -109,7 +109,7 @@ Aggiungere una scorciatoia da tastiera per alternare tra tema chiaro e scuro nel
 
 ---
 
-## Milestone 19: Sidebar scroll — lista slide scrollabile con istruzioni fisse in fondo
+## Milestone 19: Sidebar scroll — lista slide scrollabile con istruzioni fisse in fondo ✅
 
 Quando le slide sono molte, l'intero sidebar scrolla via portando con sé le istruzioni shortcut. L'utente perde il riferimento ai comandi da tastiera.
 

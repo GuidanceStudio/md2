@@ -222,3 +222,39 @@ def test_sidebar_toggle_fixed_edge():
     css = generate_css()
     assert "left: 280px" in css
     assert "#sidebar.collapsed ~ #sidebar-toggle" in css
+
+
+# --- Milestone 19: Sidebar scroll tests ---
+
+def test_sidebar_no_overflow_y_auto():
+    """Sidebar container must not scroll itself — the ul scrolls instead."""
+    css = generate_css()
+    # Extract the #sidebar { ... } block (first occurrence)
+    import re
+    match = re.search(r'#sidebar\s*\{([^}]+)\}', css)
+    assert match, "#sidebar rule not found"
+    sidebar_css = match.group(1)
+    assert "overflow-y: auto" not in sidebar_css
+    assert "overflow: hidden" in sidebar_css
+
+
+def test_sidebar_ul_scrollable():
+    """The slide list <ul> must have flex: 1 and overflow-y: auto."""
+    css = generate_css()
+    import re
+    match = re.search(r'#sidebar ul\s*\{([^}]+)\}', css)
+    assert match, "#sidebar ul rule not found"
+    ul_css = match.group(1)
+    assert "flex: 1" in ul_css
+    assert "overflow-y: auto" in ul_css
+
+
+def test_sidebar_shortcuts_no_margin_top_auto():
+    """Shortcuts must use flex-shrink: 0 instead of margin-top: auto."""
+    css = generate_css()
+    import re
+    match = re.search(r'#sidebar-shortcuts\s*\{([^}]+)\}', css)
+    assert match, "#sidebar-shortcuts rule not found"
+    shortcuts_css = match.group(1)
+    assert "margin-top: auto" not in shortcuts_css
+    assert "flex-shrink: 0" in shortcuts_css

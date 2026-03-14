@@ -140,13 +140,13 @@ def generate_css(theme_config=None):
             border-right: 1px solid var(--sidebar-border);
             display: flex;
             flex-direction: column;
-            overflow-y: auto;
+            overflow: hidden;
             flex-shrink: 0;
             transition: background-color 0.3s, border-color 0.3s;
             box-shadow: 2px 0 8px rgba(0,0,0,0.06);
         }}
 
-        #sidebar ul {{ list-style: none; padding: 0; margin: 0; }}
+        #sidebar ul {{ list-style: none; padding: 0; margin: 0; flex: 1; overflow-y: auto; }}
         #sidebar li {{ border-bottom: 1px solid var(--sidebar-border); }}
         #sidebar a {{
             display: block; padding: 15px 20px; text-decoration: none;
@@ -268,7 +268,7 @@ def generate_css(theme_config=None):
 
         /* Sidebar shortcuts guide */
         #sidebar-shortcuts {{
-            margin-top: auto; padding: 15px 20px;
+            flex-shrink: 0; padding: 15px 20px;
             border-top: 1px solid var(--sidebar-border);
             font-size: 0.75rem; color: var(--sidebar-text); opacity: 0.5;
             line-height: 1.8;
