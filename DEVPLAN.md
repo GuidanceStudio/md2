@@ -93,3 +93,16 @@ Aggiungere un flag CLI per impostare il tema scuro come default alla generazione
 - **Compatibilità toggle**: il bottone di toggle tema deve continuare a funzionare normalmente anche quando il dark è il default
 - **Test unitario**: verificare che con `--dark` l'HTML generato contenga `class="dark-mode"` sul body
 - **Test senza flag**: verificare che senza `--dark` il comportamento resti invariato (tema light di default)
+
+---
+
+## Milestone 18: Shortcut tastiera per toggle tema dark/light ✅
+
+Aggiungere una scorciatoia da tastiera per alternare tra tema chiaro e scuro nella presentazione generata.
+
+- **Shortcut keyboard**: associare un tasto (es. `D`) per toggle del tema dark/light
+- **Listener globale**: il listener deve funzionare indipendentemente dal focus corrente (ignorare se si è in un campo input/textarea)
+- **Integrazione con guida shortcut**: aggiornare la guida delle scorciatoie nella sidebar per includere il nuovo shortcut
+- **Toggle body class**: aggiungere/rimuovere `dark-mode` dal `<body>` al keypress
+- **Compatibilità con --dark**: lo shortcut deve funzionare sia quando si parte dal tema light che dal dark
+- **Test unitario**: verificare che il JS generato contenga il listener per il toggle tema

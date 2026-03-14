@@ -321,3 +321,12 @@ def test_sidebar_shortcuts_shows_toggle_key():
     html = result["body_html"]
     assert "Toggle Sidebar" in html
     assert "<kbd>S</kbd>" in html
+
+
+# --- Milestone 18: Theme toggle shortcut ---
+
+def test_sidebar_shortcuts_shows_theme_toggle_key():
+    result = _render()
+    html = result["body_html"]
+    assert "Toggle Theme" in html
+    assert "<kbd>D</kbd>" in html

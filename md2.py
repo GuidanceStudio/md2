@@ -8,6 +8,7 @@ import sys
 try:
     import markdown
     import bleach
+    from bleach.css_sanitizer import CSSSanitizer
 except ImportError as e:
     print(f"Error: Missing required library: {e.name}")
     print("Please install them using: pip install markdown bleach")
@@ -49,6 +50,7 @@ def sanitize_html(html_content):
         html_content,
         tags=ALLOWED_TAGS,
         attributes=ALLOWED_ATTRIBUTES,
+        css_sanitizer=CSSSanitizer(),
         strip=True
     )
 
@@ -437,7 +439,8 @@ def render_presentation(markdown_text, theme_config=None):
             <kbd>&#8595;</kbd> <kbd>&#8594;</kbd> Next<br>
             <kbd>&#8593;</kbd> <kbd>&#8592;</kbd> Prev<br>
             <kbd>Home</kbd> / <kbd>End</kbd><br>
-            <kbd>S</kbd> Toggle Sidebar
+            <kbd>S</kbd> Toggle Sidebar<br>
+            <kbd>D</kbd> Toggle Theme
         </div>
     </div>
     <button id="sidebar-toggle" onclick="toggleSidebar()" title="Toggle Sidebar">&#171;</button>
@@ -636,6 +639,9 @@ def main():
             }} else if (e.key === 's' || e.key === 'S') {{
                 e.preventDefault();
                 toggleSidebar();
+            }} else if (e.key === 'd' || e.key === 'D') {{
+                e.preventDefault();
+                toggleTheme();
             }}
         }});
     </script>

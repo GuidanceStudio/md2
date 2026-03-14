@@ -175,3 +175,23 @@ def test_no_dark_flag_light_default(tmp_path):
     html = _cli_html(tmp_path)
     assert '<body>' in html
     assert '<body class="dark-mode">' not in html
+
+
+# --- Milestone 18: Theme toggle shortcut ---
+
+def test_theme_toggle_shortcut_in_js(tmp_path):
+    html = _cli_html(tmp_path)
+    assert "e.key === 'd'" in html or "e.key === 'D'" in html
+    assert "toggleTheme()" in html
+
+
+def test_theme_shortcut_guide_shows_toggle(tmp_path):
+    html = _cli_html(tmp_path)
+    assert "Toggle Theme" in html
+    assert "<kbd>D</kbd>" in html
+
+
+def test_theme_shortcut_works_with_dark_flag(tmp_path):
+    html = _cli_html_dark(tmp_path)
+    assert "e.key === 'd'" in html or "e.key === 'D'" in html
+    assert "toggleTheme()" in html

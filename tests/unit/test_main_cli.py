@@ -96,3 +96,18 @@ def test_dark_flag_sun_icon_visible(tmp_path):
     moon_section = html[moon_idx:moon_idx+200]
     assert 'display:block' in sun_section
     assert 'display:none' in moon_section
+
+
+# --- Milestone 18: Theme toggle shortcut ---
+
+def test_theme_toggle_shortcut_in_js(tmp_path):
+    md_file = tmp_path / "test.md"
+    md_file.write_text("# Test\n\n---\n\n## Slide\nContent", encoding="utf-8")
+    subprocess.run(
+        [sys.executable, "-c",
+         f"import sys; sys.argv = ['md2', '{md_file}']; from md2 import main; main()"],
+        capture_output=True, text=True, cwd=str(tmp_path)
+    )
+    html = (tmp_path / "test.html").read_text(encoding="utf-8")
+    assert "e.key === 'd'" in html or "e.key === 'D'" in html
+    assert "toggleTheme()" in html
