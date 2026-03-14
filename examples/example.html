@@ -1,0 +1,771 @@
+Success! Generated 'examples/example.html'
+ <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Project Aurora: 2026 Product Launch Strategy</title>
+    <meta name="description" content="**Date:** March 10, 2026 **Audience:** Engineering &amp; Product Leadership">
+    <meta property="og:title" content="Project Aurora: 2026 Product Launch Strategy">
+    <meta property="og:type" content="website">
+    <meta property="og:description" content="**Date:** March 10, 2026 **Audience:** Engineering &amp; Product Leadership">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='15' fill='%233498db'/><text x='50' y='68' font-size='60' font-family='Arial' fill='white' text-anchor='middle' font-weight='bold'>M</text></svg>">
+    <style>
+:root {
+    --bg-color: #f9f9f9;
+    --text-color: #333;
+    --sidebar-bg: #ffffff;
+    --h2-color: #333;
+    --font-family: "Ubuntu", sans-serif;
+
+    /* Static Variables */
+    --sidebar-border: #e0e0e0;
+    --sidebar-hover: #f0f0f0;
+    --sidebar-text: #333;
+    --slide-border: #ccc;
+    --h2-border: #333;
+    --code-bg: #f4f4f4;
+    --table-border: #ddd;
+    --table-header-bg: #f2f2f2;
+    --cover-title-color: #222;
+    --cover-text-color: #444;
+    --blockquote-accent: #3498db;
+}
+
+body.dark-mode {
+    --bg-color: #0d1117;
+    --text-color: #c9d1d9;
+    --sidebar-bg: #161b22;
+    --sidebar-border: #3e3e42;
+    --sidebar-hover: #2a2d2e;
+    --sidebar-text: #cccccc;
+    --slide-border: #444;
+    --h2-color: #ffffff;
+    --h2-border: #ffffff;
+    --code-bg: #1c2128;
+    --table-border: #555;
+    --table-header-bg: #333;
+    --cover-title-color: #ffffff;
+    --cover-text-color: #cccccc;
+    --blockquote-accent: #5dade2;
+}
+
+body {
+    margin: 0;
+    padding: 0;
+    font-family: var(--font-family);
+    display: flex;
+    height: 100vh;
+    overflow: hidden;
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    transition: background-color 0.3s, color 0.3s;
+}
+
+/* Sidebar Styles */
+#sidebar {
+    width: 280px;
+    background-color: var(--sidebar-bg);
+    border-right: 1px solid var(--sidebar-border);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    flex-shrink: 0;
+    transition: background-color 0.3s, border-color 0.3s;
+    box-shadow: 2px 0 8px rgba(0,0,0,0.06);
+}
+
+#sidebar ul { list-style: none; padding: 0; margin: 0; flex: 1; overflow-y: auto; }
+#sidebar li { border-bottom: 1px solid var(--sidebar-border); }
+#sidebar a {
+    display: block; padding: 15px 20px; text-decoration: none;
+    color: var(--sidebar-text); font-size: 0.95rem; transition: background 0.2s;
+}
+#sidebar a:hover { background-color: var(--sidebar-hover); color: var(--text-color); }
+#sidebar a.active {
+    border-left: 3px solid #3498db; background: var(--sidebar-hover);
+    font-weight: 600;
+}
+
+/* Main Content Styles */
+#main {
+    flex: 1;
+    overflow-y: auto;
+    padding: 40px 60px;
+    scroll-behavior: smooth;
+    scroll-snap-type: y mandatory;
+}
+
+.slide {
+    min-height: 100vh;
+    padding: 60px 0 40px 0;
+    border-bottom: 1px solid var(--slide-border);
+    box-sizing: border-box;
+    scroll-margin-top: 40px;
+    max-width: 960px;
+    margin: 0 auto;
+    scroll-snap-align: start;
+}
+.slide:last-child { border-bottom: none; }
+
+.slide h2 {
+    margin-top: 40px; padding-bottom: 10px;
+    border-bottom: 2px solid var(--h2-border);
+    color: var(--h2-color); font-size: clamp(1.4rem, 3vh, 2.2rem);
+    font-weight: 700;
+}
+.slide h3 {
+    margin-top: 35px; margin-bottom: 10px; font-size: clamp(1.15rem, 2.2vh, 1.6rem);
+    color: var(--h2-color); border-bottom: 1px solid var(--slide-border);
+    padding-bottom: 5px; letter-spacing: 0.5px; font-weight: 600;
+}
+.slide h4 {
+    margin-top: 20px; margin-bottom: 5px; font-size: clamp(1rem, 1.8vh, 1.3rem);
+    color: var(--text-color); font-weight: 500;
+}
+.slide blockquote {
+    border-left: 4px solid var(--blockquote-accent); margin: 1em 0;
+    padding: 0.5em 1.5em; background-color: var(--code-bg);
+    color: var(--text-color); font-style: italic;
+}
+
+/* Cover Slide */
+.cover {
+    height: 100vh; display: flex; flex-direction: column;
+    justify-content: center; align-items: center; text-align: center;
+}
+.cover h1 { font-size: clamp(1.8rem, 5vw, 3.5rem); margin-bottom: 0; color: var(--cover-title-color); }
+.cover hr {
+    width: 80px; height: 3px; background: #3498db;
+    border: none; margin: 20px auto 30px;
+}
+.cover p { line-height: 1.6; font-size: 1.1rem; color: var(--cover-text-color); }
+
+/* General Content */
+.slide p, .slide li, .slide td { line-height: 1.6; font-size: clamp(0.95rem, 2vh, 1.25rem); color: var(--text-color); }
+.slide p { margin-bottom: 1em; }
+.slide ul, .slide ol { padding-left: 40px; margin-bottom: 1em; }
+.slide ul { list-style-type: disc; }
+.slide ol { list-style-type: decimal; }
+.slide pre {
+    background: var(--code-bg); padding: 15px; border-radius: 5px;
+    overflow-x: auto; font-size: clamp(0.8rem, 1.5vh, 1rem);
+    margin: 1.2em 0; line-height: 1.5;
+    border: 1px solid var(--table-border);
+}
+.slide code { font-family: "Fira Code", "JetBrains Mono", "Cascadia Code", "Consolas", monospace; background: var(--code-bg); padding: 2px 4px; border-radius: 3px; }
+.slide pre code { background: none; padding: 0; }
+
+/* Tables */
+.slide table {
+    border-collapse: collapse; width: 100%; margin: 30px auto;
+    box-shadow: 0 2px 15px rgba(0,0,0,0.05);
+    border-radius: 8px; overflow: hidden;
+}
+.slide th, .slide td { border: 1px solid var(--table-border); padding: 8px; text-align: left; }
+.slide th { background-color: var(--table-header-bg); font-weight: bold; }
+
+/* Images */
+.slide img {
+    max-width: 100%; height: auto; display: block;
+    margin: 20px auto; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.slide img:hover {
+    transform: scale(1.02); box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+}
+.content { max-width: 900px; margin: 0 auto; }
+.slide a {
+    color: #3498db; text-decoration: none; border-bottom: 1px dotted #3498db; transition: color 0.2s;
+}
+.slide a:hover { color: #2980b9; border-bottom-style: solid; }
+
+/* Sidebar collapse toggle */
+#sidebar-toggle {
+    position: fixed; top: 12px; left: 280px; z-index: 1002;
+    padding: 6px 4px;
+    cursor: pointer; border: 1px solid var(--sidebar-border);
+    border-left: none; background: var(--sidebar-bg);
+    color: var(--sidebar-text); font-size: 0.85rem;
+    border-radius: 0 6px 6px 0;
+    box-shadow: 2px 0 4px rgba(0,0,0,0.06);
+    transition: left 0.3s ease, background 0.2s;
+}
+#sidebar-toggle:hover { background: var(--sidebar-hover); }
+#sidebar.collapsed { width: 0; overflow: hidden; padding: 0; border: none; }
+#sidebar.collapsed ~ #sidebar-toggle { left: 0; }
+
+/* Sidebar shortcuts guide */
+#sidebar-shortcuts {
+    flex-shrink: 0; padding: 15px 20px;
+    border-top: 1px solid var(--sidebar-border);
+    font-size: 0.75rem; color: var(--sidebar-text); opacity: 0.5;
+    line-height: 1.8;
+}
+#sidebar-shortcuts kbd {
+    display: inline-block; background: var(--sidebar-hover);
+    border: 1px solid var(--sidebar-border); border-radius: 3px;
+    padding: 0 4px; font-family: inherit; font-size: 0.7rem;
+}
+
+/* Slide indicator */
+#slide-indicator {
+    position: fixed; bottom: 20px; right: 70px; z-index: 1000;
+    font-size: 0.8rem; color: var(--text-color); opacity: 0.6;
+    background: var(--sidebar-bg); padding: 4px 10px;
+    border-radius: 12px; border: 1px solid var(--sidebar-border);
+    pointer-events: none;
+}
+
+/* Footnotes */
+.footnote {
+    font-size: clamp(0.75rem, 1.3vh, 0.9rem);
+    color: var(--text-color); opacity: 0.8;
+}
+.footnote hr {
+    border: none; border-top: 1px solid var(--slide-border);
+    margin: 2em 0 1em;
+}
+.footnote ol { padding-left: 20px; }
+
+/* Mobile & UI Elements */
+#theme-toggle {
+    position: fixed; top: 20px; right: 20px; z-index: 1000;
+    width: 40px; height: 40px; border-radius: 50%;
+    background-color: var(--sidebar-bg); border: 1px solid var(--sidebar-border);
+    color: var(--text-color); cursor: pointer; display: flex;
+    align-items: center; justify-content: center; font-size: 1.2rem;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2); transition: transform 0.2s, background-color 0.3s;
+}
+#theme-toggle:hover { transform: scale(1.1); background-color: var(--sidebar-hover); }
+
+#progress-bar {
+    height: 3px; background: #3498db; position: fixed;
+    top: 0; left: 0; z-index: 1100; width: 0;
+    transition: width 0.2s;
+}
+
+#menu-toggle {
+    display: none; position: fixed; top: 20px; right: 20px; z-index: 1001;
+    background-color: var(--sidebar-bg); border: 1px solid var(--sidebar-border);
+    color: var(--text-color); cursor: pointer; padding: 10px;
+    border-radius: 5px; font-size: 1.2rem; box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+}
+
+/* Fade-in animation */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+.slide .content.visible {
+    animation: fadeIn 0.4s ease forwards;
+}
+
+/* Print stylesheet */
+@media print {
+    #sidebar, #theme-toggle, #menu-toggle, #progress-bar,
+    #slide-indicator, #sidebar-toggle { display: none !important; }
+    body { display: block; height: auto; overflow: visible; }
+    #main {
+        overflow: visible; padding: 0;
+        scroll-snap-type: none;
+    }
+    .slide {
+        min-height: auto; page-break-after: always;
+        scroll-snap-align: none; border-bottom: none;
+        padding: 20px 0; max-width: 100%;
+    }
+    .slide:last-child { page-break-after: avoid; }
+    .cover { height: auto; page-break-after: always; }
+    * { color: #000 !important; background: #fff !important;
+         box-shadow: none !important; }
+}
+
+@media (max-width: 1024px) {
+    #sidebar { width: 220px; }
+    #sidebar-toggle { left: 220px; }
+    #sidebar.collapsed ~ #sidebar-toggle { left: 0; }
+    #main { padding: 30px 40px; }
+}
+
+@media (max-width: 768px) {
+    #menu-toggle { display: block; }
+    #sidebar-toggle { display: none; }
+    #sidebar-shortcuts { display: none; }
+    #slide-indicator { display: none; }
+    #sidebar {
+        position: fixed; left: -100%; top: 0; height: 100%; width: 80%;
+        max-width: 300px; z-index: 1000; transition: left 0.3s ease;
+        box-shadow: 2px 0 5px rgba(0,0,0,0.5);
+    }
+    #sidebar.active { left: 0; }
+    #main { padding: 20px; }
+    #theme-toggle { display: flex; top: auto; bottom: 20px; right: 20px; }
+    .cover h1 { font-size: clamp(1.5rem, 6vw, 2rem); }
+    .slide h2 { font-size: 1.5rem; }
+    .slide h3 { font-size: 1.2rem; }
+    .slide p, .slide li, .slide td { font-size: 1rem; line-height: 1.7; }
+    .slide pre { font-size: 0.9rem; }
+    .slide table {
+        display: block; overflow-x: auto; white-space: nowrap;
+        margin: 30px 0; width: 100%;
+    }
+}
+    </style>
+</head>
+<body class="dark-mode">
+    <!-- Progress Bar -->
+    <div id="progress-bar"></div>
+
+    <!-- Hamburger Button (Mobile Only) -->
+    <button id="menu-toggle" onclick="toggleMenu()" aria-label="Toggle Menu">
+        <svg id="hamburger-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+            <line x1="3" y1="6" x2="21" y2="6"/>
+            <line x1="3" y1="12" x2="21" y2="12"/>
+            <line x1="3" y1="18" x2="21" y2="18"/>
+        </svg>
+    </button>
+
+    <!-- Slide Indicator -->
+    <div id="slide-indicator"></div>
+
+    <!-- Theme Toggle -->
+    <button id="theme-toggle" onclick="toggleTheme()" title="Toggle Theme">
+        <svg id="theme-icon-sun" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="display:block;">
+            <circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+        </svg>
+        <svg id="theme-icon-moon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="display:none;">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+        </svg>
+    </button>
+
+    <div id="sidebar">
+        <ul>
+            <li><a href="#cover">Project Aurora: 2026 Product Launch Strategy</a></li>
+            
+            <li><a href="#slide-0">1. Executive Summary</a></li>
+            
+            <li><a href="#slide-1">2. Current State: Platform Metrics</a></li>
+            
+            <li><a href="#slide-2">3. Technical Architecture</a></li>
+            
+            <li><a href="#slide-3">4. The Three Pillars</a></li>
+            
+            <li><a href="#slide-4">4a. Core Platform Pillar</a></li>
+            
+            <li><a href="#slide-5">4b. Growth Engine Pillar</a></li>
+            
+            <li><a href="#slide-6">4c. Intelligence Layer Pillar</a></li>
+            
+            <li><a href="#slide-7">5. Roadmap: Phase 1 (Q1 2026)</a></li>
+            
+            <li><a href="#slide-8">6. Roadmap: Phase 2 (Q2-Q4 2026)</a></li>
+            
+            <li><a href="#slide-9">7. Risk Register</a></li>
+            
+            <li><a href="#slide-10">8. Team & Governance</a></li>
+            
+            <li><a href="#slide-11">9. Next Steps (By End of March)</a></li>
+            
+        </ul>
+        <div id="sidebar-shortcuts">
+            <kbd>&#8595;</kbd> <kbd>&#8594;</kbd> Next<br>
+            <kbd>&#8593;</kbd> <kbd>&#8592;</kbd> Prev<br>
+            <kbd>Home</kbd> / <kbd>End</kbd><br>
+            <kbd>S</kbd> Toggle Sidebar<br>
+            <kbd>D</kbd> Toggle Theme
+        </div>
+    </div>
+    <button id="sidebar-toggle" onclick="toggleSidebar()" title="Toggle Sidebar">&#171;</button>
+
+
+    <div id="main">
+        <div class="slide cover" id="cover">
+            <h1>Project Aurora: 2026 Product Launch Strategy</h1>
+            <hr>
+            <div><p><strong>Date:</strong> March 10, 2026<br>
+<strong>Audience:</strong> Engineering &amp; Product Leadership</p></div>
+        </div>
+
+        
+        <div class="slide" id="slide-0"><h2>1. Executive Summary</h2><div class="content"><p><strong>The Vision:</strong><br>
+We are transforming from a single-product company into a <strong>platform ecosystem</strong>, with Aurora serving as the foundation for all future verticals.</p>
+<p><strong>2026 Targets:</strong></p>
+<ul>
+<li><strong>Baseline Goal:</strong> 10,000 active users.</li>
+<li><strong>Stretch Goal:</strong> <strong>25,000 active users</strong>.</li>
+<li><strong>R&amp;D Investment:</strong> <strong>$2.4M</strong> across Platform, Mobile, and AI verticals.</li>
+</ul>
+<p><strong>The Challenge:</strong><br>
+To hit our stretch targets, we must ship faster and smarter.</p>
+<ul>
+<li><strong>Current Velocity:</strong> ~12 features/quarter.</li>
+<li><strong>Baseline Need:</strong> ~30 features/quarter (<strong>2.5x</strong> increase).</li>
+<li><strong>Stretch Need:</strong> ~45 features/quarter (<strong>3.7x</strong> increase).</li>
+</ul>
+<p><strong>Key Evolution:</strong><br>
+We have reorganized from feature teams into <strong>3 Platform Pillars</strong> (Core, Growth, Intelligence) with shared infrastructure.</p></div></div>
+        
+        <div class="slide" id="slide-1"><h2>2. Current State: Platform Metrics</h2><div class="content"><p><em>Context: The Foundation Phase (Q3 2025 - Q1 2026).</em></p>
+<p><strong>What We Built:</strong></p>
+<ul>
+<li>Unified API Gateway with rate limiting and auth</li>
+<li>Real-time event pipeline processing 50k events/sec</li>
+<li>Design system v2 with 40+ components</li>
+</ul>
+<p><strong>Performance Benchmarks:</strong></p>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Metric</th>
+<th style="text-align: left;">Q3 2025</th>
+<th style="text-align: left;">Q1 2026</th>
+<th style="text-align: left;">Trend</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><strong>API Latency (p99)</strong></td>
+<td style="text-align: left;">450ms</td>
+<td style="text-align: left;"><strong>180ms</strong></td>
+<td style="text-align: left;">Improved</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Uptime</strong></td>
+<td style="text-align: left;">99.2%</td>
+<td style="text-align: left;"><strong>99.95%</strong></td>
+<td style="text-align: left;">Improved</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Deploy Frequency</strong></td>
+<td style="text-align: left;">2/week</td>
+<td style="text-align: left;"><strong>12/week</strong></td>
+<td style="text-align: left;">Improved</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Error Rate</strong></td>
+<td style="text-align: left;">2.1%</td>
+<td style="text-align: left;">0.8%</td>
+<td style="text-align: left;">Improved</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Test Coverage</strong></td>
+<td style="text-align: left;">62%</td>
+<td style="text-align: left;"><strong>87%</strong></td>
+<td style="text-align: left;">Improved</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Key Insight:</strong><br>
+The move to event-driven architecture reduced API latency by <strong>60%</strong> while increasing throughput <strong>3x</strong>. This validates the platform-first approach over point optimizations.</p>
+<blockquote>
+<p>"The best time to build a platform was two years ago. The second best time is now."</p>
+</blockquote></div></div>
+        
+        <div class="slide" id="slide-2"><h2>3. Technical Architecture</h2><div class="content"><p><em>The North Star: From Monolith to Modular Platform.</em></p>
+<h3>Core Platform Layer</h3>
+<ul>
+<li><strong>API Gateway:</strong> Handles auth, rate limiting, and request routing</li>
+<li><strong>Event Bus:</strong> Kafka-based pipeline for async processing</li>
+<li><strong>Data Layer:</strong> PostgreSQL + Redis + S3 for tiered storage</li>
+</ul>
+<h3>Service Mesh</h3>
+<pre><code class="language-yaml">services:
+  - name: user-service
+    replicas: 3
+    health_check: /healthz
+  - name: billing-service
+    replicas: 2
+    health_check: /healthz
+  - name: notification-service
+    replicas: 2
+    health_check: /healthz
+</code></pre>
+<h3>Infrastructure as Code</h3>
+<ul>
+<li><strong>Terraform</strong> for cloud resource provisioning</li>
+<li><strong>Helm charts</strong> for Kubernetes deployments</li>
+<li><strong>GitHub Actions</strong> for CI/CD pipelines</li>
+</ul></div></div>
+        
+        <div class="slide" id="slide-3"><h2>4. The Three Pillars</h2><div class="content"><p><em>Our engineering org is structured into three pillars, each with clear ownership and KPIs.</em></p>
+<p><strong>Pillar Overview:</strong></p>
+<ul>
+<li><strong>Core Platform:</strong> The Foundation (reliability, scalability, DX).</li>
+<li><strong>Growth Engine:</strong> The Accelerator (onboarding, activation, retention).</li>
+<li><strong>Intelligence Layer:</strong> The Brain (ML models, recommendations, analytics).</li>
+</ul>
+<p><strong>Coordination:</strong></p>
+<ul>
+<li><strong>Weekly architecture sync</strong> across pillar leads.</li>
+<li><strong>Shared on-call rotation</strong> for platform-wide incidents.</li>
+</ul></div></div>
+        
+        <div class="slide" id="slide-4"><h2>4a. Core Platform Pillar</h2><div class="content"><ul>
+<li><strong>Team Size:</strong> 8 engineers</li>
+<li><strong>Focus:</strong> API reliability, database performance, and developer experience.</li>
+<li><strong>Key Projects:</strong><ul>
+<li><strong>GraphQL Federation:</strong> Unified API layer across all services.</li>
+<li><strong>Zero-downtime migrations:</strong> Blue-green deployment pipeline.</li>
+<li><strong>Observability stack:</strong> OpenTelemetry + Grafana + PagerDuty.</li>
+</ul>
+</li>
+<li><strong>Q1 Deliverables:</strong><ul>
+<li>API response time &lt; 200ms (p99)</li>
+<li>99.99% uptime SLA for tier-1 endpoints</li>
+<li>SDK for Python, TypeScript, and Go</li>
+</ul>
+</li>
+</ul></div></div>
+        
+        <div class="slide" id="slide-5"><h2>4b. Growth Engine Pillar</h2><div class="content"><ul>
+<li><strong>Team Size:</strong> 6 engineers</li>
+<li><strong>Focus:</strong> User acquisition, activation funnels, and self-serve experience.</li>
+<li><strong>Key Projects:</strong><ul>
+<li><strong>Interactive onboarding:</strong> Guided setup wizard with live sandbox.</li>
+<li><strong>Usage-based billing:</strong> Metered billing with real-time cost dashboard.</li>
+<li><strong>Referral system:</strong> Two-sided incentive program.</li>
+</ul>
+</li>
+<li><strong>Key Metrics:</strong><ul>
+<li>Activation rate: 35% -&gt; <strong>60%</strong> (target)</li>
+<li>Time-to-value: 48h -&gt; <strong>&lt; 4h</strong> (target)</li>
+<li>Self-serve conversion: 12% -&gt; <strong>25%</strong> (target)</li>
+</ul>
+</li>
+</ul></div></div>
+        
+        <div class="slide" id="slide-6"><h2>4c. Intelligence Layer Pillar</h2><div class="content"><ul>
+<li><strong>Team Size:</strong> 5 engineers + 2 ML specialists</li>
+<li><strong>Focus:</strong> Data pipelines, ML models, and smart features.</li>
+<li><strong>Key Projects:</strong><ul>
+<li><strong>Anomaly detection:</strong> Real-time alerting on usage patterns.</li>
+<li><strong>Smart recommendations:</strong> Content and feature suggestions based on behavior.</li>
+<li><strong>Natural language queries:</strong> AI-powered search across documentation and data.</li>
+</ul>
+</li>
+<li><strong>Tech Stack:</strong><ul>
+<li>Feature store: <strong>Feast</strong></li>
+<li>Model serving: <strong>Triton Inference Server</strong></li>
+<li>Orchestration: <strong>Airflow</strong></li>
+</ul>
+</li>
+</ul></div></div>
+        
+        <div class="slide" id="slide-7"><h2>5. Roadmap: Phase 1 (Q1 2026)</h2><div class="content"><p><em>Objective: Platform stability and developer experience.</em></p>
+<h3>Core Platform</h3>
+<ul>
+<li><strong>Jan:</strong> API Gateway v2 rollout with circuit breakers.</li>
+<li><strong>Feb:</strong> Database sharding for user and event tables.</li>
+<li><strong>Mar:</strong> Public SDK release (Python, TypeScript, Go).</li>
+</ul>
+<h3>Growth Engine</h3>
+<ul>
+<li><strong>Jan:</strong> New onboarding flow A/B test launch.</li>
+<li><strong>Feb:</strong> Usage-based billing beta for select customers.</li>
+<li><strong>Mar:</strong> Self-serve dashboard GA release.</li>
+</ul>
+<h3>Intelligence Layer</h3>
+<ul>
+<li><strong>Jan:</strong> Data pipeline migration to Kafka Streams.</li>
+<li><strong>Feb:</strong> Anomaly detection model v1 deployment.</li>
+<li><strong>Mar:</strong> Recommendation engine beta.</li>
+</ul></div></div>
+        
+        <div class="slide" id="slide-8"><h2>6. Roadmap: Phase 2 (Q2-Q4 2026)</h2><div class="content"><p><em>Objective: Scale and differentiation.</em></p>
+<h3>Q2: Launch &amp; Grow</h3>
+<ul>
+<li><strong>Public API launch</strong> with developer portal and documentation.</li>
+<li><strong>Marketplace beta:</strong> Third-party integrations and plugins.</li>
+<li><strong>Mobile SDK:</strong> iOS and Android native libraries.</li>
+</ul>
+<h3>Q3-Q4: Scale &amp; Optimize</h3>
+<ul>
+<li><strong>Multi-region deployment:</strong> EU and APAC presence.</li>
+<li><strong>Advanced analytics:</strong> Custom dashboards and data export.</li>
+<li><strong>Enterprise features:</strong> SSO, audit logs, compliance certifications.</li>
+</ul></div></div>
+        
+        <div class="slide" id="slide-9"><h2>7. Risk Register</h2><div class="content"><table>
+<thead>
+<tr>
+<th style="text-align: left;">Risk</th>
+<th style="text-align: left;">Likelihood</th>
+<th style="text-align: left;">Impact</th>
+<th style="text-align: left;">Mitigation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><strong>Kafka scaling bottleneck</strong></td>
+<td style="text-align: left;">Medium</td>
+<td style="text-align: left;">High</td>
+<td style="text-align: left;">Pre-provision capacity; fallback to SQS</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>ML model accuracy drift</strong></td>
+<td style="text-align: left;">Medium</td>
+<td style="text-align: left;">Medium</td>
+<td style="text-align: left;">Automated retraining pipeline</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Key person dependency</strong></td>
+<td style="text-align: left;">Low</td>
+<td style="text-align: left;">High</td>
+<td style="text-align: left;">Cross-training program; documentation</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Third-party API outage</strong></td>
+<td style="text-align: left;">Medium</td>
+<td style="text-align: left;">Medium</td>
+<td style="text-align: left;">Circuit breakers; local caching</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Security vulnerability</strong></td>
+<td style="text-align: left;">Low</td>
+<td style="text-align: left;">Critical</td>
+<td style="text-align: left;">Bug bounty; regular pentests</td>
+</tr>
+</tbody>
+</table></div></div>
+        
+        <div class="slide" id="slide-10"><h2>8. Team & Governance</h2><div class="content"><p><strong>Leadership:</strong></p>
+<ul>
+<li><strong>Engineering Lead:</strong> Coordinates across all three pillars.</li>
+<li><strong>Product Lead:</strong> Owns roadmap prioritization and stakeholder communication.</li>
+</ul>
+<p><strong>Rituals:</strong></p>
+<ul>
+<li><strong>Daily standups</strong> within each pillar (async on Fridays).</li>
+<li><strong>Weekly architecture review:</strong> Cross-pillar technical alignment.</li>
+<li><strong>Bi-weekly sprint demos:</strong> Show progress to stakeholders.</li>
+<li><strong>Monthly retrospectives:</strong> Process improvement and team health.</li>
+</ul>
+<p><strong>Quality Gates:</strong></p>
+<ol>
+<li>All PRs require 2 approvals + passing CI.</li>
+<li>Feature flags for all user-facing changes.</li>
+<li>Load testing before any infrastructure change.</li>
+<li>Security review for auth and data-handling changes.</li>
+</ol></div></div>
+        
+        <div class="slide" id="slide-11"><h2>9. Next Steps (By End of March)</h2><div class="content"><h3>Core Platform</h3>
+<ul>
+<li>Finalize API Gateway v2 rollout</li>
+<li>Complete database sharding migration</li>
+<li>Ship public SDK with documentation</li>
+</ul>
+<h3>Growth Engine</h3>
+<ul>
+<li>Analyze onboarding A/B test results</li>
+<li>Launch usage-based billing to beta cohort</li>
+<li>Deploy self-serve dashboard to production</li>
+</ul>
+<h3>Intelligence Layer</h3>
+<ul>
+<li>Complete Kafka Streams migration</li>
+<li>Deploy anomaly detection v1 to staging</li>
+<li>Begin recommendation engine data collection</li>
+</ul>
+<p><strong>Let's build something great.</strong></p></div></div>
+        
+
+    </div>
+
+
+
+    <script>
+        function toggleTheme() {
+            document.body.classList.toggle('dark-mode');
+            const isDark = document.body.classList.contains('dark-mode');
+            document.getElementById('theme-icon-sun').style.display = isDark ? 'block' : 'none';
+            document.getElementById('theme-icon-moon').style.display = isDark ? 'none' : 'block';
+        }
+        function toggleMenu() {
+            const sidebar = document.getElementById('sidebar');
+            sidebar.classList.toggle('active');
+        }
+
+        // Progress bar
+        const mainEl = document.getElementById('main');
+        const progressBar = document.getElementById('progress-bar');
+        mainEl.addEventListener('scroll', function() {
+            const scrollTop = mainEl.scrollTop;
+            const scrollHeight = mainEl.scrollHeight - mainEl.clientHeight;
+            const progress = scrollHeight > 0 ? (scrollTop / scrollHeight) * 100 : 0;
+            progressBar.style.width = progress + '%';
+        });
+
+        // Slide tracking state
+        const slides = document.querySelectorAll('.slide');
+        const slidesArray = Array.from(slides);
+        const sidebarLinks = document.querySelectorAll('#sidebar a');
+        const slideIndicator = document.getElementById('slide-indicator');
+        const totalSlides = slides.length;
+        let currentSlideIndex = 0;
+
+        function updateIndicator(index) {
+            currentSlideIndex = index;
+            slideIndicator.textContent = (index + 1) + ' / ' + totalSlides;
+        }
+        updateIndicator(0);
+
+        // Single IntersectionObserver for sidebar active link + slide indicator
+        const slideObserver = new IntersectionObserver(function(entries) {
+            entries.forEach(function(entry) {
+                if (entry.isIntersecting) {
+                    const id = entry.target.id;
+                    sidebarLinks.forEach(function(link) {
+                        link.classList.remove('active');
+                        if (link.getAttribute('href') === '#' + id) {
+                            link.classList.add('active');
+                        }
+                    });
+                    const idx = slidesArray.indexOf(entry.target);
+                    if (idx >= 0) updateIndicator(idx);
+                }
+            });
+        }, { root: mainEl, threshold: 0.3 });
+        slides.forEach(function(slide) { slideObserver.observe(slide); });
+
+        // Fade-in animation for slide content
+        const fadeObserver = new IntersectionObserver(function(entries) {
+            entries.forEach(function(entry) {
+                if (entry.isIntersecting) entry.target.classList.add('visible');
+            });
+        }, { root: mainEl, threshold: 0.1 });
+        document.querySelectorAll('.slide .content').forEach(function(el) { fadeObserver.observe(el); });
+
+        // Sidebar collapse (always open by default)
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const btn = document.getElementById('sidebar-toggle');
+            sidebar.classList.toggle('collapsed');
+            btn.innerHTML = sidebar.classList.contains('collapsed') ? '&#187;' : '&#171;';
+        }
+
+        // Keyboard navigation
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'ArrowDown' || e.key === 'ArrowRight' || e.key === 'PageDown') {
+                e.preventDefault();
+                slidesArray[Math.min(currentSlideIndex + 1, slidesArray.length - 1)].scrollIntoView({ behavior: 'smooth' });
+            } else if (e.key === 'ArrowUp' || e.key === 'ArrowLeft' || e.key === 'PageUp') {
+                e.preventDefault();
+                slidesArray[Math.max(currentSlideIndex - 1, 0)].scrollIntoView({ behavior: 'smooth' });
+            } else if (e.key === 'Home') {
+                e.preventDefault();
+                currentSlideIndex = 0;
+                slidesArray[0].scrollIntoView({ behavior: 'instant' });
+            } else if (e.key === 'End') {
+                e.preventDefault();
+                currentSlideIndex = slidesArray.length - 1;
+                slidesArray[slidesArray.length - 1].scrollIntoView({ behavior: 'instant' });
+            } else if (e.key === 's' || e.key === 'S') {
+                e.preventDefault();
+                toggleSidebar();
+            } else if (e.key === 'd' || e.key === 'D') {
+                e.preventDefault();
+                toggleTheme();
+            }
+        });
+    </script>
+
+</body>
+</html>
