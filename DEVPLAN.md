@@ -84,7 +84,7 @@ Aggiungere una scorciatoia da tastiera per nascondere/mostrare la sidebar.
 
 ---
 
-## Milestone 17: Flag per tema dark di default
+## Milestone 17: Flag per tema dark di default ✅
 
 Aggiungere un flag CLI per impostare il tema scuro come default alla generazione.
 

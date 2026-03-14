@@ -473,6 +473,7 @@ def main():
     parser = argparse.ArgumentParser(description="Convert a Markdown file to an HTML presentation.")
     parser.add_argument("filename", help="The input Markdown file")
     parser.add_argument("--lang", default="it", help="HTML lang attribute (default: it)")
+    parser.add_argument("--dark", action="store_true", help="Use dark theme as default")
     args = parser.parse_args()
 
     if not os.path.exists(args.filename):
@@ -504,6 +505,9 @@ def main():
     safe_title = html.escape(result['title'])
 
     # Wrap in full HTML shell (with inline JS for local testing)
+    body_class = ' class="dark-mode"' if args.dark else ''
+    sun_display = 'block' if args.dark else 'none'
+    moon_display = 'none' if args.dark else 'block'
     full_html = f"""<!DOCTYPE html>
 <html lang="{args.lang}">
 <head>
@@ -517,7 +521,7 @@ def main():
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='15' fill='%233498db'/><text x='50' y='68' font-size='60' font-family='Arial' fill='white' text-anchor='middle' font-weight='bold'>M</text></svg>">
     <style>{result['css']}</style>
 </head>
-<body>
+<body{body_class}>
     <!-- Progress Bar -->
     <div id="progress-bar"></div>
 
@@ -537,10 +541,10 @@ def main():
 
     <!-- Theme Toggle -->
     <button id="theme-toggle" onclick="toggleTheme()" title="Toggle Theme">
-        <svg id="theme-icon-sun" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="display:none;">
+        <svg id="theme-icon-sun" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="display:{sun_display};">
             <circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
         </svg>
-        <svg id="theme-icon-moon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+        <svg id="theme-icon-moon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="display:{moon_display};">
             <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
         </svg>
     </button>

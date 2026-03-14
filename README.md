@@ -52,6 +52,7 @@ Se hai installato lo script globalmente, puoi generare la presentazione HTML dir
 | Flag     | Default | Descrizione                        |
 |----------|---------|------------------------------------|
 | `--lang` | `it`    | Attributo `lang` dell'HTML generato |
+| `--dark` | off     | Usa il tema scuro come default     |
 
 ### Sviluppo (Locale)
 In alternativa, usa il target `run` di `make` specificando il file Markdown:

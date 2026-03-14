@@ -145,3 +145,33 @@ def test_sidebar_toggle_shortcut_in_js(tmp_path):
 def test_sidebar_shortcut_guide_shows_toggle(tmp_path):
     html = _cli_html(tmp_path)
     assert "Toggle Sidebar" in html
+
+
+# --- Milestone 17: --dark flag ---
+
+def _cli_html_dark(tmp_path, md_text="# Test\n\n---\n\n## Slide\nContent"):
+    md_file = tmp_path / "dark_test.md"
+    md_file.write_text(md_text, encoding="utf-8")
+    subprocess.run(
+        [sys.executable, "-c",
+         f"import sys; sys.argv = ['md2', '{md_file}', '--dark']; from md2 import main; main()"],
+        capture_output=True, text=True, cwd=str(tmp_path)
+    )
+    return (tmp_path / "dark_test.html").read_text(encoding="utf-8")
+
+
+def test_dark_flag_body_has_class(tmp_path):
+    html = _cli_html_dark(tmp_path)
+    assert '<body class="dark-mode">' in html
+
+
+def test_dark_flag_toggle_still_works(tmp_path):
+    html = _cli_html_dark(tmp_path)
+    assert "toggleTheme" in html
+    assert "classList.toggle" in html
+
+
+def test_no_dark_flag_light_default(tmp_path):
+    html = _cli_html(tmp_path)
+    assert '<body>' in html
+    assert '<body class="dark-mode">' not in html
