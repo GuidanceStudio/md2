@@ -165,3 +165,255 @@ Il README attuale ha sezioni "Markdown supportato" e "Struttura del file Markdow
 - Non tradurre in inglese — il README è in italiano
 - Non aggiungere sezioni non necessarie
 - Non duplicare informazioni già presenti altrove nel README
+
+---
+
+## Milestone 21: Ristrutturazione a pacchetto + refactoring Jinja2
+
+Oggi `md2.py` è un singolo file che costruisce HTML/CSS/JS con f-string Python. Questo milestone converte il progetto in un pacchetto Python con template Jinja2, separando dati da presentazione.
+
+### 21.1 Conversione a pacchetto
+
+Il modulo singolo `md2.py` diventa il pacchetto `md2/`:
+
+```
+md2/
+├── __init__.py              ← re-export pubblici (main, render_presentation, etc.)
+├── core.py                  ← logica: parsing markdown, sanitize, prepare context
+├── cli.py                   ← main() e argparse
+├── templates/
+│   └── default/
+│       ├── base.html        ← template principale con {% block %}
+│       ├── style.css        ← CSS completo (era generate_css())
+│       └── components/
+│           ├── head.html    ← <head> con meta, OG, favicon, <style>
+│           ├── sidebar.html ← sidebar con lista slide e shortcuts
+│           ├── cover.html   ← slide copertina
+│           ├── slide.html   ← singola slide (usata nel {% for %})
+│           ├── controls.html← progress bar, indicator, theme toggle, hamburger
+│           └── scripts.html ← tutto il JavaScript
+```
+
+Aggiornare `pyproject.toml`:
+- `packages = ["md2"]` al posto di `include = ["md2.py"]`
+- Aggiungere `jinja2>=3.0` alle dipendenze
+- Includere `md2/templates/**` come package data
+- L'entry point `md2 = "md2.cli:main"` (o `md2:main` se re-exportato da `__init__`)
+
+Rimuovere il vecchio `md2.py` dalla root.
+
+### 21.2 Refactoring della logica core
+
+**`core.py`** contiene:
+- `sanitize_html()`, `autolink()`, `process_markdown()` — invariati
+- `prepare_context(markdown_text, theme_config=None)` — nuova funzione che sostituisce `render_presentation()`. Ritorna un dict di contesto per Jinja2:
+
+```python
+{
+    "title": "Titolo Presentazione",       # testo plain, escaped
+    "og_description": "...",                # meta description
+    "lang": "it",                           # da CLI
+    "dark_mode": False,                     # da CLI --dark
+    "cover": {
+        "title": "Titolo Presentazione",
+        "content": "<p>html copertina...</p>"
+    },
+    "slides": [
+        {"id": "slide-0", "title": "Intro", "content": "<p>html...</p>"},
+        {"id": "slide-1", "title": "Dati",  "content": "<p>html...</p>"},
+    ],
+}
+```
+
+**`cli.py`** contiene:
+- `main()` — argparse, carica template, chiama `prepare_context()`, rende con Jinja2, scrive file
+
+### 21.3 Template Jinja2 default
+
+Estrarre le f-string attuali nei file template. Il template default replica **esattamente** l'output attuale — nessun cambiamento visivo.
+
+**`base.html`** — struttura principale:
+```jinja2
+<!DOCTYPE html>
+<html lang="{{ lang }}">
+<head>
+    {% block head %}{% include "components/head.html" %}{% endblock %}
+</head>
+<body{% if dark_mode %} class="dark-mode"{% endif %}>
+    {% block progress %}<div id="progress-bar"></div>{% endblock %}
+    {% block menu_toggle %}{% include "components/controls.html" %}{% endblock %}
+    {% block sidebar %}{% include "components/sidebar.html" %}{% endblock %}
+    {% block main %}
+    <div id="main">
+        {% block cover %}{% include "components/cover.html" %}{% endblock %}
+        {% block slides %}
+        {% for slide in slides %}
+            {% include "components/slide.html" %}
+        {% endfor %}
+        {% endblock %}
+    </div>
+    {% endblock %}
+    {% block indicator %}<div id="slide-indicator"></div>{% endblock %}
+    {% block theme_toggle %}...{% endblock %}
+    {% block scripts %}<script>{% include "components/scripts.html" %}</script>{% endblock %}
+</body>
+</html>
+```
+
+**`style.css`** — il CSS di `generate_css()` convertito. Le variabili del tema (`--bg-color`, etc.) restano CSS custom properties. Il file CSS viene incluso via `{% include "style.css" %}` dentro un `<style>`.
+
+**`components/sidebar.html`**:
+```jinja2
+<div id="sidebar">
+    <ul>
+        <li><a href="#cover">{{ cover.title }}</a></li>
+        {% for slide in slides %}
+        <li><a href="#{{ slide.id }}">{{ slide.title }}</a></li>
+        {% endfor %}
+    </ul>
+    <div id="sidebar-shortcuts">
+        <kbd>&#8595;</kbd> <kbd>&#8594;</kbd> Next<br>
+        <kbd>&#8593;</kbd> <kbd>&#8592;</kbd> Prev<br>
+        <kbd>Home</kbd> / <kbd>End</kbd><br>
+        <kbd>S</kbd> Toggle Sidebar<br>
+        <kbd>D</kbd> Toggle Theme
+    </div>
+</div>
+<button id="sidebar-toggle" onclick="toggleSidebar()" title="Toggle Sidebar">&#171;</button>
+```
+
+**`components/scripts.html`** — il blocco `<script>` attuale, convertito da f-string a JS puro (non serve Jinja2 nel JS, non ci sono variabili dinamiche).
+
+### 21.4 Rendering con Jinja2
+
+In `cli.py`, il rendering:
+
+```python
+from jinja2 import Environment, FileSystemLoader, PackageLoader
+
+def load_template(template_name=None):
+    """Carica il template. Se None, usa il default bundled."""
+    if template_name:
+        # carica da ~/.md2/templates/{template_name}/
+        template_dir = Path.home() / ".md2" / "templates" / template_name
+        env = Environment(loader=FileSystemLoader(str(template_dir)))
+    else:
+        # carica il default bundled nel pacchetto
+        env = Environment(loader=PackageLoader("md2", "templates/default"))
+    return env.get_template("base.html")
+```
+
+### 21.5 Aggiornamento build e test
+
+- Aggiornare `pyproject.toml` con nuova struttura pacchetto
+- Aggiornare tutti gli import nei test (`from md2 import ...` deve continuare a funzionare via `__init__.py`)
+- Verificare che `uv run md2 examples/example.md` produca output **identico** (o equivalente) a prima
+- Tutti i 154 test esistenti devono passare
+- Aggiungere test per `prepare_context()` che verifichi la struttura del dict ritornato
+
+### Cosa NON fare
+- Non cambiare l'output visivo — il template default deve produrre HTML identico
+- Non aggiungere feature nuove — solo refactoring
+- Non rimuovere `generate_css()` se serve ancora per i test, ma internamente il template usa `style.css`
+
+---
+
+## Milestone 22: Sistema template utente — `--template` e `--init-templates`
+
+### 22.1 Auto-setup `~/.md2/templates/default/`
+
+Al **primo run** di `md2` (o quando `~/.md2/templates/default/` non esiste), copiare automaticamente il template bundled in `~/.md2/templates/default/`. Messaggio informativo:
+
+```
+Initialized default template in ~/.md2/templates/default/
+```
+
+Da quel momento, `md2` usa il template da `~/.md2/` — l'utente può modificarlo liberamente.
+
+### 22.2 Flag `--template`
+
+```
+md2 file.md --template corporate
+```
+
+Carica il template da `~/.md2/templates/corporate/base.html`. Se la directory non esiste, errore chiaro:
+
+```
+Error: Template 'corporate' not found in ~/.md2/templates/corporate/
+```
+
+### 22.3 Comando `--init-templates`
+
+```
+md2 --init-templates
+```
+
+(Re)copia il template default bundled in `~/.md2/templates/default/`, sovrascrivendo. Utile dopo un aggiornamento di md2 per ottenere il template aggiornato. Avviso se la directory esiste già:
+
+```
+Default template (re)initialized in ~/.md2/templates/default/
+```
+
+### 22.4 Logica di risoluzione template
+
+Ordine di caricamento:
+
+1. Se `--template nome` → `~/.md2/templates/{nome}/`
+2. Se esiste `~/.md2/templates/default/` → usalo
+3. Altrimenti → template bundled nel pacchetto + auto-copia in `~/.md2/templates/default/`
+
+Questo garantisce:
+- Funziona sempre, anche senza setup
+- L'utente ha sempre i file su disco per personalizzare
+- `--template` è esplicito per template alternativi
+
+### 22.5 Ereditarietà cross-template
+
+Un template custom può estendere il default:
+
+```jinja2
+{% extends "default/base.html" %}
+
+{% block css %}
+<style>/* CSS completamente custom */</style>
+{% endblock %}
+```
+
+Per abilitare questo, il `FileSystemLoader` deve puntare a `~/.md2/templates/` (parent), non alla directory del singolo template. Il `base.html` viene cercato nella sottocartella del template selezionato.
+
+Configurazione Jinja2:
+```python
+loader = FileSystemLoader(str(Path.home() / ".md2" / "templates"))
+env = Environment(loader=loader)
+template = env.get_template(f"{template_name}/base.html")
+```
+
+### 22.6 Test
+
+- Test `--init-templates` crea i file in una directory temporanea (mockare `Path.home()`)
+- Test `--template nome` carica il template corretto
+- Test template inesistente → errore chiaro
+- Test ereditarietà: template custom che fa `{% extends "default/base.html" %}` e sovrascrive un blocco
+- Test auto-setup al primo run
+- Test che il default da `~/.md2/` produce output identico al bundled
+
+---
+
+## Milestone 23: README — documentazione sistema template
+
+### Cosa aggiungere
+
+1. **Sezione "Template"** nel README con:
+   - Spiegazione del concetto (un template = una directory con file Jinja2)
+   - Struttura della directory `~/.md2/templates/`
+   - Come usare `--template` e `--init-templates`
+
+2. **Come creare un template custom**:
+   - Copiare il default: `cp -r ~/.md2/templates/default ~/.md2/templates/mio-template`
+   - Oppure creare da zero con `{% extends "default/base.html" %}`
+   - Elenco dei `{% block %}` disponibili da sovrascrivere
+   - Elenco delle variabili di contesto disponibili (`title`, `slides`, `cover`, etc.)
+
+3. **Esempio pratico**: template "minimal" che rimuove sidebar e controlli
+
+4. **Aggiornare la sezione "Opzioni"** con il flag `--template` e `--init-templates`
