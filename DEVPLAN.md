@@ -129,7 +129,7 @@ Quando le slide sono molte, l'intero sidebar scrolla via portando con sé le ist
 
 ---
 
-## Milestone 20: README — documentazione completa formato Markdown e funzionalità supportate
+## Milestone 20: README — documentazione completa formato Markdown e funzionalità supportate ✅
 
 Il README attuale ha sezioni "Markdown supportato" e "Struttura del file Markdown" ma sono incomplete e frammentate. Servono informazioni chiare e complete su come scrivere il file `.md` per ottenere una buona presentazione, e su cosa esattamente il tool supporta.
 

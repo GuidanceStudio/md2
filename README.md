@@ -72,6 +72,7 @@ L'HTML generato supporta le seguenti scorciatoie:
 | `Home`                     | Torna alla cover           |
 | `End`                      | Vai all'ultima slide       |
 | `S`                        | Toggle sidebar             |
+| `D`                        | Toggle dark/light mode     |
 
 ## Test
 
@@ -122,52 +123,142 @@ Per rimuovere l'ambiente virtuale e i file generati:
 
     make clean
 
-## Funzionalità
+## Struttura del file Markdown
 
-### Markdown supportato
+md2 converte un singolo file `.md` in una presentazione HTML. Il file è diviso in sezioni separate da `---`.
 
-Oltre alla sintassi base (heading, bold, italic, link, immagini, liste), md2 supporta:
+### Copertina
 
-- **Fenced code blocks** — ` ```python ... ``` ` con attributo di linguaggio
-- **Tabelle** — sintassi standard con `|` e `---`
-- **Footnotes** — `[^1]` nel testo e `[^1]: nota` in fondo alla slide
-- **Autolink** — URL nudi (`https://...`) vengono automaticamente convertiti in link cliccabili
+La prima sezione (prima del primo `---`) è la **copertina**. Il primo `# H1` diventa il titolo della presentazione e della pagina HTML. Il testo sotto appare centrato nella slide di copertina. Se non c'è un `# H1`, il titolo di default è "Presentation".
 
-### Interfaccia generata
+### Separatore slide
 
-- **Sidebar navigabile** con link a ogni slide e indicatore slide attiva
-- **Sidebar collassabile** (bottone `«` in alto nella sidebar, bottone `»` fisso per riaprirla)
-- **Guida shortcut** nella sidebar — mostra le scorciatoie da tastiera in fondo al menu
+Usa `---` su una riga separata, con **righe vuote sopra e sotto**, per separare le slide:
+
+```
+Contenuto slide 1
+
+---
+
+Contenuto slide 2
+```
+
+### Titolo slide
+
+Il primo `## H2` di ogni sezione diventa il titolo della slide e la voce corrispondente nella sidebar di navigazione. Se una sezione non ha `## H2`, viene chiamata "Slide N".
+
+### Sotto-sezioni
+
+All'interno di ogni slide puoi usare `### H3` e `#### H4` per creare sotto-sezioni.
+
+### Esempio completo
+
+```markdown
+# Titolo della Presentazione
+
+Questo testo appare sulla copertina.
+**Data:** 14 marzo 2026
+
+---
+
+## Introduzione
+
+Contenuto della prima slide con **bold** e *italic*.
+
+- Punto uno
+- Punto due
+  - Sotto-punto
+
+> Una citazione importante.
+
+---
+
+## Dati e Codice
+
+### Tabella risultati
+
+| Metrica | Valore | Trend |
+|---------|--------|-------|
+| CPL     | €29    | +15%  |
+| CAC     | €514   | -2%   |
+
+### Esempio di codice
+
+```python
+def hello():
+    print("Hello, world!")
+```
+
+Un link automatico: https://example.com
+
+Una nota a piè di pagina[^1].
+
+[^1]: Questa è la nota.
+```
+
+## Markdown supportato
+
+### Testo
+
+| Sintassi                | Risultato          |
+|-------------------------|--------------------|
+| `**bold**`              | **bold**           |
+| `*italic*`              | *italic*           |
+| `` `inline code` ``    | `inline code`      |
+| `[testo](url)`          | link cliccabile    |
+| `![alt](url)`           | immagine centrata  |
+
+### Heading
+
+| Livello    | Uso                                              |
+|------------|--------------------------------------------------|
+| `# H1`    | Titolo della presentazione (solo nella copertina) |
+| `## H2`   | Titolo della slide (uno per slide)                |
+| `### H3`  | Sotto-sezione dentro una slide                    |
+| `#### H4` | Sotto-sezione di livello inferiore                |
+
+### Liste
+
+Liste puntate (`-` o `*`) e numerate (`1.`), anche annidate con indentazione.
+
+### Tabelle
+
+Sintassi standard con `|` e `---`. L'allineamento colonne è supportato (`:---`, `:---:`, `---:`).
+
+### Blocchi di codice
+
+Fenced code blocks con ` ```linguaggio ``` `. Il linguaggio viene usato come attributo class per eventuale syntax highlighting.
+
+### Blockquote
+
+`>` produce un blocco citazione con bordino laterale blu.
+
+### Footnotes
+
+`[^1]` nel testo e `[^1]: testo della nota` in fondo alla slide. Le note vengono renderizzate in fondo alla slide con stile ridotto.
+
+### Autolink
+
+URL nudi (`https://...`) vengono automaticamente convertiti in link cliccabili con `target="_blank"`.
+
+### Newline
+
+Un singolo invio nel markdown produce un `<br>` nell'HTML (estensione `nl2br`). Non serve il doppio spazio a fine riga.
+
+### HTML inline
+
+Tag HTML sicuri vengono preservati: `<iframe>` per embed video/mappe, `<img>` con attributi `src`, `alt`, `width`, `height`. Tag pericolosi (`<script>`, `onclick`, `javascript:`) vengono rimossi automaticamente.
+
+## Interfaccia generata
+
+- **Sidebar navigabile** — link a ogni slide, indicatore slide attiva, lista scrollabile con shortcut fissi in fondo
+- **Sidebar collassabile** — bottone `«`/`»` o tasto `S`
+- **Dark mode** — toggle sole/luna in alto a destra o tasto `D`
 - **Indicatore slide** — mostra "2 / 5" in basso a destra
 - **Barra di progresso** — linea blu in cima alla pagina
-- **Dark mode** — toggle sole/luna in alto a destra
 - **Scroll-snap** — ogni slide occupa l'intero viewport
 - **Fade-in** — il contenuto delle slide appare con animazione
 - **Print** — `Ctrl+P` produce un layout pulito senza UI, una slide per pagina
 - **Meta tag Open Graph** — titolo e descrizione per la condivisione
 - **Favicon inline** — nessun 404 nel browser
 - **Responsive** — breakpoint a 1024px (tablet) e 768px (mobile) con menu hamburger
-
-## Struttura del file Markdown
-
-Lo script interpreta il file Markdown secondo le seguenti regole:
-
-1.  **Copertina:** La prima sezione del file (prima del primo separatore) rappresenta la copertina. Il primo titolo `# H1` trovato qui viene utilizzato come titolo principale della presentazione.
-2.  **Separatori:** Usa `---` (su una riga separata) per dividere le diverse slide.
-3.  **Titoli delle Slide:** In ogni sezione successiva, il primo titolo `## H2` viene utilizzato come intestazione della slide e come voce nel menu di navigazione laterale.
-
-### Esempio
-
-    # Titolo della Presentazione
-
-    Questo testo appare sulla copertina.
-
-    ---
-
-    ## Introduzione
-    Contenuto della prima slide.
-
-    ---
-
-    ## Sviluppo
-    Contenuto della seconda slide.
