@@ -70,6 +70,7 @@ L'HTML generato supporta le seguenti scorciatoie:
 | `↑` / `←` / `PgUp`        | Slide precedente           |
 | `Home`                     | Torna alla cover           |
 | `End`                      | Vai all'ultima slide       |
+| `S`                        | Toggle sidebar             |
 
 ## Test
 

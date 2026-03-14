@@ -132,3 +132,16 @@ def test_output_has_og_description(tmp_path):
     html = _cli_html(tmp_path, md)
     assert 'og:description' in html
     assert 'My cover description' in html
+
+
+# --- Milestone 16: Sidebar toggle shortcut ---
+
+def test_sidebar_toggle_shortcut_in_js(tmp_path):
+    html = _cli_html(tmp_path)
+    assert "e.key === 's'" in html or "e.key === 'S'" in html
+    assert "toggleSidebar()" in html
+
+
+def test_sidebar_shortcut_guide_shows_toggle(tmp_path):
+    html = _cli_html(tmp_path)
+    assert "Toggle Sidebar" in html

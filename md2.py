@@ -436,7 +436,8 @@ def render_presentation(markdown_text, theme_config=None):
         <div id="sidebar-shortcuts">
             <kbd>&#8595;</kbd> <kbd>&#8594;</kbd> Next<br>
             <kbd>&#8593;</kbd> <kbd>&#8592;</kbd> Prev<br>
-            <kbd>Home</kbd> / <kbd>End</kbd>
+            <kbd>Home</kbd> / <kbd>End</kbd><br>
+            <kbd>S</kbd> Toggle Sidebar
         </div>
     </div>
     <button id="sidebar-toggle" onclick="toggleSidebar()" title="Toggle Sidebar">&#171;</button>
@@ -628,6 +629,9 @@ def main():
             }} else if (e.key === 'End') {{
                 e.preventDefault();
                 slidesArray[slidesArray.length - 1].scrollIntoView({{ behavior: 'smooth' }});
+            }} else if (e.key === 's' || e.key === 'S') {{
+                e.preventDefault();
+                toggleSidebar();
             }}
         }});
     </script>

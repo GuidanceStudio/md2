@@ -70,3 +70,26 @@ Test end-to-end che leggono/scrivono file su disco.
 - **test_large_file**: file con molte slide (50+) viene processato senza errori
 - **test_special_characters_in_title**: caratteri speciali (`<`, `>`, `&`) nel titolo vengono gestiti
 - **test_output_overwrites_existing**: se il file `.html` esiste già, viene sovrascritto
+
+---
+
+## Milestone 16: Shortcut tastiera per toggle sidebar ✅
+
+Aggiungere una scorciatoia da tastiera per nascondere/mostrare la sidebar.
+
+- **Shortcut keyboard**: associare un tasto (es. `S` o `Ctrl+B`) per toggle della sidebar
+- **Listener globale**: il listener deve funzionare indipendentemente dal focus corrente
+- **Integrazione con guida shortcut**: aggiornare la guida delle scorciatoie nella sidebar per includere il nuovo shortcut
+- **Stato persistente**: ricordare lo stato della sidebar (aperta/chiusa) durante la navigazione
+
+---
+
+## Milestone 17: Flag per tema dark di default
+
+Aggiungere un flag CLI per impostare il tema scuro come default alla generazione.
+
+- **Flag CLI `--dark`**: aggiungere un argomento opzionale `--dark` al parser CLI
+- **Body class**: quando il flag è attivo, il `<body>` viene generato con `class="dark-mode"` già applicata
+- **Compatibilità toggle**: il bottone di toggle tema deve continuare a funzionare normalmente anche quando il dark è il default
+- **Test unitario**: verificare che con `--dark` l'HTML generato contenga `class="dark-mode"` sul body
+- **Test senza flag**: verificare che senza `--dark` il comportamento resti invariato (tema light di default)

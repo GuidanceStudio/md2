@@ -312,3 +312,12 @@ def test_sidebar_shortcuts_content():
     assert "Prev" in html
     assert "Home" in html
     assert "End" in html
+
+
+# --- Milestone 16: Sidebar toggle shortcut ---
+
+def test_sidebar_shortcuts_shows_toggle_key():
+    result = _render()
+    html = result["body_html"]
+    assert "Toggle Sidebar" in html
+    assert "<kbd>S</kbd>" in html
