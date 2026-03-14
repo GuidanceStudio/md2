@@ -77,10 +77,12 @@
                 slidesArray[Math.max(currentSlideIndex - 1, 0)].scrollIntoView({ behavior: 'smooth' });
             } else if (e.key === 'Home') {
                 e.preventDefault();
-                slidesArray[0].scrollIntoView({ behavior: 'smooth' });
+                currentSlideIndex = 0;
+                slidesArray[0].scrollIntoView({ behavior: 'instant' });
             } else if (e.key === 'End') {
                 e.preventDefault();
-                slidesArray[slidesArray.length - 1].scrollIntoView({ behavior: 'smooth' });
+                currentSlideIndex = slidesArray.length - 1;
+                slidesArray[slidesArray.length - 1].scrollIntoView({ behavior: 'instant' });
             } else if (e.key === 's' || e.key === 'S') {
                 e.preventDefault();
                 toggleSidebar();
