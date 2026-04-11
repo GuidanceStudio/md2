@@ -39,6 +39,10 @@ _CHART_DIRECTIVE_RE = re.compile(
     re.MULTILINE | re.DOTALL
 )
 _VALID_CHART_TYPES = {'bar', 'column', 'line', 'area', 'pie'}
+_COLUMNS_DIRECTIVE_RE = re.compile(
+    r'^:::columns\n(.*?)\n:::',
+    re.MULTILINE | re.DOTALL
+)
 _CHART_DIV_RE = re.compile(
     r'<div class="md2-chart" data-chart-type="(\w+)" '
     r'data-chart-options="([^"]*)"'
@@ -142,6 +146,36 @@ def preprocess_chart_directives(markdown_text):
 
     result = _CHART_DIRECTIVE_RE.sub(_replace_chart, markdown_text)
     return result, has_charts
+
+
+def preprocess_columns(markdown_text):
+    """Find :::columns ... ::: blocks and convert to two-column HTML layout.
+
+    Each column is separated by --- inside the block. Content in each
+    column is parsed as markdown independently. If no --- separator is
+    found, the block is left unchanged (no column effect).
+    """
+    def _replace_columns(match):
+        content = match.group(1)
+
+        # Split on --- separator (same pattern as slide separator)
+        parts = re.split(r'\n+[ \t]*---[ \t]*\n+', content)
+
+        if len(parts) < 2:
+            # No separator found — no column effect, return content as-is
+            return content
+
+        # Take first two parts only (max 2 columns)
+        cols_html = []
+        for part in parts[:2]:
+            col_md = part.strip()
+            # Parse each column's markdown independently
+            col_html = markdown.markdown(col_md, extensions=MD_EXTENSIONS)
+            cols_html.append(f'<div class="md2-col">{col_html}</div>')
+
+        return f'<div class="md2-columns">{"".join(cols_html)}</div>'
+
+    return _COLUMNS_DIRECTIVE_RE.sub(_replace_columns, markdown_text)
 
 
 def transform_charts(html_content):
@@ -282,6 +316,7 @@ def process_markdown(text):
     Returns (html_string, has_charts) tuple.
     """
     text, has_charts = preprocess_chart_directives(text)
+    text = preprocess_columns(text)
     raw_html = markdown.markdown(text, extensions=MD_EXTENSIONS)
     sanitized = sanitize_html(raw_html)
     result = autolink(sanitized)

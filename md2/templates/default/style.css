@@ -188,6 +188,12 @@ body {
 }
 body.dark-mode .md2-chart .charts-css { color: var(--text-color); }
 
+/* Columns layout */
+.md2-columns {
+    display: flex; gap: 30px; align-items: flex-start; margin: 20px 0;
+}
+.md2-col { flex: 1; min-width: 0; }
+
 /* Images */
 .slide img {
     max-width: 100%; height: auto; display: block;
@@ -333,4 +339,5 @@ body.dark-mode .md2-chart .charts-css { color: var(--text-color); }
         display: block; overflow-x: auto; white-space: nowrap;
         margin: 30px 0; width: 100%;
     }
+    .md2-columns { flex-direction: column; }
 }

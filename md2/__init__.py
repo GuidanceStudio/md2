@@ -5,6 +5,7 @@ from .core import (
     autolink,
     process_markdown,
     preprocess_chart_directives,
+    preprocess_columns,
     transform_charts,
     prepare_context,
     parse_frontmatter,

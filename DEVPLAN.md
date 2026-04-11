@@ -880,7 +880,7 @@ In `style.css`, specializzare le regole per tipo:
 
 ---
 
-## M29: `:::columns` — layout a colonne nelle slide
+## M29: `:::columns` — layout a colonne nelle slide ✅
 
 Le slide attuali sono single-column. Per presentazioni efficaci serve poter affiancare contenuti (testo + chart, due liste, immagine + descrizione).
 
