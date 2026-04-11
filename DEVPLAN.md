@@ -829,3 +829,254 @@ body.dark-mode .md2-chart .charts-css {
 - [x] Aggiornare `examples/example.md` con almeno un chart (bar o column) per dimostrare la feature
 - [x] Aggiungere `examples/charts.md` — showcase dedicato con tutti i tipi di chart e opzioni
 - [x] Rigenerare `examples/example.html`
+
+---
+
+## M28: Chart sizing — altezze e dimensioni sensate per tipo
+
+Il chart rendering attuale non ha vincoli di dimensione: i grafici si espandono al 100% dello spazio disponibile. Un pie chart occupa l'intero viewport ed è inutilizzabile. Serve un sistema di sizing di default per tipo, con possibilità di override.
+
+### 28.1 Problema
+
+- **Pie/donut**: senza vincoli diventano enormi, illeggibili
+- **Column/line/area**: occupano tutta la larghezza ma non hanno altezza definita, il risultato dipende dal contenuto
+- **Bar**: l'altezza dipende dal numero di righe, serve un minimo sensato per riga
+- **Tutti**: su schermi diversi il risultato è imprevedibile
+
+### 28.2 Sizing di default per tipo
+
+Regole CSS nel blocco `.md2-chart` in `style.css`:
+
+| Tipo | Altezza | Larghezza | Note |
+|------|---------|-----------|------|
+| `bar` | auto (~40px/riga) | 100% | Cresce naturalmente con i dati |
+| `column` | 250px | 100% | Altezza fissa, barre si adattano |
+| `line` | 250px | 100% | Altezza fissa per leggibilità |
+| `area` | 250px | 100% | Come line |
+| `pie` | 200px | 200px, centrato | Quadrato, proporzionato |
+
+Il wrapper `.md2-chart` imposta `max-width: 100%` e `margin: 30px auto` per centrare i chart.
+
+### 28.3 Implementazione CSS
+
+In `style.css`, specializzare le regole per tipo:
+
+```css
+.md2-chart .charts-css.bar { --labels-size: 80px; }
+.md2-chart .charts-css.column { height: 250px; }
+.md2-chart .charts-css.line { height: 250px; }
+.md2-chart .charts-css.area { height: 250px; }
+.md2-chart .charts-css.pie {
+    height: 200px; width: 200px; margin: 0 auto;
+}
+```
+
+### 28.4 Test
+
+- [ ] `test_chart_bar_no_fixed_height` — bar chart non ha altezza fissa nel CSS
+- [ ] `test_chart_column_has_height` — column chart ha height nel wrapper
+- [ ] `test_chart_pie_has_constrained_size` — pie chart ha height e width limitati
+- [ ] `test_chart_sizing_visual` — e2e: generare una presentazione con tutti i tipi di chart e verificare che l'HTML contenga le classi di sizing corrette
+
+---
+
+## M29: `:::columns` — layout a colonne nelle slide
+
+Le slide attuali sono single-column. Per presentazioni efficaci serve poter affiancare contenuti (testo + chart, due liste, immagine + descrizione).
+
+### 29.1 Sintassi
+
+```markdown
+:::columns
+Contenuto della colonna sinistra.
+
+- Lista
+- Di punti
+
+---
+
+:::chart bar --labels
+| A | B |
+|---|---|
+| x | 50 |
+:::
+
+:::
+```
+
+- `:::columns` apre il container
+- `---` separa le colonne (esattamente come il separatore slide, ma dentro `:::columns` ha significato diverso)
+- `:::` chiude il container
+- **Massimo 2 colonne** — nelle presentazioni, 3+ colonne sono quasi sempre illeggibili
+- Se non c'è `---` → errore/fallback: tratta come singola colonna (nessun effetto)
+
+### 29.2 Annidamento con `:::chart`
+
+`:::chart` dentro `:::columns` funziona. Il preprocessore deve gestire l'annidamento:
+- Prima processare i `:::chart` (più interni)
+- Poi processare i `:::columns` (più esterni)
+
+Oppure: usare un singolo pass che riconosce entrambi. Dato che `:::chart` è terminato da `:::` e `:::columns` anche, servono regole di disambiguazione:
+- `:::chart` si chiude col primo `:::` che incontra
+- `:::columns` si chiude col primo `:::` **che non fa parte di un `:::chart`** al suo interno
+
+Approccio pratico: **processare `:::chart` prima di `:::columns`**. Dopo il preprocessamento dei chart, i blocchi `:::chart...:::` sono già stati sostituiti con `<div class="md2-chart">...</div>`. Quindi `:::columns` vede solo i marker HTML e non si confonde.
+
+### 29.3 Implementazione
+
+**`core.py`** — nuova funzione `preprocess_columns(markdown_text)`:
+
+1. Trova i blocchi `:::columns ... :::`
+2. Splitta il contenuto sul `---` separator
+3. Wrappa ogni parte in `<div class="md2-col">`
+4. Wrappa tutto in `<div class="md2-columns">`
+5. Il markdown dentro ogni colonna viene processato normalmente
+
+**Pipeline**: `preprocess_chart_directives()` → `preprocess_columns()` → `markdown.markdown()` → `sanitize_html()` → `transform_charts()`
+
+Nota: come per i chart, il markdown dentro le colonne deve essere processato **indipendentemente** per evitare che il container HTML interferisca con il parsing markdown. Ogni colonna viene parsata separatamente con `markdown.markdown()`.
+
+**`style.css`**:
+
+```css
+.md2-columns {
+    display: flex;
+    gap: 30px;
+    align-items: flex-start;
+    margin: 20px 0;
+}
+.md2-col {
+    flex: 1;
+    min-width: 0;
+}
+
+@media (max-width: 768px) {
+    .md2-columns { flex-direction: column; }
+}
+
+@media print {
+    .md2-columns { display: flex; gap: 20px; }
+}
+```
+
+**Sanitizzazione**: aggiungere `md2-columns` e `md2-col` come classi consentite (già coperte dal `*: ['class']`).
+
+### 29.4 Test
+
+- [ ] `test_columns_directive_parsed` — `:::columns ... ::: ` viene riconosciuto
+- [ ] `test_columns_two_columns` — il `---` separator produce due `.md2-col`
+- [ ] `test_columns_no_separator_fallback` — senza `---`, nessun effetto colonne
+- [ ] `test_columns_with_chart_inside` — `:::chart` dentro `:::columns` funziona
+- [ ] `test_columns_markdown_preserved` — il markdown dentro le colonne viene parsato (bold, liste, ecc.)
+- [ ] `test_columns_responsive` — CSS contiene la media query mobile
+- [ ] `test_columns_in_slide_e2e` — e2e: colonne appaiono nell'HTML generato
+- [ ] `test_multiple_columns_blocks` — più `:::columns` nella stessa presentazione
+
+---
+
+## M30: Print-optimized CSS — stampa di chart, colonne e palette
+
+Il CSS stampa attuale usa `* { color: #000 !important; background: #fff !important; }` che distrugge i colori dei chart. Serve un'ottimizzazione specifica per la stampa.
+
+### 30.1 Problema attuale
+
+- `* { background: #fff !important; }` → le barre dei chart diventano invisibili (bianche su bianco)
+- `* { color: #000 !important; }` → le etichette perdono il colore semantico
+- I chart senza colori sono inutilizzabili in stampa
+- I pie chart senza riempimento colorato sono un cerchio vuoto
+- Le colonne (`:::columns`) devono restare affiancate anche in stampa
+
+### 30.2 Strategia
+
+Invece del reset globale `* { color: #000; background: #fff }`, usare un approccio selettivo:
+
+1. **Reset background/color** solo sugli elementi di layout (body, sidebar, slide, ecc.)
+2. **Preservare** background e color sui chart (`.md2-chart`)
+3. **Forzare** i colori della palette light in stampa (non quelli dark, anche se l'utente era in dark mode)
+4. **Aggiungere** `-webkit-print-color-adjust: exact` e `print-color-adjust: exact` sui chart
+
+### 30.3 Implementazione CSS
+
+Sostituzione del blocco `@media print` in `style.css`:
+
+```css
+@media print {
+    /* Layout: rimuovi UI */
+    #sidebar, #theme-toggle, #menu-toggle, #progress-bar,
+    #slide-indicator, #sidebar-toggle { display: none !important; }
+    body { display: block; height: auto; overflow: visible; }
+    #main {
+        overflow: visible; padding: 0;
+        scroll-snap-type: none;
+    }
+    .slide {
+        min-height: auto; page-break-after: always;
+        scroll-snap-align: none; border-bottom: none;
+        padding: 20px 0; max-width: 100%;
+    }
+    .slide:last-child { page-break-after: avoid; }
+    .cover { height: auto; page-break-after: always; }
+
+    /* Reset colori solo su elementi di layout, NON sui chart */
+    body, #main, .slide, .cover, .slide p, .slide li,
+    .slide h2, .slide h3, .slide h4, .slide blockquote,
+    .slide pre, .slide code, .slide a {
+        color: #000 !important;
+        background: #fff !important;
+        box-shadow: none !important;
+    }
+    .slide th, .slide td {
+        color: #000 !important;
+        border-color: #999 !important;
+    }
+    .slide th { background-color: #f0f0f0 !important; }
+
+    /* Chart: preserva colori */
+    .md2-chart, .md2-chart * {
+        print-color-adjust: exact !important;
+        -webkit-print-color-adjust: exact !important;
+    }
+
+    /* Chart: usa colori light anche se era dark mode */
+    .md2-chart .charts-css {
+        color: #000;
+    }
+
+    /* Colonne: mantieni layout affiancato */
+    .md2-columns { display: flex; gap: 20px; }
+
+    /* Evita page break dentro un chart o un columns */
+    .md2-chart, .md2-columns {
+        break-inside: avoid;
+        page-break-inside: avoid;
+    }
+}
+```
+
+### 30.4 Palette in stampa
+
+In stampa la palette light viene sempre usata (anche se il documento è in dark mode). Questo avviene naturalmente perché la regola `body.dark-mode` non si applica — il reset CSS rimuove la classe. Ma dobbiamo verificare che le variabili `--md2-color-N` del `:root` (light) siano effettivamente usate dai chart in stampa.
+
+### 30.5 Test
+
+- [ ] `test_print_css_no_global_reset` — il CSS di stampa non usa `* { color: #000 }`
+- [ ] `test_print_css_chart_colors_preserved` — il blocco print contiene `print-color-adjust: exact`
+- [ ] `test_print_css_chart_break_avoid` — i chart hanno `break-inside: avoid`
+- [ ] `test_print_css_columns_preserved` — le colonne restano flex in stampa
+- [ ] `test_print_css_layout_elements_reset` — body, slide, ecc. hanno reset colori
+- [ ] `test_print_visual_e2e` — e2e: l'HTML generato con chart contiene le regole di stampa corrette
+
+---
+
+## M31: Documentazione e example — columns, sizing, stampa
+
+### 31.1 README
+
+- [ ] Aggiungere sezione "Layout a colonne" con sintassi `:::columns`, esempio con chart
+- [ ] Aggiornare sezione "Interfaccia generata" con nota su stampa chart-friendly
+- [ ] Aggiornare sezione "Grafici" con nota su sizing automatico per tipo
+
+### 31.2 Example
+
+- [ ] Aggiornare `examples/example.md` con almeno un uso di `:::columns` (testo + chart affiancati)
+- [ ] Rigenerare `examples/example.html`
