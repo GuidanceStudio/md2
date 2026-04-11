@@ -22,9 +22,13 @@ We are transforming from a single-product company into a **platform ecosystem**,
 **The Challenge:**
 To hit our stretch targets, we must ship faster and smarter.
 
-*   **Current Velocity:** ~12 features/quarter.
-*   **Baseline Need:** ~30 features/quarter (**2.5x** increase).
-*   **Stretch Need:** ~45 features/quarter (**3.7x** increase).
+:::chart pie --labels --title "R&D Budget Allocation"
+| Vertical | Budget |
+|----------|--------|
+| Platform | 48     |
+| Mobile   | 28     |
+| AI       | 24     |
+:::
 
 **Key Evolution:**
 We have reorganized from feature teams into **3 Platform Pillars** (Core, Growth, Intelligence) with shared infrastructure.
@@ -164,10 +168,16 @@ services:
     *   **Anomaly detection:** Real-time alerting on usage patterns.
     *   **Smart recommendations:** Content and feature suggestions based on behavior.
     *   **Natural language queries:** AI-powered search across documentation and data.
-*   **Tech Stack:**
-    *   Feature store: **Feast**
-    *   Model serving: **Triton Inference Server**
-    *   Orchestration: **Airflow**
+:::chart area --labels --title "Event Pipeline Throughput (K events/sec)"
+| Hour  | Throughput |
+|-------|------------|
+| 00:00 | 12         |
+| 04:00 | 8          |
+| 08:00 | 35         |
+| 12:00 | 50         |
+| 16:00 | 48         |
+| 20:00 | 30         |
+:::
 
 ---
 
@@ -198,6 +208,15 @@ services:
 ## 6. Roadmap: Phase 2 (Q2-Q4 2026)
 
 *Objective: Scale and differentiation.*
+
+:::chart line --labels --show-data --title "Projected User Growth"
+| Quarter | Active Users |
+|---------|--------------|
+| Q1      | 3200         |
+| Q2      | 8500         |
+| Q3      | 15000        |
+| Q4      | 25000        |
+:::
 
 ### Q2: Launch & Grow
 

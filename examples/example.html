@@ -455,11 +455,28 @@ We are transforming from a single-product company into a <strong>platform ecosys
 </ul>
 <p><strong>The Challenge:</strong><br>
 To hit our stretch targets, we must ship faster and smarter.</p>
-<ul>
-<li><strong>Current Velocity:</strong> ~12 features/quarter.</li>
-<li><strong>Baseline Need:</strong> ~30 features/quarter (<strong>2.5x</strong> increase).</li>
-<li><strong>Stretch Need:</strong> ~45 features/quarter (<strong>3.7x</strong> increase).</li>
-</ul>
+<div class="md2-chart"><table class="charts-css pie show-labels">
+<caption>R&amp;D Budget Allocation</caption>
+<thead><tr>
+<th scope="col">Vertical</th>
+<th scope="col">Budget</th>
+</tr></thead>
+<tbody>
+<tr>
+<th scope="row">Platform</th>
+<td style="--size: 1"><span class="data">48</span></td>
+</tr>
+<tr>
+<th scope="row">Mobile</th>
+<td style="--size: 0.583333"><span class="data">28</span></td>
+</tr>
+<tr>
+<th scope="row">AI</th>
+<td style="--size: 0.5"><span class="data">24</span></td>
+</tr>
+</tbody>
+</table></div>
+
 <p><strong>Key Evolution:</strong><br>
 We have reorganized from feature teams into <strong>3 Platform Pillars</strong> (Core, Growth, Intelligence) with shared infrastructure.</p></div></div>
         
@@ -668,13 +685,40 @@ The move to event-driven architecture reduced API latency by <strong>60%</strong
 <li><strong>Natural language queries:</strong> AI-powered search across documentation and data.</li>
 </ul>
 </li>
-<li><strong>Tech Stack:</strong><ul>
-<li>Feature store: <strong>Feast</strong></li>
-<li>Model serving: <strong>Triton Inference Server</strong></li>
-<li>Orchestration: <strong>Airflow</strong></li>
 </ul>
-</li>
-</ul></div></div>
+<div class="md2-chart"><table class="charts-css area show-labels">
+<caption>Event Pipeline Throughput (K events/sec)</caption>
+<thead><tr>
+<th scope="col">Hour</th>
+<th scope="col">Throughput</th>
+</tr></thead>
+<tbody>
+<tr>
+<th scope="row">00:00</th>
+<td style="--size: 0.24"><span class="data">12</span></td>
+</tr>
+<tr>
+<th scope="row">04:00</th>
+<td style="--size: 0.16"><span class="data">8</span></td>
+</tr>
+<tr>
+<th scope="row">08:00</th>
+<td style="--size: 0.7"><span class="data">35</span></td>
+</tr>
+<tr>
+<th scope="row">12:00</th>
+<td style="--size: 1"><span class="data">50</span></td>
+</tr>
+<tr>
+<th scope="row">16:00</th>
+<td style="--size: 0.96"><span class="data">48</span></td>
+</tr>
+<tr>
+<th scope="row">20:00</th>
+<td style="--size: 0.6"><span class="data">30</span></td>
+</tr>
+</tbody>
+</table></div></div></div>
         
         <div class="slide" id="slide-7"><h2>5. Roadmap: Phase 1 (Q1 2026)</h2><div class="content"><p><em>Objective: Platform stability and developer experience.</em></p>
 <h3>Core Platform</h3>
@@ -697,6 +741,32 @@ The move to event-driven architecture reduced API latency by <strong>60%</strong
 </ul></div></div>
         
         <div class="slide" id="slide-8"><h2>6. Roadmap: Phase 2 (Q2-Q4 2026)</h2><div class="content"><p><em>Objective: Scale and differentiation.</em></p>
+<div class="md2-chart"><table class="charts-css line show-labels show-data-on-hover">
+<caption>Projected User Growth</caption>
+<thead><tr>
+<th scope="col">Quarter</th>
+<th scope="col">Active Users</th>
+</tr></thead>
+<tbody>
+<tr>
+<th scope="row">Q1</th>
+<td style="--size: 0.128"><span class="data">3200</span></td>
+</tr>
+<tr>
+<th scope="row">Q2</th>
+<td style="--size: 0.34"><span class="data">8500</span></td>
+</tr>
+<tr>
+<th scope="row">Q3</th>
+<td style="--size: 0.6"><span class="data">15000</span></td>
+</tr>
+<tr>
+<th scope="row">Q4</th>
+<td style="--size: 1"><span class="data">25000</span></td>
+</tr>
+</tbody>
+</table></div>
+
 <h3>Q2: Launch &amp; Grow</h3>
 <ul>
 <li><strong>Public API launch</strong> with developer portal and documentation.</li>

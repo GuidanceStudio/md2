@@ -309,10 +309,42 @@ Sintassi standard con `|` e `---`. L'allineamento colonne è supportato (`:---`,
 
 ### Grafici (Charts)
 
-Usa la direttiva `:::chart` per trasformare una tabella in un grafico visuale:
+Usa la direttiva `:::chart` per trasformare una tabella markdown in un grafico visuale. La sintassi è:
 
 ```
-:::chart bar --labels
+:::chart TIPO [--opzioni...]
+| Intestazione | Colonna Dati |
+|--------------|--------------|
+| Etichetta    | Valore       |
+:::
+```
+
+La prima colonna è sempre l'etichetta (asse delle categorie). Le colonne successive sono i dati. Se ci sono più colonne dati, il grafico diventa automaticamente multi-dataset.
+
+#### Tipi di grafico
+
+| Tipo     | Descrizione                                          |
+|----------|------------------------------------------------------|
+| `bar`    | Barre orizzontali — ideale per confronti             |
+| `column` | Barre verticali — ideale per serie temporali         |
+| `line`   | Grafico a linea — trend e andamenti                  |
+| `area`   | Grafico ad area — come line ma con riempimento       |
+| `pie`    | Grafico a torta — proporzioni (solo singola serie)   |
+
+#### Opzioni
+
+| Opzione       | Effetto                                               |
+|---------------|-------------------------------------------------------|
+| `--labels`    | Mostra le etichette (prima colonna) sugli assi        |
+| `--legend`    | Mostra legenda sotto il grafico (per multi-dataset)   |
+| `--stacked`   | Barre/colonne impilate anziché affiancate             |
+| `--show-data` | Mostra i valori numerici al passaggio del mouse       |
+| `--title "…"` | Aggiunge un titolo/caption sopra il grafico           |
+
+#### Esempio: singola serie
+
+```
+:::chart bar --labels --title "Vendite per prodotto"
 | Prodotto | Vendite |
 |----------|---------|
 | Widget A | 50      |
@@ -321,19 +353,24 @@ Usa la direttiva `:::chart` per trasformare una tabella in un grafico visuale:
 :::
 ```
 
-Tipi supportati: `bar`, `column`, `line`, `area`, `pie`.
+#### Esempio: multi-dataset con legenda
 
-Opzioni disponibili:
+```
+:::chart column --labels --legend
+| Trimestre | Entrate | Uscite |
+|-----------|---------|--------|
+| Q1        | 100     | 80     |
+| Q2        | 150     | 90     |
+| Q3        | 130     | 110    |
+:::
+```
 
-| Opzione       | Effetto                               |
-|---------------|---------------------------------------|
-| `--labels`    | Mostra etichette sugli assi           |
-| `--legend`    | Mostra legenda (per multi-dataset)    |
-| `--stacked`   | Barre/colonne impilate                |
-| `--show-data` | Mostra valori al passaggio del mouse  |
-| `--title "…"` | Titolo del grafico                    |
+#### Note
 
-I grafici usano automaticamente i colori della palette del documento. Charts.css viene incluso nell'HTML solo quando il documento contiene almeno un grafico.
+- I valori nelle colonne dati devono essere **numerici**. Valori non numerici vengono trattati come 0.
+- I grafici usano automaticamente i colori della **palette** del documento (vedi sezione Palette colori).
+- **Charts.css** viene incluso nell'HTML solo quando il documento contiene almeno un grafico — le presentazioni senza grafici non hanno overhead aggiuntivo.
+- Basato su [Charts.css](https://chartscss.org/), una libreria CSS pura senza JavaScript.
 
 ### Blocchi di codice
 
