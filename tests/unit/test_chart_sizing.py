@@ -31,14 +31,13 @@ def _get_style_css():
 # --- CSS rules exist for each chart type ---
 
 def test_pie_has_constrained_size():
-    """Pie charts have both height and width constraints in CSS."""
+    """Pie charts have responsive size constraints in CSS."""
     css = _get_style_css()
     assert ".charts-css.pie" in css
-    # Should have height and width (or max-width)
     pie_section = css[css.index(".charts-css.pie"):]
     pie_block = pie_section[:pie_section.index("}") + 1]
-    assert "height" in pie_block
-    assert "width" in pie_block or "max-width" in pie_block
+    assert "max-width" in pie_block
+    assert "aspect-ratio" in pie_block
 
 
 def test_column_has_height():

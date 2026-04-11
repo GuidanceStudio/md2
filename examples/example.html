@@ -177,7 +177,9 @@ body {
 .md2-chart .charts-css.column { --labels-size: 80px; height: 250px; }
 .md2-chart .charts-css.line { height: 250px; }
 .md2-chart .charts-css.area { height: 250px; }
-.md2-chart .charts-css.pie { height: 200px; width: 200px; margin: 0 auto; }
+.md2-chart .charts-css.pie {
+    max-width: 280px; margin: 0 auto; aspect-ratio: 1;
+}
 .md2-chart .charts-css tbody tr:nth-child(8n+1) td { --color: var(--md2-color-1); }
 .md2-chart .charts-css tbody tr:nth-child(8n+2) td { --color: var(--md2-color-2); }
 .md2-chart .charts-css tbody tr:nth-child(8n+3) td { --color: var(--md2-color-3); }
@@ -507,15 +509,15 @@ We have reorganized from feature teams into <strong>3 Platform Pillars</strong> 
 <tbody>
 <tr>
 <th scope="row">Platform</th>
-<td style="--size: 1"><span class="data">48</span></td>
+<td style="--start: 0; --end: 0.48"><span class="data">48</span></td>
 </tr>
 <tr>
 <th scope="row">Mobile</th>
-<td style="--size: 0.583333"><span class="data">28</span></td>
+<td style="--start: 0.48; --end: 0.76"><span class="data">28</span></td>
 </tr>
 <tr>
 <th scope="row">AI</th>
-<td style="--size: 0.5"><span class="data">24</span></td>
+<td style="--start: 0.76; --end: 1"><span class="data">24</span></td>
 </tr>
 </tbody>
 </table></div>

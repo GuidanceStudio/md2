@@ -165,7 +165,9 @@ body {
 .md2-chart .charts-css.column { --labels-size: 80px; height: 250px; }
 .md2-chart .charts-css.line { height: 250px; }
 .md2-chart .charts-css.area { height: 250px; }
-.md2-chart .charts-css.pie { height: 200px; width: 200px; margin: 0 auto; }
+.md2-chart .charts-css.pie {
+    max-width: 280px; margin: 0 auto; aspect-ratio: 1;
+}
 .md2-chart .charts-css tbody tr:nth-child(8n+1) td { --color: var(--md2-color-1); }
 .md2-chart .charts-css tbody tr:nth-child(8n+2) td { --color: var(--md2-color-2); }
 .md2-chart .charts-css tbody tr:nth-child(8n+3) td { --color: var(--md2-color-3); }

@@ -262,18 +262,29 @@ def transform_charts(html_content):
             parts.append(f'<th scope="col">{h}</th>')
         parts.append('</tr></thead>')
 
-        # Tbody
+        # Tbody — pie uses --start/--end (cumulative), others use --size
+        is_pie = chart_type == "pie"
         parts.append('<tbody>')
         val_idx = 0
+        cumulative = 0.0
+        total = sum(all_values) if is_pie and sum(all_values) > 0 else 1
         for label, values in data_rows:
             parts.append('<tr>')
             parts.append(f'<th scope="row">{label}</th>')
             for v in values:
-                norm = all_values[val_idx] / max_val
-                # Format: avoid trailing zeros, but keep precision
-                size_str = f"{norm:g}" if norm != int(norm) else str(int(norm))
                 data_span = f'<span class="data">{v.strip()}</span>'
-                parts.append(f'<td style="--size: {size_str}">{data_span}</td>')
+                if is_pie:
+                    start = cumulative
+                    proportion = all_values[val_idx] / total
+                    cumulative += proportion
+                    end = cumulative
+                    s_str = f"{start:g}"
+                    e_str = f"{end:g}"
+                    parts.append(f'<td style="--start: {s_str}; --end: {e_str}">{data_span}</td>')
+                else:
+                    norm = all_values[val_idx] / max_val
+                    size_str = f"{norm:g}" if norm != int(norm) else str(int(norm))
+                    parts.append(f'<td style="--size: {size_str}">{data_span}</td>')
                 val_idx += 1
             parts.append('</tr>')
         parts.append('</tbody>')

@@ -1080,3 +1080,36 @@ In stampa la palette light viene sempre usata (anche se il documento è in dark 
 
 - [x] Aggiornare `examples/example.md` con almeno un uso di `:::columns` (testo + chart affiancati)
 - [x] Rigenerare `examples/example.html`
+
+---
+
+## M32: Bugfix — colori pie chart e sizing responsivo ✅
+
+### 32.1 Bug: pie chart senza colori
+
+**Sintomo**: il pie chart appare come cerchio grigio senza colori per le fette.
+
+**Causa**: le regole CSS per i colori palette usano `tr:nth-child(N) td` che funziona per bar/column (una `<td>` per riga = una barra). Ma nel pie chart, Charts.css tratta ogni `<td>` come una fetta — il colore va applicato diversamente. La struttura HTML generata da `transform_charts` ha una riga per fetta (corretto), ma il selettore potrebbe non applicarsi al pie perché Charts.css per i pie usa un meccanismo di rendering diverso (conic-gradient sulle `<td>`).
+
+**Investigazione necessaria**:
+- Verificare come Charts.css applica i colori nel pie: usa `--color` su `<td>`, su `<tr>`, o con `--color-N` sulle classi?
+- Verificare che il nostro HTML generato per il pie abbia la struttura corretta per Charts.css
+- Verificare che `--color` venga effettivamente settata e non sovrascritta
+
+**Fix**: adattare le regole CSS e/o la generazione HTML per il pie.
+
+### 32.2 Bug: pie sizing 200x200px troppo piccolo e non responsivo
+
+**Sintomo**: su schermi grandi il pie chart a 200x200px è minuscolo e sproporzionato.
+
+**Fix**: usare dimensionamento relativo al container, non fisso:
+- Dentro `:::columns` (flex child): il pie si adatta alla colonna
+- Standalone: il pie occupa una dimensione ragionevole (es. `min(300px, 100%)`)
+- Usare `aspect-ratio: 1` per mantenere il quadrato senza fissare pixel
+
+### 32.3 Test
+
+- [x] `test_pie_chart_has_colors` — il pie chart renderizzato ha `--color` applicato alle fette
+- [x] `test_pie_responsive_sizing` — il CSS del pie usa unità relative o aspect-ratio, non px fissi
+- [x] `test_pie_in_columns_renders` — pie dentro :::columns ha dimensioni ragionevoli
+- [x] `test_all_chart_types_have_colors` — ogni tipo di chart ha colori dalla palette
