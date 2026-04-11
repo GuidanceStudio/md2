@@ -1237,3 +1237,26 @@ Tutte le modifiche sono solo CSS — nessun cambiamento alla logica Python.
 - [x] Commit & push
 
 **Done when:** I chart hanno una cornice visiva coerente con le tabelle, i numeri hanno spazio e sono leggibili su qualsiasi colore di barra.
+
+---
+
+## M38: Chart CSS refinement — padding barre, caption, padding wrapper, legenda ✅
+
+**Why:** I numeri dentro le barre sono incollati al bordo destro. Il wrapper ha troppo padding-top. La legenda ha un bordo/box indesiderato da Charts.css. I chart con `<caption>` non hanno uno stile coerente con gli header delle tabelle.
+
+**Approach:** Modifiche CSS in `style.css`:
+1. **Padding dentro le barre**: `padding-right` sulle `<td>` dei chart per distanziare i numeri dal bordo
+2. **Caption come header tabella**: stilizzare `<caption>` con sfondo grigio chiaro, font bold, padding — stessa estetica dell'header delle tabelle normali
+3. **Padding wrapper asimmetrico**: ridurre `padding-top` e tenere più padding sui lati/basso
+4. **Legenda senza bordo**: rimuovere border/outline dalla `<ul>` legenda che Charts.css aggiunge di default
+
+**Tasks:**
+- [x] Aggiungere padding-right alle td dei chart
+- [x] Stilizzare caption come header tabella
+- [x] Rendere padding wrapper asimmetrico (meno top)
+- [x] Rimuovere bordo dalla legenda
+- [x] Test: unit — CSS contiene le nuove regole
+- [x] Rigenerare example e verificare con Playwright
+- [x] Commit & push
+
+**Done when:** I numeri dentro le barre hanno respiro, la caption ha stile header, il wrapper non ha spazio vuoto eccessivo in alto, la legenda è pulita senza bordi.

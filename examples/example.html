@@ -166,13 +166,19 @@ body {
 
 /* Charts — override table styles inside chart wrappers */
 .md2-chart {
-    margin: 30px auto; max-width: 100%; padding: 20px;
+    margin: 30px auto; max-width: 100%; padding: 8px 20px 20px;
     box-shadow: 0 2px 15px rgba(0,0,0,0.05);
     border-radius: 8px; overflow: hidden;
+}
+.md2-chart caption {
+    font-weight: bold; padding: 8px 12px; text-align: left;
+    background-color: var(--table-header-bg); border-radius: 6px 6px 0 0;
+    margin-bottom: 8px; font-size: 0.95rem;
 }
 .md2-chart .data {
     color: #fff; font-weight: 600; font-size: 0.85rem;
     text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+    padding-right: 6px;
 }
 .md2-chart table.charts-css {
     box-shadow: none; border-radius: 0; border-collapse: separate;
@@ -208,7 +214,8 @@ body {
 .md2-chart .charts-css.multiple tbody td:nth-child(9) { --color: var(--md2-color-8); }
 .md2-chart ul.legend {
     display: flex; gap: 15px; justify-content: center;
-    margin-top: 10px; font-size: 0.85rem; list-style: none; padding: 0;
+    margin-top: 10px; font-size: 0.85rem; list-style: none;
+    padding: 8px 0 0; border: none;
 }
 body.dark-mode .md2-chart .charts-css { color: var(--text-color); }
 
