@@ -417,3 +417,415 @@ template = env.get_template(f"{template_name}/base.html")
 3. **Esempio pratico**: template "minimal" che rimuove sidebar e controlli
 
 4. **Aggiornare la sezione "Opzioni"** con il flag `--template` e `--init-templates`
+
+---
+
+## M24: Frontmatter — parsing metadata del documento ✅
+
+md2 non ha ancora supporto per il frontmatter YAML/TOML. Serve come prerequisito per il sistema palette e chart: è il punto dove l'utente dichiara `palette:` e `colors:` a livello di documento.
+
+### 24.1 Formato supportato
+
+Blocco TOML delimitato da `+++` all'inizio del file markdown:
+
+```markdown
++++
+title = "Report Q1 2026"
+palette = "warm"
++++
+
+# Report Q1 2026
+
+Contenuti della presentazione...
+```
+
+Scelta TOML perché:
+- `pyproject.toml` già nel progetto — coerenza
+- `tomllib` nella stdlib da Python 3.11, zero dipendenze
+- Per Python 3.9-3.10: aggiungere `tomli` come dipendenza (stessa API)
+
+### 24.2 Campi supportati (fase 1)
+
+| Campo | Tipo | Default | Descrizione |
+|-------|------|---------|-------------|
+| `title` | string | da `# H1` | Titolo della presentazione (override) |
+| `palette` | string | `"default"` | Nome palette colori (file `.toml`) |
+| `colors` | array di stringhe | — | Override inline dei colori della palette |
+| `lang` | string | `"it"` | Lingua del documento |
+| `dark` | bool | `false` | Dark mode di default |
+
+### 24.3 Implementazione
+
+**`core.py`** — nuova funzione `parse_frontmatter(markdown_text)`:
+
+```python
+def parse_frontmatter(markdown_text):
+    """Extract TOML frontmatter and return (metadata_dict, remaining_markdown)."""
+```
+
+- Cerca `+++` come prima riga non-vuota del file
+- Parsa il blocco tra i due `+++` come TOML
+- Ritorna `(metadata, body)` — metadata è un dict, body è il markdown senza frontmatter
+- Se non c'è frontmatter, ritorna `({}, markdown_text)` — backward-compatible
+
+**`cli.py`** — `render_html()` chiama `parse_frontmatter()` prima di `prepare_context()`. I campi del frontmatter sovrascrivono i flag CLI (il frontmatter ha priorità sul default, ma il CLI ha priorità sul frontmatter? → **Il frontmatter vince sui default, il CLI vince sul frontmatter** per `lang` e `dark`).
+
+### 24.4 Interazione con il titolo
+
+Se `title` è nel frontmatter, viene usato al posto del `# H1` come titolo della presentazione. Il `# H1` nel markdown resta visibile nella cover slide ma non determina il `<title>` HTML.
+
+Se `title` non è nel frontmatter, comportamento invariato (il `# H1` diventa il titolo).
+
+### 24.5 Test
+
+- [x] `test_no_frontmatter_backward_compat` — senza frontmatter, tutto funziona come prima
+- [x] `test_frontmatter_parsed` — frontmatter TOML viene estratto correttamente
+- [x] `test_frontmatter_title_override` — `title` nel frontmatter sovrascrive `# H1` nel `<title>`
+- [x] `test_frontmatter_palette` — campo `palette` viene passato nel contesto
+- [x] `test_frontmatter_colors` — campo `colors` viene passato nel contesto
+- [x] `test_frontmatter_lang_dark` — `lang` e `dark` dal frontmatter funzionano
+- [x] `test_cli_overrides_frontmatter` — `--lang en` sovrascrive `lang = "it"` nel frontmatter
+- [x] `test_malformed_frontmatter` — frontmatter TOML invalido produce errore chiaro
+- [x] `test_frontmatter_stripped_from_content` — il frontmatter non appare nell'HTML generato
+
+---
+
+## M25: Sistema palette colori — file TOML + cascata
+
+Palette colori come file TOML esterni, con meccanismo di lookup builtin → utente → frontmatter.
+
+### 25.1 Struttura file palette
+
+```
+md2/palettes/default.toml      ← builtin, distribuita col pacchetto
+md2/palettes/warm.toml
+md2/palettes/cool.toml
+md2/palettes/mono.toml
+md2/palettes/vivid.toml
+md2/palettes/pastel.toml
+```
+
+Utente:
+```
+~/.md2/palettes/corporate.toml   ← palette custom
+~/.md2/palettes/warm.toml        ← override di una builtin
+```
+
+### 25.2 Formato file palette
+
+```toml
+name = "default"
+
+colors = [
+    "#4e79a7",
+    "#f28e2b",
+    "#e15759",
+    "#76b7b2",
+    "#59a14f",
+    "#edc948",
+    "#b07aa1",
+    "#ff9da7",
+]
+
+[dark]
+colors = [
+    "#6fa0d6",
+    "#f5b84c",
+    "#f28e8e",
+    "#9ed4cf",
+    "#7ec87e",
+    "#f5e08a",
+    "#d4a3c7",
+    "#ffb8c0",
+]
+```
+
+Se la sezione `[dark]` è assente, il renderer calcola automaticamente varianti più luminose (+20% lightness in HSL) dai colori base.
+
+### 25.3 Cascata di risoluzione
+
+```
+1. Palette builtin (md2/palettes/)
+   ↓ sovrascritta da
+2. Palette utente (~/.md2/palettes/)
+   ↓ sovrascritta da
+3. Frontmatter: palette = "nome"
+   ↓ sovrascritta da
+4. Frontmatter: colors = ["#...", "#..."]  (override totale o parziale)
+```
+
+Se nel frontmatter ci sono sia `palette` che `colors`:
+- `palette` carica i colori base
+- `colors` sovrascrive i primi N colori (merge parziale)
+
+### 25.4 Implementazione
+
+**`md2/palettes.py`** — nuovo modulo:
+
+```python
+BUILTIN_PALETTES_DIR = Path(__file__).parent / "palettes"
+USER_PALETTES_DIR = Path.home() / ".md2" / "palettes"
+
+def load_palette(name="default"):
+    """Load palette by name. User dir takes priority over builtin."""
+
+def resolve_colors(metadata):
+    """Given frontmatter metadata, return final list of colors."""
+
+def generate_palette_css(colors, dark_colors=None):
+    """Generate CSS variables from color list."""
+```
+
+**Output CSS** generato da `generate_palette_css()`:
+
+```css
+:root {
+    --md2-color-1: #4e79a7;
+    --md2-color-2: #f28e2b;
+    /* ... */
+}
+body.dark-mode {
+    --md2-color-1: #6fa0d6;
+    --md2-color-2: #f5b84c;
+    /* ... */
+}
+```
+
+Questo CSS viene iniettato nel `<style>` del template, dopo `style.css`.
+
+**`cli.py`** — `render_html()` chiama `resolve_colors(metadata)` e passa il CSS generato nel contesto Jinja2 come variabile `palette_css`.
+
+**`base.html`** — aggiunge:
+```jinja2
+{% if palette_css %}
+<style>{{ palette_css }}</style>
+{% endif %}
+```
+
+### 25.5 Palette builtin da creare
+
+| Nome | Stile | Colori base (light) |
+|------|-------|---------------------|
+| `default` | Tableau-inspired, bilanciata | 8 colori ad alto contrasto |
+| `warm` | Rossi, arancioni, gialli | Toni caldi, energia |
+| `cool` | Blu, verdi, viola | Professionale, calmo |
+| `mono` | Sfumature di un singolo colore (accent) | Minimalista |
+| `vivid` | Saturazione alta | Impatto visivo, presentazioni |
+| `pastel` | Toni morbidi, bassa saturazione | Leggibile, elegante |
+
+### 25.6 Build e distribuzione
+
+- Aggiungere `md2/palettes/*.toml` al package data in `pyproject.toml`
+- La directory `~/.md2/palettes/` viene creata al primo uso se necessario (non al primo run come i template — le palette builtin funzionano senza copia)
+
+### 25.7 Test
+
+- [ ] `test_load_builtin_palette` — `load_palette("default")` carica dalla dir builtin
+- [ ] `test_load_user_palette` — palette in `~/.md2/palettes/` ha priorità su builtin
+- [ ] `test_palette_not_found` — nome palette inesistente produce errore chiaro
+- [ ] `test_resolve_colors_default` — senza frontmatter, usa palette default
+- [ ] `test_resolve_colors_palette_name` — `palette = "warm"` carica la palette warm
+- [ ] `test_resolve_colors_inline_override` — `colors = [...]` sovrascrive
+- [ ] `test_resolve_colors_partial_merge` — `palette + colors` parziale = merge corretto
+- [ ] `test_generate_palette_css` — output CSS contiene le variabili `--md2-color-N`
+- [ ] `test_dark_auto_generated` — senza sezione `[dark]`, i colori dark vengono calcolati
+- [ ] `test_dark_explicit` — con sezione `[dark]`, i colori espliciti vengono usati
+- [ ] `test_palette_toml_format` — tutti i file `.toml` builtin sono validi e parsabili
+
+---
+
+## M26: Charts.css — embedding e direttiva `:::chart`
+
+Integrazione di Charts.css nel template e parsing della direttiva `:::chart` per trasformare tabelle markdown in grafici.
+
+### 26.1 Embedding Charts.css
+
+Scaricare la versione minificata di Charts.css e includerla nel template:
+
+```
+md2/templates/default/vendor/charts.min.css
+```
+
+Inclusa nel `<style>` solo quando il documento contiene almeno un chart (per non appesantire presentazioni senza grafici):
+
+```jinja2
+{% if has_charts %}
+<style>{% include "vendor/charts.min.css" %}</style>
+{% endif %}
+```
+
+Aggiornare `pyproject.toml` per includere la directory `vendor/` nel package data.
+
+### 26.2 Direttiva `:::chart` — sintassi
+
+```markdown
+:::chart bar --labels --legend --stacked
+| Prodotto | Q1  | Q2  | Q3  |
+|----------|-----|-----|-----|
+| Widget A | 50  | 80  | 65  |
+| Widget B | 30  | 60  | 90  |
+:::
+```
+
+Formato: `:::chart {tipo} [--opzione ...]`
+
+**Tipi supportati:**
+
+| Tipo | Classe Charts.css | Note |
+|------|-------------------|------|
+| `bar` | `.bar` | Barre orizzontali |
+| `column` | `.column` | Barre verticali |
+| `line` | `.line` | Grafico a linea |
+| `area` | `.area` | Grafico ad area |
+| `pie` | `.pie` | Torta (solo singola serie) |
+
+**Opzioni strutturali:**
+
+| Opzione | Effetto |
+|---------|---------|
+| `--labels` | Mostra etichette sugli assi |
+| `--legend` | Mostra legenda (per multi-dataset) |
+| `--stacked` | Barre/colonne impilate anziché affiancate |
+| `--reverse` | Inverte la direzione del grafico |
+| `--show-data` | Mostra i valori numerici sui dati |
+| `--title "Titolo"` | Caption/titolo del grafico |
+
+### 26.3 Implementazione — pipeline di trasformazione
+
+Il processing avviene in due fasi, integrate nella pipeline esistente di `core.py`:
+
+**Fase 1: Preprocessore** (prima di `markdown.markdown()`)
+
+Nuovo in `core.py` — funzione `preprocess_chart_directives(markdown_text)`:
+
+1. Trova tutti i blocchi `:::chart ... :::`
+2. Per ogni blocco:
+   - Estrae tipo e opzioni dalla prima riga
+   - Estrae il contenuto markdown (la tabella)
+   - Sostituisce il blocco con un marker HTML: `<div class="md2-chart" data-type="bar" data-options="labels,legend">` + tabella markdown + `</div>`
+3. Ritorna il markdown modificato e un flag `has_charts`
+
+Il markdown della tabella viene lasciato intatto — sarà `python-markdown` a parsarlo in `<table>`.
+
+**Fase 2: Postprocessore** (dopo `markdown.markdown()` e `sanitize_html()`)
+
+Nuovo in `core.py` — funzione `transform_charts(html_content)`:
+
+1. Trova tutti i `<div class="md2-chart">` nel HTML
+2. Per ogni div:
+   - Legge `data-type` e `data-options`
+   - Trova la `<table>` al suo interno
+   - Trasforma la tabella nella struttura richiesta da Charts.css:
+     - Aggiunge la classe `.charts-css` + classe tipo (`.bar`, `.column`, etc.)
+     - Aggiunge classi opzioni (`.show-labels`, `.show-legend`, etc.)
+     - Ristruttura `<td>` per aggiungere gli attributi `style="--size: ..."` richiesti da Charts.css
+     - Se multi-dataset, aggiunge `--color` per serie usando le variabili `--md2-color-N`
+   - Aggiunge legenda HTML se `--legend`
+   - Aggiunge caption se `--title`
+3. Ritorna l'HTML trasformato
+
+**Calcolo `--size`**: Charts.css usa valori normalizzati 0-1. Il postprocessore:
+- Legge tutti i valori numerici dalla tabella
+- Trova il massimo
+- Normalizza ogni valore: `--size: {value / max_value}`
+
+### 26.4 Integrazione nella pipeline
+
+In `core.py`, la funzione `process_markdown()` cambia:
+
+```python
+def process_markdown(text):
+    text, has_charts = preprocess_chart_directives(text)
+    raw_html = markdown.markdown(text, extensions=MD_EXTENSIONS)
+    sanitized = sanitize_html(raw_html)
+    autolinked = autolink(sanitized)
+    if has_charts:
+        autolinked = transform_charts(autolinked)
+    return autolinked, has_charts
+```
+
+Nota: `process_markdown()` ora ritorna una tupla `(html, has_charts)`. Aggiornare tutti i chiamanti (`prepare_context()`, test).
+
+`has_charts` viene propagato nel contesto Jinja2 per il conditional include del CSS Charts.css.
+
+### 26.5 Sanitizzazione
+
+`sanitize_html()` deve permettere i nuovi attributi:
+- `data-type` e `data-options` su `<div>` — aggiungerli a `ALLOWED_ATTRIBUTES`
+- `style` con `--size` e `--color` su `<td>` — già consentito via `CSSSanitizer`
+
+Verificare che bleach non rimuova le classi `charts-css`, `bar`, `show-labels`, etc.
+
+### 26.6 CSS aggiuntivo per i chart
+
+In `style.css`, aggiungere stili di integrazione (non duplicando Charts.css, ma adattando al contesto md2):
+
+```css
+/* Chart wrapper */
+.md2-chart {
+    margin: 30px auto;
+    max-width: 100%;
+}
+
+/* Chart usa i colori della palette */
+.md2-chart .charts-css tbody tr:nth-child(1) td { --color: var(--md2-color-1); }
+.md2-chart .charts-css tbody tr:nth-child(2) td { --color: var(--md2-color-2); }
+/* ... fino a 8 */
+
+/* Legenda styling */
+.md2-chart .chart-legend {
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+    margin-top: 10px;
+    font-size: 0.85rem;
+}
+
+/* Dark mode compatibility */
+body.dark-mode .md2-chart .charts-css {
+    color: var(--text-color);
+}
+```
+
+### 26.7 Test
+
+- [ ] `test_chart_directive_parsed` — `:::chart bar ... :::` viene riconosciuto
+- [ ] `test_chart_type_bar` — tipo `bar` produce classe `.bar`
+- [ ] `test_chart_type_column` — tipo `column` produce classe `.column`
+- [ ] `test_chart_type_line` — tipo `line` produce classe `.line`
+- [ ] `test_chart_type_area` — tipo `area` produce classe `.area`
+- [ ] `test_chart_type_pie` — tipo `pie` produce classe `.pie`
+- [ ] `test_chart_options_labels` — `--labels` produce classe `.show-labels`
+- [ ] `test_chart_options_legend` — `--legend` produce legenda HTML
+- [ ] `test_chart_options_stacked` — `--stacked` produce classe `.stacked`
+- [ ] `test_chart_options_reverse` — `--reverse` produce classe `.reverse`
+- [ ] `test_chart_options_show_data` — `--show-data` produce classe `.show-data-on-hover`
+- [ ] `test_chart_title` — `--title "..."` produce `<caption>`
+- [ ] `test_chart_size_normalization` — valori vengono normalizzati 0-1 correttamente
+- [ ] `test_chart_multi_dataset` — tabella con più colonne dati produce dataset multipli
+- [ ] `test_chart_colors_from_palette` — chart usa `--md2-color-N` per le serie
+- [ ] `test_chart_has_charts_flag` — `has_charts` è `True` solo quando ci sono chart
+- [ ] `test_no_charts_no_css` — senza chart, Charts.css non viene incluso nell'HTML
+- [ ] `test_chart_fallback_readable` — se Charts.css fallisce, la tabella resta leggibile
+- [ ] `test_chart_in_slide` — chart dentro una slide si renderizza correttamente
+- [ ] `test_multiple_charts` — più chart nella stessa presentazione funzionano
+- [ ] `test_chart_invalid_type` — tipo non supportato produce warning/fallback a tabella
+- [ ] `test_chart_non_numeric_values` — valori non numerici gestiti con errore chiaro
+
+---
+
+## M27: Documentazione e example — chart e palette
+
+### 27.1 README
+
+- [ ] Aggiungere sezione "Grafici" con sintassi `:::chart`, tipi supportati, opzioni
+- [ ] Aggiungere sezione "Palette colori" con spiegazione cascata, come creare palette custom
+- [ ] Aggiungere sezione "Frontmatter" con formato e campi supportati
+- [ ] Aggiornare sezione "Markdown supportato" con `:::chart`
+- [ ] Aggiornare sezione "Opzioni" con `palette` e `colors` nel frontmatter
+
+### 27.2 Example
+
+- [ ] Aggiornare `examples/example.md` con almeno un chart (bar o column) per dimostrare la feature
+- [ ] Aggiungere `examples/charts.md` — showcase dedicato con tutti i tipi di chart e opzioni
+- [ ] Rigenerare `examples/example.html`

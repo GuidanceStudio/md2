@@ -5,6 +5,7 @@ import sys
 from pathlib import Path
 
 from .core import (
+    parse_frontmatter,
     prepare_context,
     extract_og_description,
     get_jinja_env,
@@ -54,18 +55,25 @@ def _resolve_template_dir(template_name=None):
     return user_default
 
 
-def render_html(markdown_text, lang="it", dark_mode=False, template_dir=None):
+def render_html(markdown_text, lang=None, dark_mode=None, template_dir=None):
     """Render markdown to a full HTML string using Jinja2 templates."""
-    context = prepare_context(markdown_text)
+    metadata, body = parse_frontmatter(markdown_text)
+    context = prepare_context(body, metadata=metadata)
 
-    og_description = extract_og_description(markdown_text, context["title"])
+    og_description = extract_og_description(body, context["title"])
     safe_title = html.escape(context["title"])
+
+    # Resolve lang: caller > frontmatter > default "it"
+    resolved_lang = lang if lang is not None else metadata.get("lang", "it")
+
+    # Resolve dark: caller > frontmatter > default False
+    resolved_dark = dark_mode if dark_mode is not None else metadata.get("dark", False)
 
     context.update({
         "title": safe_title,
         "og_description": og_description,
-        "lang": lang,
-        "dark_mode": dark_mode,
+        "lang": resolved_lang,
+        "dark_mode": resolved_dark,
     })
     # Escape cover title consistently
     context["cover"]["title"] = safe_title
@@ -94,8 +102,8 @@ def main():
     """CLI entry point: converts a Markdown file to an HTML presentation."""
     parser = argparse.ArgumentParser(description="Convert a Markdown file to an HTML presentation.")
     parser.add_argument("filename", nargs="?", help="The input Markdown file")
-    parser.add_argument("--lang", default="it", help="HTML lang attribute (default: it)")
-    parser.add_argument("--dark", action="store_true", help="Use dark theme as default")
+    parser.add_argument("--lang", default=None, help="HTML lang attribute (default: it)")
+    parser.add_argument("--dark", action="store_true", default=None, help="Use dark theme as default")
     parser.add_argument("--template", metavar="NAME", help="Template name from ~/.md2/templates/")
     parser.add_argument("--init-templates", action="store_true", help="(Re)initialize default template in ~/.md2/templates/")
     args = parser.parse_args()
@@ -116,7 +124,9 @@ def main():
 
     output_filename = filepath.with_suffix(".html")
     content = filepath.read_text(encoding="utf-8")
-    full_html = render_html(content, lang=args.lang, dark_mode=args.dark, template_dir=template_dir)
+    full_html = render_html(
+        content, lang=args.lang, dark_mode=args.dark, template_dir=template_dir,
+    )
     output_filename.write_text(full_html, encoding="utf-8")
 
     print(f"Success! Generated '{output_filename}'")

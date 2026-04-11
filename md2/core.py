@@ -2,6 +2,11 @@ import html
 import re
 from pathlib import Path
 
+try:
+    import tomllib
+except ImportError:
+    import tomli as tomllib
+
 import markdown
 import bleach
 from bleach.css_sanitizer import CSSSanitizer
@@ -29,6 +34,7 @@ MD_EXTENSIONS = ['tables', 'sane_lists', 'nl2br', 'fenced_code', 'footnotes']
 
 _SLIDE_SPLIT_RE = re.compile(r'\n+[ \t]*---[ \t]*\n+')
 _AUTOLINK_RE = re.compile(r'(?<!["\x27=])(https?://[^\s<>\x27"]+)')
+_FRONTMATTER_RE = re.compile(r'\A\s*\+\+\+\n(.*?)\n\+\+\+\n?', re.DOTALL)
 
 DEFAULT_THEME = {
     "bg_color": "#f9f9f9",
@@ -37,6 +43,30 @@ DEFAULT_THEME = {
     "h2_color": "#333",
     "font_family": '"Ubuntu", sans-serif'
 }
+
+
+def parse_frontmatter(markdown_text):
+    """Extract TOML frontmatter delimited by +++ and return (metadata, body).
+
+    If no frontmatter is found, returns ({}, original_text).
+    Raises ValueError on malformed TOML.
+    """
+    match = _FRONTMATTER_RE.match(markdown_text)
+    if not match:
+        return {}, markdown_text
+
+    toml_str = match.group(1)
+    body = markdown_text[match.end():]
+
+    if not toml_str.strip():
+        return {}, body
+
+    try:
+        metadata = tomllib.loads(toml_str)
+    except Exception as e:
+        raise ValueError(f"Invalid TOML in frontmatter: {e}") from e
+
+    return metadata, body
 
 
 def sanitize_html(html_content):
@@ -64,11 +94,14 @@ def process_markdown(text):
     return autolink(sanitize_html(raw_html))
 
 
-def prepare_context(markdown_text):
+def prepare_context(markdown_text, metadata=None):
     """
     Parses markdown into a context dict for template rendering.
-    Returns a dict with 'title', 'cover', and 'slides'.
+    Returns a dict with 'title', 'cover', 'slides', and frontmatter fields.
     """
+    if metadata is None:
+        metadata = {}
+
     raw_slides = _SLIDE_SPLIT_RE.split(markdown_text)
 
     cover_title = "Presentation"
@@ -82,6 +115,10 @@ def prepare_context(markdown_text):
             cover_content = '\n'.join(lines[1:])
         else:
             cover_content = first_slide_text
+
+    # Frontmatter title overrides H1 for the presentation title
+    if "title" in metadata:
+        cover_title = metadata["title"]
 
     slides_data = []
     for i, slide_text in enumerate(raw_slides[1:]):
@@ -109,6 +146,8 @@ def prepare_context(markdown_text):
             "content": cover_clean
         },
         "slides": slides_data,
+        "palette": metadata.get("palette", "default"),
+        "colors": metadata.get("colors"),
     }
 
 
