@@ -974,7 +974,7 @@ Nota: come per i chart, il markdown dentro le colonne deve essere processato **i
 
 ---
 
-## M30: Print-optimized CSS — stampa di chart, colonne e palette
+## M30: Print-optimized CSS — stampa di chart, colonne e palette ✅
 
 Il CSS stampa attuale usa `* { color: #000 !important; background: #fff !important; }` che distrugge i colori dei chart. Serve un'ottimizzazione specifica per la stampa.
 
@@ -1059,12 +1059,12 @@ In stampa la palette light viene sempre usata (anche se il documento è in dark 
 
 ### 30.5 Test
 
-- [ ] `test_print_css_no_global_reset` — il CSS di stampa non usa `* { color: #000 }`
-- [ ] `test_print_css_chart_colors_preserved` — il blocco print contiene `print-color-adjust: exact`
-- [ ] `test_print_css_chart_break_avoid` — i chart hanno `break-inside: avoid`
-- [ ] `test_print_css_columns_preserved` — le colonne restano flex in stampa
-- [ ] `test_print_css_layout_elements_reset` — body, slide, ecc. hanno reset colori
-- [ ] `test_print_visual_e2e` — e2e: l'HTML generato con chart contiene le regole di stampa corrette
+- [x] `test_print_css_no_global_reset` — il CSS di stampa non usa `* { color: #000 }`
+- [x] `test_print_css_chart_colors_preserved` — il blocco print contiene `print-color-adjust: exact`
+- [x] `test_print_css_chart_break_avoid` — i chart hanno `break-inside: avoid`
+- [x] `test_print_css_columns_preserved` — le colonne restano flex in stampa
+- [x] `test_print_css_layout_elements_reset` — body, slide, ecc. hanno reset colori
+- [x] `test_print_visual_e2e` — e2e: l'HTML generato con chart contiene le regole di stampa corrette
 
 ---
 

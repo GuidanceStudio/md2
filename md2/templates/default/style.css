@@ -292,6 +292,7 @@ body.dark-mode .md2-chart .charts-css { color: var(--text-color); }
 
 /* Print stylesheet */
 @media print {
+    /* Hide UI elements */
     #sidebar, #theme-toggle, #menu-toggle, #progress-bar,
     #slide-indicator, #sidebar-toggle { display: none !important; }
     body { display: block; height: auto; overflow: visible; }
@@ -306,8 +307,34 @@ body.dark-mode .md2-chart .charts-css { color: var(--text-color); }
     }
     .slide:last-child { page-break-after: avoid; }
     .cover { height: auto; page-break-after: always; }
-    * { color: #000 !important; background: #fff !important;
-         box-shadow: none !important; }
+
+    /* Selective color reset — layout elements only, NOT charts */
+    body, #main, .slide, .cover,
+    .slide p, .slide li, .slide h2, .slide h3, .slide h4,
+    .slide blockquote, .slide pre, .slide code, .slide a {
+        color: #000 !important; background: #fff !important;
+        box-shadow: none !important;
+    }
+    .slide th, .slide td {
+        color: #000 !important; border-color: #999 !important;
+    }
+    .slide th { background-color: #f0f0f0 !important; }
+
+    /* Charts: preserve colors for printing */
+    .md2-chart, .md2-chart * {
+        print-color-adjust: exact !important;
+        -webkit-print-color-adjust: exact !important;
+    }
+    .md2-chart .charts-css { color: #000; }
+
+    /* Columns: preserve side-by-side layout */
+    .md2-columns { display: flex; gap: 20px; }
+
+    /* Prevent page breaks inside charts and columns */
+    .md2-chart, .md2-columns {
+        break-inside: avoid;
+        page-break-inside: avoid;
+    }
 }
 
 @media (max-width: 1024px) {
