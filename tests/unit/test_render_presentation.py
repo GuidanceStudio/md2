@@ -247,17 +247,17 @@ def test_sidebar_has_toggle_button():
 # --- Simplify: process_markdown helper ---
 
 def test_process_markdown_basic():
-    html = process_markdown("Hello **world**")
+    html, _ = process_markdown("Hello **world**")
     assert "<strong>world</strong>" in html
 
 
 def test_process_markdown_autolinks():
-    html = process_markdown("Visit https://example.com today")
+    html, _ = process_markdown("Visit https://example.com today")
     assert 'href="https://example.com"' in html
 
 
 def test_process_markdown_sanitizes():
-    html = process_markdown("<script>alert(1)</script>Safe")
+    html, _ = process_markdown("<script>alert(1)</script>Safe")
     assert "<script>" not in html
     assert "Safe" in html
 
@@ -283,18 +283,18 @@ def test_autolink_skips_equals():
 
 
 def test_process_markdown_fenced_code():
-    html = process_markdown("```python\nprint(1)\n```")
+    html, _ = process_markdown("```python\nprint(1)\n```")
     assert "<pre>" in html
     assert "<code" in html
 
 
 def test_process_markdown_footnotes():
-    html = process_markdown("Text[^1]\n\n[^1]: My footnote")
+    html, _ = process_markdown("Text[^1]\n\n[^1]: My footnote")
     assert "My footnote" in html
 
 
 def test_process_markdown_table():
-    html = process_markdown("| A | B |\n|---|---|\n| 1 | 2 |")
+    html, _ = process_markdown("| A | B |\n|---|---|\n| 1 | 2 |")
     assert "<table>" in html
 
 

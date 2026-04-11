@@ -4,6 +4,8 @@ from .core import (
     sanitize_html,
     autolink,
     process_markdown,
+    preprocess_chart_directives,
+    transform_charts,
     prepare_context,
     parse_frontmatter,
     extract_og_description,

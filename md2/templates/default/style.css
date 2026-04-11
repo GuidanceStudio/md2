@@ -152,6 +152,39 @@ body {
 .slide th, .slide td { border: 1px solid var(--table-border); padding: 8px; text-align: left; }
 .slide th { background-color: var(--table-header-bg); font-weight: bold; }
 
+/* Charts — override table styles inside chart wrappers */
+.md2-chart { margin: 30px auto; max-width: 100%; }
+.md2-chart table.charts-css {
+    box-shadow: none; border-radius: 0; border-collapse: separate;
+}
+.md2-chart .charts-css th,
+.md2-chart .charts-css td {
+    border: none; background: none; padding: 0;
+}
+.md2-chart .charts-css.bar,
+.md2-chart .charts-css.column { --labels-size: 80px; }
+.md2-chart .charts-css tbody tr:nth-child(8n+1) td { --color: var(--md2-color-1); }
+.md2-chart .charts-css tbody tr:nth-child(8n+2) td { --color: var(--md2-color-2); }
+.md2-chart .charts-css tbody tr:nth-child(8n+3) td { --color: var(--md2-color-3); }
+.md2-chart .charts-css tbody tr:nth-child(8n+4) td { --color: var(--md2-color-4); }
+.md2-chart .charts-css tbody tr:nth-child(8n+5) td { --color: var(--md2-color-5); }
+.md2-chart .charts-css tbody tr:nth-child(8n+6) td { --color: var(--md2-color-6); }
+.md2-chart .charts-css tbody tr:nth-child(8n+7) td { --color: var(--md2-color-7); }
+.md2-chart .charts-css tbody tr:nth-child(8n) td { --color: var(--md2-color-8); }
+.md2-chart .charts-css.multiple tbody td:nth-child(2) { --color: var(--md2-color-1); }
+.md2-chart .charts-css.multiple tbody td:nth-child(3) { --color: var(--md2-color-2); }
+.md2-chart .charts-css.multiple tbody td:nth-child(4) { --color: var(--md2-color-3); }
+.md2-chart .charts-css.multiple tbody td:nth-child(5) { --color: var(--md2-color-4); }
+.md2-chart .charts-css.multiple tbody td:nth-child(6) { --color: var(--md2-color-5); }
+.md2-chart .charts-css.multiple tbody td:nth-child(7) { --color: var(--md2-color-6); }
+.md2-chart .charts-css.multiple tbody td:nth-child(8) { --color: var(--md2-color-7); }
+.md2-chart .charts-css.multiple tbody td:nth-child(9) { --color: var(--md2-color-8); }
+.md2-chart ul.legend {
+    display: flex; gap: 15px; justify-content: center;
+    margin-top: 10px; font-size: 0.85rem; list-style: none; padding: 0;
+}
+body.dark-mode .md2-chart .charts-css { color: var(--text-color); }
+
 /* Images */
 .slide img {
     max-width: 100%; height: auto; display: block;

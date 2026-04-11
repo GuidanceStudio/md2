@@ -11,4 +11,7 @@
 {% if palette_css %}
 {{ palette_css }}
 {% endif %}
+{% if has_charts %}
+{% include "vendor/charts.min.css" %}
+{% endif %}
     </style>

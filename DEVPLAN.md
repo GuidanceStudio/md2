@@ -634,7 +634,7 @@ Questo CSS viene iniettato nel `<style>` del template, dopo `style.css`.
 
 ---
 
-## M26: Charts.css — embedding e direttiva `:::chart`
+## M26: Charts.css — embedding e direttiva `:::chart` ✅
 
 Integrazione di Charts.css nel template e parsing della direttiva `:::chart` per trasformare tabelle markdown in grafici.
 
@@ -789,28 +789,28 @@ body.dark-mode .md2-chart .charts-css {
 
 ### 26.7 Test
 
-- [ ] `test_chart_directive_parsed` — `:::chart bar ... :::` viene riconosciuto
-- [ ] `test_chart_type_bar` — tipo `bar` produce classe `.bar`
-- [ ] `test_chart_type_column` — tipo `column` produce classe `.column`
-- [ ] `test_chart_type_line` — tipo `line` produce classe `.line`
-- [ ] `test_chart_type_area` — tipo `area` produce classe `.area`
-- [ ] `test_chart_type_pie` — tipo `pie` produce classe `.pie`
-- [ ] `test_chart_options_labels` — `--labels` produce classe `.show-labels`
-- [ ] `test_chart_options_legend` — `--legend` produce legenda HTML
-- [ ] `test_chart_options_stacked` — `--stacked` produce classe `.stacked`
-- [ ] `test_chart_options_reverse` — `--reverse` produce classe `.reverse`
-- [ ] `test_chart_options_show_data` — `--show-data` produce classe `.show-data-on-hover`
-- [ ] `test_chart_title` — `--title "..."` produce `<caption>`
-- [ ] `test_chart_size_normalization` — valori vengono normalizzati 0-1 correttamente
-- [ ] `test_chart_multi_dataset` — tabella con più colonne dati produce dataset multipli
-- [ ] `test_chart_colors_from_palette` — chart usa `--md2-color-N` per le serie
-- [ ] `test_chart_has_charts_flag` — `has_charts` è `True` solo quando ci sono chart
+- [x] `test_chart_directive_parsed` — `:::chart bar ... :::` viene riconosciuto
+- [x] `test_chart_type_bar` — tipo `bar` produce classe `.bar`
+- [x] `test_chart_type_column` — tipo `column` produce classe `.column`
+- [x] `test_chart_type_line` — tipo `line` produce classe `.line`
+- [x] `test_chart_type_area` — tipo `area` produce classe `.area`
+- [x] `test_chart_type_pie` — tipo `pie` produce classe `.pie`
+- [x] `test_chart_options_labels` — `--labels` produce classe `.show-labels`
+- [x] `test_chart_options_legend` — `--legend` produce legenda HTML
+- [x] `test_chart_options_stacked` — `--stacked` produce classe `.stacked`
+- [x] `test_chart_options_reverse` — `--reverse` produce classe `.reverse`
+- [x] `test_chart_options_show_data` — `--show-data` produce classe `.show-data-on-hover`
+- [x] `test_chart_title` — `--title "..."` produce `<caption>`
+- [x] `test_chart_size_normalization` — valori vengono normalizzati 0-1 correttamente
+- [x] `test_chart_multi_dataset` — tabella con più colonne dati produce dataset multipli
+- [x] `test_chart_colors_from_palette` — chart usa `--md2-color-N` per le serie
+- [x] `test_chart_has_charts_flag` — `has_charts` è `True` solo quando ci sono chart
 - [ ] `test_no_charts_no_css` — senza chart, Charts.css non viene incluso nell'HTML
-- [ ] `test_chart_fallback_readable` — se Charts.css fallisce, la tabella resta leggibile
-- [ ] `test_chart_in_slide` — chart dentro una slide si renderizza correttamente
+- [x] `test_chart_fallback_readable` — se Charts.css fallisce, la tabella resta leggibile
+- [x] `test_chart_in_slide` — chart dentro una slide si renderizza correttamente
 - [ ] `test_multiple_charts` — più chart nella stessa presentazione funzionano
-- [ ] `test_chart_invalid_type` — tipo non supportato produce warning/fallback a tabella
-- [ ] `test_chart_non_numeric_values` — valori non numerici gestiti con errore chiaro
+- [x] `test_chart_invalid_type` — tipo non supportato produce warning/fallback a tabella
+- [x] `test_chart_non_numeric_values` — valori non numerici gestiti con errore chiaro
 
 ---
 
