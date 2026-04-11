@@ -224,16 +224,23 @@ def transform_charts(html_content):
         num_datasets = len(data_rows[0][1]) if data_rows else 0
         is_multiple = num_datasets > 1
 
-        # Collect all numeric values for normalization
-        all_values = []
+        # Parse numeric values into a 2D grid (rows x columns)
+        parsed_values = []
         for _, values in data_rows:
+            row_vals = []
             for v in values:
                 try:
-                    all_values.append(float(v.strip()))
+                    row_vals.append(float(v.strip()))
                 except (ValueError, TypeError):
-                    all_values.append(0)
+                    row_vals.append(0)
+            parsed_values.append(row_vals)
 
+        # Flat list for pie/global use
+        all_values = [v for row in parsed_values for v in row]
         max_val = max(all_values) if all_values and max(all_values) > 0 else 1
+
+        # Per-row max for multi-dataset normalization
+        row_maxes = [max(row) if max(row) > 0 else 1 for row in parsed_values]
 
         # Dataset headers (for legend)
         dataset_headers = headers[1:] if len(headers) > 1 else []
@@ -267,27 +274,33 @@ def transform_charts(html_content):
         # Tbody — pie uses --start/--end (cumulative), others use --size
         is_pie = chart_type == "pie"
         parts.append('<tbody>')
-        val_idx = 0
         cumulative = 0.0
         total = sum(all_values) if is_pie and sum(all_values) > 0 else 1
-        for label, values in data_rows:
+        for row_idx, (label, values) in enumerate(data_rows):
             parts.append('<tr>')
             parts.append(f'<th scope="row">{label}</th>')
-            for v in values:
-                data_span = f'<span class="data">{v.strip()}</span>'
+            for col_idx, v in enumerate(values):
+                num_val = parsed_values[row_idx][col_idx]
+                # Suppress data label for zero values to avoid floating "0"
+                data_span = f'<span class="data">{v.strip()}</span>' if num_val != 0 else ""
                 if is_pie:
+                    flat_idx = row_idx * len(values) + col_idx
                     start = cumulative
-                    proportion = all_values[val_idx] / total
+                    proportion = all_values[flat_idx] / total
                     cumulative += proportion
                     end = cumulative
                     s_str = f"{start:g}"
                     e_str = f"{end:g}"
                     parts.append(f'<td style="--start: {s_str}; --end: {e_str}">{data_span}</td>')
                 else:
-                    norm = all_values[val_idx] / max_val
+                    # Multi-dataset: normalize per-row so each metric is self-comparable
+                    if is_multiple:
+                        row_max = row_maxes[row_idx]
+                    else:
+                        row_max = max_val
+                    norm = num_val / row_max
                     size_str = f"{norm:g}" if norm != int(norm) else str(int(norm))
                     parts.append(f'<td style="--size: {size_str}">{data_span}</td>')
-                val_idx += 1
             parts.append('</tr>')
         parts.append('</tbody>')
         parts.append('</table>')

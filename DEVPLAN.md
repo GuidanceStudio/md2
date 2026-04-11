@@ -1168,3 +1168,48 @@ Contenuto a destra.
 - [x] Commit & push
 
 **Done when:** I chart si ridimensionano proporzionalmente al viewport su schermi di diverse dimensioni.
+
+---
+
+## M35: Fix normalizzazione valori chart e gestione zero ✅
+
+**Why:** La normalizzazione dei valori usa il max globale su tutte le colonne dati. Dati con scale diverse (Deploy/week=2-12 vs Uptime=99-100) producono barre invisibili (`--size: 0.02`). Inoltre `--size: 0` produce barre vuote con label "0" flottante nel vuoto.
+
+**Approach:** In `transform_charts()` in `core.py`, cambiare la normalizzazione: per multi-dataset, normalizzare per colonna (ogni dataset ha il suo max). Per singolo dataset resta invariato. Per valori zero: non generare il `<span class="data">` quando il valore è 0, così Charts.css non mostra label flottanti. La normalizzazione per-colonna richiede ristrutturare il ciclo in `_transform_chart`: prima raccogliere i max per colonna, poi generare `--size` relativo al max della colonna.
+
+**Tasks:**
+- [x] Ristrutturare normalizzazione in `transform_charts()` per usare max per-colonna nei multi-dataset
+- [x] Sopprimere `<span class="data">` per valori zero
+- [x] Test: unit — multi-dataset con scale diverse produce --size ragionevoli (nessuno < 0.1 se il dato è significativo)
+- [x] Test: unit — valore zero non genera span.data
+- [x] Test: unit — singolo dataset normalizzazione invariata
+- [x] Rigenerare example e verificare con Playwright
+- [x] Commit & push
+
+**Done when:** Nel bar chart multi-dataset Deploy/week (2→12) produce barre visibili e proporzionate all'interno della propria serie, non schiacciate dal max di Uptime (100).
+
+---
+
+## M36: Fix CSS — bar height, line visibility, label spacing
+
+**Why:** I bar chart sono schiacciati (nessuna altezza minima per riga). Il line chart è una striscia sottile (la linea è troppo fine). Le label si troncano su testi lunghi. I valori `show-data` si sovrappongono.
+
+**Approach:** Modifiche CSS in `style.css`:
+1. **Bar min-height per riga**: aggiungere `min-height: 40px` alle `<tr>` del bar chart, così ogni riga ha spazio sufficiente
+2. **Line thickness**: settare `--line-size: 3px` per rendere le linee visibili
+3. **Labels size**: aumentare `--labels-size` a `100px` per label più lunghe, con `text-overflow: ellipsis` come fallback
+4. **Data overlay**: settare `--data-spacing` per distanziare i valori dalle barre
+5. **Area chart**: come line, verificare che le aree abbiano spessore visibile
+
+Tutte le modifiche sono solo CSS — nessun cambiamento alla logica Python.
+
+**Tasks:**
+- [ ] Aggiungere min-height per riga nei bar chart
+- [ ] Settare --line-size per line e area chart
+- [ ] Aumentare --labels-size e aggiungere text-overflow
+- [ ] Settare --data-spacing per show-data
+- [ ] Test: unit — CSS contiene le nuove regole
+- [ ] Rigenerare example e verificare tutti i chart con Playwright
+- [ ] Commit & push
+
+**Done when:** Tutti e 6 i chart nell'example sono visivamente leggibili: barre con altezza adeguata, linee visibili, label non troncate, valori non sovrapposti.
