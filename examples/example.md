@@ -51,7 +51,7 @@ We have reorganized from feature teams into **3 Platform Pillars** (Core, Growth
 | **Error Rate** | 2.1% | 0.8% | Improved |
 | **Test Coverage** | 62% | **87%** | Improved |
 
-:::chart bar --labels
+:::chart bar --labels --legend
 | Metric        | Q3 2025 | Q1 2026 |
 |---------------|---------|---------|
 | Deploy/week   | 2       | 12      |
@@ -109,6 +109,14 @@ services:
 *   **Growth Engine:** The Accelerator (onboarding, activation, retention).
 *   **Intelligence Layer:** The Brain (ML models, recommendations, analytics).
 
+:::chart column --labels --legend --title "Team Allocation"
+| Pillar       | Engineers | ML Specialists |
+|--------------|-----------|----------------|
+| Core         | 8         | 0              |
+| Growth       | 6         | 0              |
+| Intelligence | 5         | 2              |
+:::
+
 **Coordination:**
 
 *   **Weekly architecture sync** across pillar leads.
@@ -139,10 +147,12 @@ services:
     *   **Interactive onboarding:** Guided setup wizard with live sandbox.
     *   **Usage-based billing:** Metered billing with real-time cost dashboard.
     *   **Referral system:** Two-sided incentive program.
-*   **Key Metrics:**
-    *   Activation rate: 35% -> **60%** (target)
-    *   Time-to-value: 48h -> **< 4h** (target)
-    *   Self-serve conversion: 12% -> **25%** (target)
+:::chart bar --labels --show-data --title "Growth Targets (%)"
+| Metric          | Current | Target |
+|-----------------|---------|--------|
+| Activation Rate | 35      | 60     |
+| Self-serve Conv | 12      | 25     |
+:::
 
 ---
 
