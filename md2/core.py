@@ -2,10 +2,7 @@ import html
 import re
 from pathlib import Path
 
-try:
-    import tomllib
-except ImportError:
-    import tomli as tomllib
+from ._compat import tomllib
 
 import markdown
 import bleach

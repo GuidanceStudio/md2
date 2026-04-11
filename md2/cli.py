@@ -11,6 +11,7 @@ from .core import (
     get_jinja_env,
     BUNDLED_TEMPLATES_DIR,
 )
+from .palettes import resolve_colors, generate_palette_css
 
 USER_TEMPLATES_DIR = Path.home() / ".md2" / "templates"
 
@@ -69,11 +70,16 @@ def render_html(markdown_text, lang=None, dark_mode=None, template_dir=None):
     # Resolve dark: caller > frontmatter > default False
     resolved_dark = dark_mode if dark_mode is not None else metadata.get("dark", False)
 
+    # Resolve palette colors and generate CSS
+    colors, dark_colors = resolve_colors(metadata)
+    palette_css = generate_palette_css(colors, dark_colors)
+
     context.update({
         "title": safe_title,
         "og_description": og_description,
         "lang": resolved_lang,
         "dark_mode": resolved_dark,
+        "palette_css": palette_css,
     })
     # Escape cover title consistently
     context["cover"]["title"] = safe_title

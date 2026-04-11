@@ -1,0 +1,24 @@
+name = "pastel"
+
+colors = [
+    "#a1c9f4",
+    "#ffb482",
+    "#8de5a1",
+    "#ff9f9b",
+    "#d0bbff",
+    "#debb9b",
+    "#fab0e4",
+    "#cfcfcf",
+]
+
+[dark]
+colors = [
+    "#b8d8f8",
+    "#ffc8a0",
+    "#a8f0b8",
+    "#ffb8b5",
+    "#e0d0ff",
+    "#e8d0b0",
+    "#fcc8f0",
+    "#e0e0e0",
+]

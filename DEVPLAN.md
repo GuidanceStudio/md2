@@ -490,7 +490,7 @@ Se `title` non è nel frontmatter, comportamento invariato (il `# H1` diventa il
 
 ---
 
-## M25: Sistema palette colori — file TOML + cascata
+## M25: Sistema palette colori — file TOML + cascata ✅
 
 Palette colori come file TOML esterni, con meccanismo di lookup builtin → utente → frontmatter.
 
@@ -620,17 +620,17 @@ Questo CSS viene iniettato nel `<style>` del template, dopo `style.css`.
 
 ### 25.7 Test
 
-- [ ] `test_load_builtin_palette` — `load_palette("default")` carica dalla dir builtin
-- [ ] `test_load_user_palette` — palette in `~/.md2/palettes/` ha priorità su builtin
-- [ ] `test_palette_not_found` — nome palette inesistente produce errore chiaro
-- [ ] `test_resolve_colors_default` — senza frontmatter, usa palette default
-- [ ] `test_resolve_colors_palette_name` — `palette = "warm"` carica la palette warm
-- [ ] `test_resolve_colors_inline_override` — `colors = [...]` sovrascrive
-- [ ] `test_resolve_colors_partial_merge` — `palette + colors` parziale = merge corretto
-- [ ] `test_generate_palette_css` — output CSS contiene le variabili `--md2-color-N`
-- [ ] `test_dark_auto_generated` — senza sezione `[dark]`, i colori dark vengono calcolati
-- [ ] `test_dark_explicit` — con sezione `[dark]`, i colori espliciti vengono usati
-- [ ] `test_palette_toml_format` — tutti i file `.toml` builtin sono validi e parsabili
+- [x] `test_load_builtin_palette` — `load_palette("default")` carica dalla dir builtin
+- [x] `test_load_user_palette` — palette in `~/.md2/palettes/` ha priorità su builtin
+- [x] `test_palette_not_found` — nome palette inesistente produce errore chiaro
+- [x] `test_resolve_colors_default` — senza frontmatter, usa palette default
+- [x] `test_resolve_colors_palette_name` — `palette = "warm"` carica la palette warm
+- [x] `test_resolve_colors_inline_override` — `colors = [...]` sovrascrive
+- [x] `test_resolve_colors_partial_merge` — `palette + colors` parziale = merge corretto
+- [x] `test_generate_palette_css` — output CSS contiene le variabili `--md2-color-N`
+- [x] `test_dark_auto_generated` — senza sezione `[dark]`, i colori dark vengono calcolati
+- [x] `test_dark_explicit` — con sezione `[dark]`, i colori espliciti vengono usati
+- [x] `test_palette_toml_format` — tutti i file `.toml` builtin sono validi e parsabili
 
 ---
 

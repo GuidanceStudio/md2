@@ -1,0 +1,24 @@
+name = "mono"
+
+colors = [
+    "#1a3a5c",
+    "#2a5a8c",
+    "#3a7abc",
+    "#5a9ad5",
+    "#7ab8e0",
+    "#a0d0f0",
+    "#c0e0f8",
+    "#ddeeff",
+]
+
+[dark]
+colors = [
+    "#4a8ac0",
+    "#5a9ad5",
+    "#7ab8e0",
+    "#90c8e8",
+    "#a0d0f0",
+    "#b8e0f5",
+    "#d0eafa",
+    "#e8f4ff",
+]

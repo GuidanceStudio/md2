@@ -26,6 +26,7 @@ packages = ["md2"]
 
 [tool.hatch.build.targets.wheel.force-include]
 "md2/templates" = "md2/templates"
+"md2/palettes" = "md2/palettes"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
