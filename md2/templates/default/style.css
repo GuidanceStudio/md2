@@ -153,7 +153,15 @@ body {
 .slide th { background-color: var(--table-header-bg); font-weight: bold; }
 
 /* Charts — override table styles inside chart wrappers */
-.md2-chart { margin: 30px auto; max-width: 100%; }
+.md2-chart {
+    margin: 30px auto; max-width: 100%; padding: 20px;
+    box-shadow: 0 2px 15px rgba(0,0,0,0.05);
+    border-radius: 8px; overflow: hidden;
+}
+.md2-chart .data {
+    color: #fff; font-weight: 600; font-size: 0.85rem;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+}
 .md2-chart table.charts-css {
     box-shadow: none; border-radius: 0; border-collapse: separate;
 }

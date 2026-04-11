@@ -1213,3 +1213,27 @@ Tutte le modifiche sono solo CSS — nessun cambiamento alla logica Python.
 - [x] Commit & push
 
 **Done when:** Tutti e 6 i chart nell'example sono visivamente leggibili: barre con altezza adeguata, linee visibili, label non troncate, valori non sovrapposti.
+
+---
+
+## M37: Chart visual polish — cornice, padding, colore testo dati ✅
+
+**Why:** I chart flottano nel vuoto senza cornice visiva. I numeri dentro le barre sono incollati al bordo e il testo nero è illeggibile su barre scure (es. "62" nero su blu `#4e79a7`).
+
+**Approach:** Modifiche CSS in `style.css`:
+1. **Cornice**: aggiungere al wrapper `.md2-chart` lo stesso trattamento visivo delle tabelle — `border-radius: 8px`, `box-shadow`, `overflow: hidden`, e un padding interno
+2. **Padding**: aggiungere padding al wrapper `.md2-chart` per dare respiro al contenuto e impedire che i valori escano dal contenitore
+3. **Colore testo dati**: i `.data` dentro i chart diventano bianchi con `text-shadow` per contrasto su qualsiasi colore di barra. In dark mode resta bianco (funziona su entrambi i temi).
+
+Tutte le modifiche sono solo CSS — nessun cambiamento alla logica Python.
+
+**Tasks:**
+- [x] Aggiungere box-shadow e border-radius al wrapper `.md2-chart`
+- [x] Aggiungere padding interno al wrapper
+- [x] Settare color: #fff e text-shadow sui `.data` span dentro i chart
+- [x] Verificare dark mode — il bianco funziona anche su sfondo scuro
+- [x] Test: unit — CSS contiene le nuove regole
+- [x] Rigenerare example e verificare con Playwright
+- [x] Commit & push
+
+**Done when:** I chart hanno una cornice visiva coerente con le tabelle, i numeri hanno spazio e sono leggibili su qualsiasi colore di barra.
