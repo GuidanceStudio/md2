@@ -1068,15 +1068,15 @@ In stampa la palette light viene sempre usata (anche se il documento è in dark 
 
 ---
 
-## M31: Documentazione e example — columns, sizing, stampa
+## M31: Documentazione e example — columns, sizing, stampa ✅
 
 ### 31.1 README
 
-- [ ] Aggiungere sezione "Layout a colonne" con sintassi `:::columns`, esempio con chart
-- [ ] Aggiornare sezione "Interfaccia generata" con nota su stampa chart-friendly
-- [ ] Aggiornare sezione "Grafici" con nota su sizing automatico per tipo
+- [x] Aggiungere sezione "Layout a colonne" con sintassi `:::columns`, esempio con chart
+- [x] Aggiornare sezione "Interfaccia generata" con nota su stampa chart-friendly
+- [x] Aggiornare sezione "Grafici" con nota su sizing automatico per tipo
 
 ### 31.2 Example
 
-- [ ] Aggiornare `examples/example.md` con almeno un uso di `:::columns` (testo + chart affiancati)
-- [ ] Rigenerare `examples/example.html`
+- [x] Aggiornare `examples/example.md` con almeno un uso di `:::columns` (testo + chart affiancati)
+- [x] Rigenerare `examples/example.html`

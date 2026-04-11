@@ -19,8 +19,14 @@ We are transforming from a single-product company into a **platform ecosystem**,
 *   **Stretch Goal:** **25,000 active users**.
 *   **R&D Investment:** **$2.4M** across Platform, Mobile, and AI verticals.
 
+:::columns
 **The Challenge:**
 To hit our stretch targets, we must ship faster and smarter.
+
+**Key Evolution:**
+We have reorganized from feature teams into **3 Platform Pillars** (Core, Growth, Intelligence) with shared infrastructure.
+
+---
 
 :::chart pie --labels --title "R&D Budget Allocation"
 | Vertical | Budget |
@@ -30,8 +36,7 @@ To hit our stretch targets, we must ship faster and smarter.
 | AI       | 24     |
 :::
 
-**Key Evolution:**
-We have reorganized from feature teams into **3 Platform Pillars** (Core, Growth, Intelligence) with shared infrastructure.
+:::
 
 ---
 

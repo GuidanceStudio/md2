@@ -89,7 +89,10 @@ I test usano `pytest` e sono divisi in **unit** (funzioni pure, senza I/O) e **l
     │   ├── test_template_system.py    # sistema template, --template, --init-templates
     │   ├── test_frontmatter.py        # parsing frontmatter TOML
     │   ├── test_palettes.py           # sistema palette colori
-    │   └── test_charts.py             # direttiva :::chart e Charts.css
+    │   ├── test_charts.py             # direttiva :::chart e Charts.css
+    │   ├── test_chart_sizing.py       # dimensioni default per tipo di chart
+    │   ├── test_columns.py            # direttiva :::columns layout
+    │   └── test_print_css.py          # CSS stampa ottimizzato per chart
     └── live/
         ├── test_conversion_e2e.py     # conversione completa file → HTML
         ├── test_edge_cases_e2e.py     # file vuoti, unicode, XSS, casi limite
@@ -365,12 +368,47 @@ La prima colonna è sempre l'etichetta (asse delle categorie). Le colonne succes
 :::
 ```
 
+#### Dimensioni
+
+Ogni tipo di grafico ha dimensioni di default sensate:
+
+| Tipo | Altezza | Larghezza |
+|------|---------|-----------|
+| `bar` | automatica (cresce con le righe) | 100% |
+| `column`, `line`, `area` | 250px | 100% |
+| `pie` | 200px | 200px (centrato) |
+
 #### Note
 
 - I valori nelle colonne dati devono essere **numerici**. Valori non numerici vengono trattati come 0.
 - I grafici usano automaticamente i colori della **palette** del documento (vedi sezione Palette colori).
 - **Charts.css** viene incluso nell'HTML solo quando il documento contiene almeno un grafico — le presentazioni senza grafici non hanno overhead aggiuntivo.
 - Basato su [Charts.css](https://chartscss.org/), una libreria CSS pura senza JavaScript.
+- In **stampa**, i colori dei grafici vengono preservati (`print-color-adjust: exact`). I grafici non vengono spezzati tra pagine.
+
+### Layout a colonne
+
+Usa `:::columns` per affiancare contenuti in due colonne:
+
+```
+:::columns
+Testo nella colonna sinistra.
+
+- Punto uno
+- Punto due
+
+---
+
+:::chart bar --labels
+| A | B |
+|---|---|
+| x | 50 |
+:::
+
+:::
+```
+
+Il `---` all'interno di `:::columns` separa le due colonne (massimo 2). Su mobile (< 768px) le colonne si impilano verticalmente. In stampa restano affiancate.
 
 ### Blocchi di codice
 
@@ -405,7 +443,7 @@ Tag HTML sicuri vengono preservati: `<iframe>` per embed video/mappe, `<img>` co
 - **Barra di progresso** — linea blu in cima alla pagina
 - **Scroll-snap** — ogni slide occupa l'intero viewport
 - **Fade-in** — il contenuto delle slide appare con animazione
-- **Print** — `Ctrl+P` produce un layout pulito senza UI, una slide per pagina
+- **Print** — `Ctrl+P` produce un layout pulito senza UI, una slide per pagina. I grafici mantengono i colori e non vengono spezzati tra pagine
 - **Meta tag Open Graph** — titolo e descrizione per la condivisione
 - **Favicon inline** — nessun 404 nel browser
 - **Responsive** — breakpoint a 1024px (tablet) e 768px (mobile) con menu hamburger
