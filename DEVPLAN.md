@@ -832,7 +832,7 @@ body.dark-mode .md2-chart .charts-css {
 
 ---
 
-## M28: Chart sizing — altezze e dimensioni sensate per tipo
+## M28: Chart sizing — altezze e dimensioni sensate per tipo ✅
 
 Il chart rendering attuale non ha vincoli di dimensione: i grafici si espandono al 100% dello spazio disponibile. Un pie chart occupa l'intero viewport ed è inutilizzabile. Serve un sistema di sizing di default per tipo, con possibilità di override.
 
@@ -873,10 +873,10 @@ In `style.css`, specializzare le regole per tipo:
 
 ### 28.4 Test
 
-- [ ] `test_chart_bar_no_fixed_height` — bar chart non ha altezza fissa nel CSS
-- [ ] `test_chart_column_has_height` — column chart ha height nel wrapper
-- [ ] `test_chart_pie_has_constrained_size` — pie chart ha height e width limitati
-- [ ] `test_chart_sizing_visual` — e2e: generare una presentazione con tutti i tipi di chart e verificare che l'HTML contenga le classi di sizing corrette
+- [x] `test_chart_bar_no_fixed_height` — bar chart non ha altezza fissa nel CSS
+- [x] `test_chart_column_has_height` — column chart ha height nel wrapper
+- [x] `test_chart_pie_has_constrained_size` — pie chart ha height e width limitati
+- [x] `test_chart_sizing_visual` — e2e: generare una presentazione con tutti i tipi di chart e verificare che l'HTML contenga le classi di sizing corrette
 
 ---
 
