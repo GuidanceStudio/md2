@@ -1190,7 +1190,7 @@ Contenuto a destra.
 
 ---
 
-## M36: Fix CSS — bar height, line visibility, label spacing
+## M36: Fix CSS — bar height, line visibility, label spacing ✅
 
 **Why:** I bar chart sono schiacciati (nessuna altezza minima per riga). Il line chart è una striscia sottile (la linea è troppo fine). Le label si troncano su testi lunghi. I valori `show-data` si sovrappongono.
 
@@ -1204,12 +1204,12 @@ Contenuto a destra.
 Tutte le modifiche sono solo CSS — nessun cambiamento alla logica Python.
 
 **Tasks:**
-- [ ] Aggiungere min-height per riga nei bar chart
-- [ ] Settare --line-size per line e area chart
-- [ ] Aumentare --labels-size e aggiungere text-overflow
-- [ ] Settare --data-spacing per show-data
-- [ ] Test: unit — CSS contiene le nuove regole
-- [ ] Rigenerare example e verificare tutti i chart con Playwright
-- [ ] Commit & push
+- [x] Aggiungere min-height per riga nei bar chart
+- [x] Settare --line-size per line e area chart
+- [x] Aumentare --labels-size e aggiungere text-overflow
+- [x] Settare --data-spacing per show-data
+- [x] Test: unit — CSS contiene le nuove regole
+- [x] Rigenerare example e verificare tutti i chart con Playwright
+- [x] Commit & push
 
 **Done when:** Tutti e 6 i chart nell'example sono visivamente leggibili: barre con altezza adeguata, linee visibili, label non troncate, valori non sovrapposti.

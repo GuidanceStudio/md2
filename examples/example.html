@@ -173,10 +173,12 @@ body {
 .md2-chart .charts-css td {
     border: none; background: none; padding: 0;
 }
-.md2-chart .charts-css.bar { --labels-size: 80px; }
-.md2-chart .charts-css.column { --labels-size: 80px; height: min(300px, 40vh); }
-.md2-chart .charts-css.line { height: min(300px, 40vh); }
-.md2-chart .charts-css.area { height: min(300px, 40vh); }
+.md2-chart .charts-css { --data-spacing: 8px; }
+.md2-chart .charts-css.bar { --labels-size: 100px; min-height: 40px; }
+.md2-chart .charts-css.bar tbody tr { min-height: 40px; }
+.md2-chart .charts-css.column { --labels-size: 100px; height: min(300px, 40vh); }
+.md2-chart .charts-css.line { height: min(300px, 40vh); --line-size: 3px; }
+.md2-chart .charts-css.area { height: min(300px, 40vh); --line-size: 3px; }
 .md2-chart .charts-css.pie {
     max-width: min(50vh, 50vw); margin: 0 auto; aspect-ratio: 1;
 }

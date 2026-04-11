@@ -64,15 +64,16 @@ def test_area_has_height():
 
 
 def test_bar_no_fixed_height():
-    """Bar charts do NOT have a fixed height — they grow with data rows."""
+    """Bar charts do NOT have a fixed height — they grow with data rows.
+
+    min-height is allowed (for row visibility), but not a fixed height.
+    """
     css = _get_style_css()
-    # Bar should not have a height rule (it grows naturally)
-    # Find all .charts-css.bar rules and check none sets height
     bar_matches = [m.start() for m in re.finditer(r'\.charts-css\.bar\b', css)]
     for start in bar_matches:
         block = css[start:css.index("}", start) + 1]
-        # Should not contain "height:" (but --labels-size is ok)
-        height_matches = re.findall(r'\bheight\s*:', block)
+        # Match standalone "height:" but not "min-height:" or "--line-size"
+        height_matches = re.findall(r'(?<!-)(?<!min-)\bheight\s*:', block)
         assert len(height_matches) == 0, f"Bar chart should not have fixed height: {block}"
 
 
