@@ -174,11 +174,11 @@ body {
     border: none; background: none; padding: 0;
 }
 .md2-chart .charts-css.bar { --labels-size: 80px; }
-.md2-chart .charts-css.column { --labels-size: 80px; height: 250px; }
-.md2-chart .charts-css.line { height: 250px; }
-.md2-chart .charts-css.area { height: 250px; }
+.md2-chart .charts-css.column { --labels-size: 80px; height: min(300px, 40vh); }
+.md2-chart .charts-css.line { height: min(300px, 40vh); }
+.md2-chart .charts-css.area { height: min(300px, 40vh); }
 .md2-chart .charts-css.pie {
-    max-width: 280px; margin: 0 auto; aspect-ratio: 1;
+    max-width: min(50vh, 50vw); margin: 0 auto; aspect-ratio: 1;
 }
 .md2-chart .charts-css tbody tr:nth-child(8n+1) td { --color: var(--md2-color-1); }
 .md2-chart .charts-css tbody tr:nth-child(8n+2) td { --color: var(--md2-color-2); }

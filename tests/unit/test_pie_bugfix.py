@@ -107,14 +107,12 @@ def test_bar_still_uses_size():
 
 # --- Responsive sizing ---
 
-def test_pie_responsive_not_fixed_px():
-    """Pie CSS does not use fixed 200px width — uses responsive approach."""
+def test_pie_responsive_uses_viewport_units():
+    """Pie CSS uses viewport units (vh/vw) for responsive sizing."""
     css = (BUNDLED_TEMPLATES_DIR / "style.css").read_text(encoding="utf-8")
-    # Find pie rule
     pie_idx = css.index(".charts-css.pie")
     pie_block = css[pie_idx:css.index("}", pie_idx) + 1]
-    # Should not have "width: 200px" literally
-    assert "width: 200px" not in pie_block
+    assert "vh" in pie_block or "vw" in pie_block
 
 
 def test_pie_uses_aspect_ratio():

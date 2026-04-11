@@ -31,19 +31,24 @@ def _get_style_css():
 # --- CSS rules exist for each chart type ---
 
 def test_pie_has_constrained_size():
-    """Pie charts have responsive size constraints in CSS."""
+    """Pie charts have viewport-relative responsive sizing."""
     css = _get_style_css()
     assert ".charts-css.pie" in css
     pie_section = css[css.index(".charts-css.pie"):]
     pie_block = pie_section[:pie_section.index("}") + 1]
-    assert "max-width" in pie_block
     assert "aspect-ratio" in pie_block
+    # Uses viewport units, not fixed px
+    assert "vh" in pie_block or "vw" in pie_block
 
 
-def test_column_has_height():
-    """Column charts have a fixed height in CSS."""
+def test_column_has_viewport_height():
+    """Column charts use viewport-relative height."""
     css = _get_style_css()
     assert re.search(r'\.charts-css\.column\b.*?height', css, re.DOTALL)
+    # Should contain vh unit for responsive sizing
+    col_idx = css.index(".charts-css.column")
+    col_block = css[col_idx:css.index("}", col_idx) + 1]
+    assert "vh" in col_block
 
 
 def test_line_has_height():

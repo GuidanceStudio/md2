@@ -375,8 +375,8 @@ Ogni tipo di grafico ha dimensioni di default sensate:
 | Tipo | Altezza | Larghezza |
 |------|---------|-----------|
 | `bar` | automatica (cresce con le righe) | 100% |
-| `column`, `line`, `area` | 250px | 100% |
-| `pie` | 200px | 200px (centrato) |
+| `column`, `line`, `area` | `min(300px, 40vh)` | 100% |
+| `pie` | proporzionale al viewport | `min(50vh, 50vw)` centrato |
 
 #### Note
 

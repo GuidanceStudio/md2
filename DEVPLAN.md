@@ -1149,7 +1149,7 @@ Contenuto a destra.
 
 ---
 
-## M34: Chart sizing responsivo con unità viewport
+## M34: Chart sizing responsivo con unità viewport ✅
 
 **Why:** I chart sono troppo piccoli su schermi grandi. 280px max-width per pie e 250px height per column/line/area non si adattano al viewport. Su un monitor 1440p il chart occupa un angolino della slide.
 
@@ -1160,11 +1160,11 @@ Contenuto a destra.
 - Dentro `:::columns` (flex child): i chart si adattano alla colonna naturalmente
 
 **Tasks:**
-- [ ] Aggiornare CSS sizing per pie con `min(50vh, 50vw)`
-- [ ] Aggiornare CSS sizing per column/line/area con `min(300px, 40vh)`
-- [ ] Aggiornare test `test_chart_sizing.py` e `test_pie_bugfix.py` per le nuove regole
-- [ ] Rigenerare `examples/example.html`
-- [ ] Aggiornare README tabella dimensioni
-- [ ] Commit & push
+- [x] Aggiornare CSS sizing per pie con `min(50vh, 50vw)`
+- [x] Aggiornare CSS sizing per column/line/area con `min(300px, 40vh)`
+- [x] Aggiornare test `test_chart_sizing.py` e `test_pie_bugfix.py` per le nuove regole
+- [x] Rigenerare `examples/example.html`
+- [x] Aggiornare README tabella dimensioni
+- [x] Commit & push
 
 **Done when:** I chart si ridimensionano proporzionalmente al viewport su schermi di diverse dimensioni.
