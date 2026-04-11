@@ -1,3 +1,8 @@
++++
+title = "Project Aurora: 2026 Product Launch Strategy"
+palette = "default"
++++
+
 # Project Aurora: 2026 Product Launch Strategy
 **Date:** March 10, 2026
 **Audience:** Engineering & Product Leadership
@@ -45,6 +50,14 @@ We have reorganized from feature teams into **3 Platform Pillars** (Core, Growth
 | **Deploy Frequency** | 2/week | **12/week** | Improved |
 | **Error Rate** | 2.1% | 0.8% | Improved |
 | **Test Coverage** | 62% | **87%** | Improved |
+
+:::chart bar --labels
+| Metric        | Q3 2025 | Q1 2026 |
+|---------------|---------|---------|
+| Deploy/week   | 2       | 12      |
+| Test Coverage | 62      | 87      |
+| Uptime %      | 99      | 100     |
+:::
 
 **Key Insight:**
 The move to event-driven architecture reduced API latency by **60%** while increasing throughput **3x**. This validates the platform-first approach over point optimizations.

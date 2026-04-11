@@ -86,7 +86,10 @@ I test usano `pytest` e sono divisi in **unit** (funzioni pure, senza I/O) e **l
     │   ├── test_generate_css.py       # generazione CSS, temi, dark mode, responsive
     │   ├── test_render_presentation.py # parsing markdown, slide, sidebar, struttura HTML
     │   ├── test_main_cli.py           # parsing argomenti CLI
-    │   └── test_template_system.py    # sistema template, --template, --init-templates
+    │   ├── test_template_system.py    # sistema template, --template, --init-templates
+    │   ├── test_frontmatter.py        # parsing frontmatter TOML
+    │   ├── test_palettes.py           # sistema palette colori
+    │   └── test_charts.py             # direttiva :::chart e Charts.css
     └── live/
         ├── test_conversion_e2e.py     # conversione completa file → HTML
         ├── test_edge_cases_e2e.py     # file vuoti, unicode, XSS, casi limite
@@ -125,6 +128,82 @@ oppure direttamente:
 Per rimuovere l'ambiente virtuale e i file generati:
 
     make clean
+
+## Frontmatter
+
+md2 supporta un blocco frontmatter TOML all'inizio del file markdown, delimitato da `+++`:
+
+```markdown
++++
+title = "Report Trimestrale"
+palette = "warm"
+lang = "en"
+dark = true
++++
+
+# Report Trimestrale
+
+Contenuto della presentazione...
+```
+
+| Campo     | Tipo            | Default     | Descrizione                          |
+|-----------|-----------------|-------------|--------------------------------------|
+| `title`   | string          | da `# H1`  | Titolo della presentazione (override)|
+| `palette` | string          | `"default"` | Nome palette colori                  |
+| `colors`  | array di string | —           | Override colori della palette         |
+| `lang`    | string          | `"it"`      | Lingua del documento                 |
+| `dark`    | bool            | `false`     | Dark mode come default               |
+
+I flag CLI (`--lang`, `--dark`) hanno priorità sul frontmatter quando specificati esplicitamente.
+
+## Palette colori
+
+md2 include 6 palette predefinite: `default`, `warm`, `cool`, `mono`, `vivid`, `pastel`.
+
+Le palette sono file TOML con questa struttura:
+
+```toml
+name = "warm"
+
+colors = [
+    "#d45d00",
+    "#e8910c",
+    "#f5c542",
+    "#e15759",
+]
+
+[dark]
+colors = [
+    "#f0a050",
+    "#f5b84c",
+    "#fce08a",
+    "#f28e8e",
+]
+```
+
+### Palette custom
+
+Crea un file `.toml` in `~/.md2/palettes/`:
+
+```bash
+# Nuova palette
+~/.md2/palettes/corporate.toml
+
+# Override di una builtin
+~/.md2/palettes/warm.toml
+```
+
+Le palette utente hanno priorità sulle builtin.
+
+### Cascata colori
+
+```
+Palette builtin → Palette utente → Frontmatter (palette=) → Frontmatter (colors=)
+```
+
+Se nel frontmatter sono presenti sia `palette` che `colors`, i colori nel frontmatter sovrascrivono i primi N colori della palette selezionata.
+
+Se la sezione `[dark]` è assente nel file palette, le varianti dark vengono calcolate automaticamente.
 
 ## Struttura del file Markdown
 
@@ -227,6 +306,34 @@ Liste puntate (`-` o `*`) e numerate (`1.`), anche annidate con indentazione.
 ### Tabelle
 
 Sintassi standard con `|` e `---`. L'allineamento colonne è supportato (`:---`, `:---:`, `---:`).
+
+### Grafici (Charts)
+
+Usa la direttiva `:::chart` per trasformare una tabella in un grafico visuale:
+
+```
+:::chart bar --labels
+| Prodotto | Vendite |
+|----------|---------|
+| Widget A | 50      |
+| Widget B | 80      |
+| Widget C | 65      |
+:::
+```
+
+Tipi supportati: `bar`, `column`, `line`, `area`, `pie`.
+
+Opzioni disponibili:
+
+| Opzione       | Effetto                               |
+|---------------|---------------------------------------|
+| `--labels`    | Mostra etichette sugli assi           |
+| `--legend`    | Mostra legenda (per multi-dataset)    |
+| `--stacked`   | Barre/colonne impilate                |
+| `--show-data` | Mostra valori al passaggio del mouse  |
+| `--title "…"` | Titolo del grafico                    |
+
+I grafici usano automaticamente i colori della palette del documento. Charts.css viene incluso nell'HTML solo quando il documento contiene almeno un grafico.
 
 ### Blocchi di codice
 
@@ -340,6 +447,8 @@ Queste variabili sono disponibili in tutti i template:
 | `slides[].id`      | string  | ID HTML della slide (`slide-0`, `slide-1`) |
 | `slides[].title`   | string  | Titolo della slide                         |
 | `slides[].content` | string  | HTML del contenuto della slide             |
+| `palette_css`      | string  | CSS con variabili `--md2-color-N`          |
+| `has_charts`       | bool    | `true` se il documento contiene grafici    |
 
 ### Aggiornare il template default
 

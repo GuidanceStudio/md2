@@ -805,27 +805,27 @@ body.dark-mode .md2-chart .charts-css {
 - [x] `test_chart_multi_dataset` — tabella con più colonne dati produce dataset multipli
 - [x] `test_chart_colors_from_palette` — chart usa `--md2-color-N` per le serie
 - [x] `test_chart_has_charts_flag` — `has_charts` è `True` solo quando ci sono chart
-- [ ] `test_no_charts_no_css` — senza chart, Charts.css non viene incluso nell'HTML
+- [x] `test_no_charts_no_css` — senza chart, Charts.css non viene incluso nell'HTML
 - [x] `test_chart_fallback_readable` — se Charts.css fallisce, la tabella resta leggibile
 - [x] `test_chart_in_slide` — chart dentro una slide si renderizza correttamente
-- [ ] `test_multiple_charts` — più chart nella stessa presentazione funzionano
+- [x] `test_multiple_charts` — più chart nella stessa presentazione funzionano
 - [x] `test_chart_invalid_type` — tipo non supportato produce warning/fallback a tabella
 - [x] `test_chart_non_numeric_values` — valori non numerici gestiti con errore chiaro
 
 ---
 
-## M27: Documentazione e example — chart e palette
+## M27: Documentazione e example — chart e palette ✅
 
 ### 27.1 README
 
-- [ ] Aggiungere sezione "Grafici" con sintassi `:::chart`, tipi supportati, opzioni
-- [ ] Aggiungere sezione "Palette colori" con spiegazione cascata, come creare palette custom
-- [ ] Aggiungere sezione "Frontmatter" con formato e campi supportati
-- [ ] Aggiornare sezione "Markdown supportato" con `:::chart`
-- [ ] Aggiornare sezione "Opzioni" con `palette` e `colors` nel frontmatter
+- [x] Aggiungere sezione "Grafici" con sintassi `:::chart`, tipi supportati, opzioni
+- [x] Aggiungere sezione "Palette colori" con spiegazione cascata, come creare palette custom
+- [x] Aggiungere sezione "Frontmatter" con formato e campi supportati
+- [x] Aggiornare sezione "Markdown supportato" con `:::chart`
+- [x] Aggiornare sezione "Opzioni" con `palette` e `colors` nel frontmatter
 
 ### 27.2 Example
 
-- [ ] Aggiornare `examples/example.md` con almeno un chart (bar o column) per dimostrare la feature
-- [ ] Aggiungere `examples/charts.md` — showcase dedicato con tutti i tipi di chart e opzioni
-- [ ] Rigenerare `examples/example.html`
+- [x] Aggiornare `examples/example.md` con almeno un chart (bar o column) per dimostrare la feature
+- [x] Aggiungere `examples/charts.md` — showcase dedicato con tutti i tipi di chart e opzioni
+- [x] Rigenerare `examples/example.html`
