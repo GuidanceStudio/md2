@@ -1113,3 +1113,58 @@ In stampa la palette light viene sempre usata (anche se il documento è in dark 
 - [x] `test_pie_responsive_sizing` — il CSS del pie usa unità relative o aspect-ratio, non px fissi
 - [x] `test_pie_in_columns_renders` — pie dentro :::columns ha dimensioni ragionevoli
 - [x] `test_all_chart_types_have_colors` — ogni tipo di chart ha colori dalla palette
+
+---
+
+## M33: Refactor `:::columns` — sintassi `:::col` e fix pipeline ✅
+
+**Why:** Il `---` dentro `:::columns` viene mangiato dal slide splitter in `prepare_context()` prima che `preprocess_columns` lo veda. Le columns non funzionano mai in pratica. Inoltre il `---` è semanticamente un thematic break, non un separatore di colonna.
+
+**Approach:** Cambiare la sintassi a `:::col` esplicito per demarcare le colonne. Il preprocessor `preprocess_columns` cerca `:::columns ... :::col ... :::` e splitta su `:::col`. Nessun conflitto con `---` (slide separator) né con `:::chart`. L'ordine di processing nella pipeline resta: chart → columns → markdown → sanitize → transform.
+
+Nuova sintassi:
+```markdown
+:::columns
+
+:::col
+Testo a sinistra.
+
+:::col
+Contenuto a destra.
+
+:::
+```
+
+**Tasks:**
+- [x] Aggiornare regex `_COLUMNS_DIRECTIVE_RE` per matchare `:::columns ... :::`
+- [x] Aggiornare `preprocess_columns()` per splittare su `:::col` invece di `---`
+- [x] Aggiornare tutti i test in `test_columns.py`
+- [x] Aggiornare `examples/example.md` con la nuova sintassi
+- [x] Aggiornare README sezione "Layout a colonne"
+- [x] Test: unit — colonne con `:::col`, annidamento con chart, fallback senza `:::col`
+- [x] Test: e2e — colonne renderizzate correttamente nell'HTML
+- [x] Commit & push
+
+**Done when:** `:::columns` con `:::col` produce due colonne affiancate nell'HTML generato, senza conflitto con il separatore slide `---`.
+
+---
+
+## M34: Chart sizing responsivo con unità viewport
+
+**Why:** I chart sono troppo piccoli su schermi grandi. 280px max-width per pie e 250px height per column/line/area non si adattano al viewport. Su un monitor 1440p il chart occupa un angolino della slide.
+
+**Approach:** Usare unità viewport nel CSS per sizing proporzionato:
+- Pie: `max-width: min(50vh, 50vw); aspect-ratio: 1` — si adatta al viewport mantenendo il cerchio
+- Column/line/area: `height: min(300px, 40vh)` — minimo 300px o 40% del viewport, quale è minore
+- Bar: invariato (auto, cresce con le righe)
+- Dentro `:::columns` (flex child): i chart si adattano alla colonna naturalmente
+
+**Tasks:**
+- [ ] Aggiornare CSS sizing per pie con `min(50vh, 50vw)`
+- [ ] Aggiornare CSS sizing per column/line/area con `min(300px, 40vh)`
+- [ ] Aggiornare test `test_chart_sizing.py` e `test_pie_bugfix.py` per le nuove regole
+- [ ] Rigenerare `examples/example.html`
+- [ ] Aggiornare README tabella dimensioni
+- [ ] Commit & push
+
+**Done when:** I chart si ridimensionano proporzionalmente al viewport su schermi di diverse dimensioni.

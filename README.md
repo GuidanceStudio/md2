@@ -388,17 +388,18 @@ Ogni tipo di grafico ha dimensioni di default sensate:
 
 ### Layout a colonne
 
-Usa `:::columns` per affiancare contenuti in due colonne:
+Usa `:::columns` con `:::col` per affiancare contenuti in due colonne:
 
 ```
 :::columns
+
+:::col
 Testo nella colonna sinistra.
 
 - Punto uno
 - Punto due
 
----
-
+:::col
 :::chart bar --labels
 | A | B |
 |---|---|
@@ -408,7 +409,7 @@ Testo nella colonna sinistra.
 :::
 ```
 
-Il `---` all'interno di `:::columns` separa le due colonne (massimo 2). Su mobile (< 768px) le colonne si impilano verticalmente. In stampa restano affiancate.
+Ogni `:::col` delimita l'inizio di una colonna (massimo 2). Su mobile (< 768px) le colonne si impilano verticalmente. In stampa restano affiancate.
 
 ### Blocchi di codice
 

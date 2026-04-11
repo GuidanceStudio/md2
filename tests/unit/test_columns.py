@@ -1,4 +1,4 @@
-"""Tests for M29: :::columns — two-column layout directive."""
+"""Tests for M33: :::columns with :::col — two-column layout directive."""
 import subprocess
 import sys
 
@@ -8,31 +8,30 @@ from md2.core import preprocess_columns, process_markdown
 # --- preprocess_columns ---
 
 def test_columns_directive_parsed():
-    """:::columns ... ::: is recognized and produces column divs."""
-    md = ":::columns\nLeft content\n\n---\n\nRight content\n:::"
+    """:::columns with :::col markers produces column divs."""
+    md = ":::columns\n\n:::col\nLeft content\n\n:::col\nRight content\n\n:::"
     result = preprocess_columns(md)
     assert 'class="md2-columns"' in result
     assert 'class="md2-col"' in result
 
 
 def test_columns_two_columns():
-    """The --- separator produces exactly two .md2-col divs."""
-    md = ":::columns\nLeft\n\n---\n\nRight\n:::"
+    """Two :::col markers produce exactly two .md2-col divs."""
+    md = ":::columns\n\n:::col\nLeft\n\n:::col\nRight\n\n:::"
     result = preprocess_columns(md)
     assert result.count('class="md2-col"') == 2
 
 
-def test_columns_no_separator_fallback():
-    """Without --- inside, no column effect — content passes through."""
-    md = ":::columns\nJust some content without separator\n:::"
+def test_columns_no_col_marker_fallback():
+    """Without :::col inside, no column effect — content passes through."""
+    md = ":::columns\nJust some content without col markers\n:::"
     result = preprocess_columns(md)
-    # Should not create columns without a separator
     assert 'class="md2-columns"' not in result
 
 
 def test_columns_markdown_preserved():
     """Markdown inside columns is parsed (bold, lists, etc.)."""
-    md = ":::columns\n**bold** text\n\n---\n\n- item one\n- item two\n:::"
+    md = ":::columns\n\n:::col\n**bold** text\n\n:::col\n- item one\n- item two\n\n:::"
     result = preprocess_columns(md)
     assert "<strong>bold</strong>" in result
     assert "<li>" in result
@@ -41,12 +40,11 @@ def test_columns_markdown_preserved():
 def test_columns_with_chart_inside():
     """:::chart inside :::columns works correctly."""
     md = (
-        ":::columns\nSome text\n\n---\n\n"
+        ":::columns\n\n:::col\nSome text\n\n:::col\n"
         ":::chart bar --labels\n"
         "| A | B |\n|---|---|\n| x | 50 |\n"
         ":::\n\n:::"
     )
-    # Charts are preprocessed first, then columns
     from md2.core import preprocess_chart_directives
     preprocessed, has_charts = preprocess_chart_directives(md)
     result = preprocess_columns(preprocessed)
@@ -64,20 +62,28 @@ def test_no_columns_unchanged():
 def test_multiple_columns_blocks():
     """Multiple :::columns blocks in the same text all get processed."""
     md = (
-        ":::columns\nA\n\n---\n\nB\n:::\n\n"
+        ":::columns\n\n:::col\nA\n\n:::col\nB\n\n:::\n\n"
         "Some text between\n\n"
-        ":::columns\nC\n\n---\n\nD\n:::"
+        ":::columns\n\n:::col\nC\n\n:::col\nD\n\n:::"
     )
     result = preprocess_columns(md)
     assert result.count('class="md2-columns"') == 2
     assert result.count('class="md2-col"') == 4
 
 
+def test_columns_no_conflict_with_slide_separator():
+    """--- inside :::columns is NOT treated as column separator (no conflict)."""
+    md = ":::columns\n\n:::col\nText with --- horizontal rule\n\n:::col\nRight\n\n:::"
+    result = preprocess_columns(md)
+    # Should still produce 2 columns, --- is just markdown content
+    assert result.count('class="md2-col"') == 2
+
+
 # --- Full pipeline ---
 
 def test_columns_in_process_markdown():
     """Columns go through the full process_markdown pipeline."""
-    md = ":::columns\n**Left**\n\n---\n\nRight side\n:::"
+    md = ":::columns\n\n:::col\n**Left**\n\n:::col\nRight side\n\n:::"
     html, _ = process_markdown(md)
     assert 'class="md2-columns"' in html
     assert "<strong>Left</strong>" in html
@@ -98,7 +104,6 @@ def test_columns_responsive_css():
     """CSS has a mobile breakpoint that stacks columns."""
     from md2.core import BUNDLED_TEMPLATES_DIR
     css = (BUNDLED_TEMPLATES_DIR / "style.css").read_text(encoding="utf-8")
-    # Should have flex-direction: column in a media query
     assert "flex-direction: column" in css or "flex-direction:column" in css
 
 
@@ -108,10 +113,9 @@ def test_columns_in_slide_e2e(tmp_path):
     """Columns render correctly in a full presentation."""
     md_content = (
         "# Test\n\n---\n\n## Layout\n\n"
-        ":::columns\n"
-        "**Left column** with text.\n\n"
-        "---\n\n"
-        "**Right column** with more.\n"
+        ":::columns\n\n"
+        ":::col\n**Left column** with text.\n\n"
+        ":::col\n**Right column** with more.\n\n"
         ":::\n"
     )
     md_file = tmp_path / "test.md"
