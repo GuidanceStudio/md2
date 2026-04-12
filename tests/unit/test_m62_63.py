@@ -44,15 +44,17 @@ def test_line_area_data_position_relative():
 
 # --- M63 ---
 
-def test_multi_line_legend_has_large_margin():
-    """Multi-dataset line/area legend has large margin-top to clear x-labels."""
-    css = _get_style_css()
-    # Should have a selector for .md2-chart:has(.line.multiple/.area.multiple) ul.legend
-    # with margin-top >= 60px
-    assert re.search(
-        r':has\([^)]*\.(line|area)\.multiple[^)]*\)[^{]*ul\.legend[^{]*\{[^}]*margin-top:\s*(\d+)px',
-        css,
-    ) or re.search(
-        r':has\([^)]*\.multiple\.(line|area)[^)]*\)[^{]*ul\.legend[^{]*\{[^}]*margin-top:\s*(\d+)px',
-        css,
-    ), "Multi-line/area legend needs large margin-top to clear x-axis labels"
+def test_multi_line_no_legend_at_all():
+    """M65 supersedes M63: multi-line/area no longer has any legend at all
+    (endpoint labels serve as legend)."""
+    from md2.core import process_markdown
+    md = (
+        ":::chart line\n"
+        "| Q | A | B |\n"
+        "|---|---|---|\n"
+        "| 1 | 100 | 200 |\n"
+        "| 2 | 150 | 250 |\n"
+        ":::"
+    )
+    html, _ = process_markdown(md)
+    assert "charts-css legend" not in html

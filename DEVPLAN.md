@@ -1780,3 +1780,133 @@ Verificare con Playwright che legend.y > xLabels.bottom.
 - [x] Commit & push
 
 **Done when:** La legend nei line/area multi-dataset è sotto le x-axis labels, nessuna sovrapposizione.
+
+---
+
+## M64: Rethink radicale — data summary sotto il chart per line/area 🚫 SUPERSEDED
+
+**Status:** Rigettato dall'utente. La data table sotto il chart è visivamente "un disastro" e separa i valori dal chart. Superseded da M64bis.
+
+(contenuto originale mantenuto come reference storica. Vedi M65 sotto per l'approccio attuale.)
+
+## M64 (bis — original content archived, see M65):
+
+**Why (archived):** Da M43 in poi ho accumulato 5 milestone di fix per le label di line/area (M54 show values, M57 top padding, M61 wrapper padding, M62 z-index pill) senza mai arrivare a una soluzione pulita. Ogni fix risolve un sintomo e ne crea un altro:
+- 25000 clipped al top → padding-top → x-labels fuori card → più padding → 50 ancora clipped
+- Multi-dataset label collision → hide them → "grafico inutile, mancano numeri"
+- Pill z-index nascosto da td sibling → z-index: 2 → ancora clipping top
+
+**Root cause**: Charts.css usa `position: absolute` per i `.data` dentro i `<td>` ai coordinate del valore. Questo genera inevitabilmente: clipping ai bordi, z-index fights, collision in multi-dataset, spreco di spazio. L'approccio è sbagliato dall'inizio per i chart tipo "line/area" dove i valori sono SPARSI.
+
+L'utente ha individuato la soluzione corretta: **non posizionare le label nel chart area**. Metterle in un'area dedicata sotto il chart.
+
+**Approach:** Per `line` e `area` (e SOLO per loro — bar/column/pie funzionano bene con label inline dentro le barre colorate):
+
+1. **Rimuovere completamente** la generazione di `<span class="data">` inline per line/area
+2. **Generare una data summary HTML** dentro il wrapper, dopo il chart e prima della legend:
+   - **Single-dataset**: `<div class="md2-chart-data">` con mini-tabella orizzontale. Header: x-categorie. Row: valori.
+   - **Multi-dataset**: `<table class="md2-chart-data">` con una riga per serie. Prima colonna: color dot + nome serie. Colonne successive: valori per ogni x-categoria.
+3. **Rimuovere** le regole CSS ora obsolete:
+   - `padding-block-start` da `.line/.area` (M57) — già rimosso
+   - `.md2-chart:has(.line/.area)` extra padding (M61) — può tornare a default
+   - `.line/.area .data` z-index e position (M62) — non esistono più data span
+   - Pill background su `.line/.area .data` — non esiste più
+4. **Aggiungere CSS** per `.md2-chart-data`:
+   - Font piccolo (0.85rem), color muted (text-color con opacity 0.9)
+   - Compatto (padding 4-6px per cell)
+   - Allineato a destra o centrato (valori numerici)
+   - Color dots coerenti con le serie del chart (via `var(--md2-color-N)`)
+5. **Eliminare** `margin-top: 72px` dalla legend multi-line/area (M63) — non serve più perché il chart area torna a dimensione normale
+6. **Reset wrapper padding** per line/area ai valori default (come altri chart)
+
+**Tasks:**
+- [ ] In `transform_charts`: per `line`/`area`, non generare `<span class="data">` anche in single-dataset
+- [ ] Aggiungere logica per generare `.md2-chart-data` HTML (single/multi)
+- [ ] Inserire `.md2-chart-data` nel risultato wrapper (dopo tbody, prima della legend)
+- [ ] CSS: nuova classe `.md2-chart-data` con stile compatto
+- [ ] Rimuovere regole CSS obsolete da `style.css`: `.line .data`, `.area .data`, `.md2-chart:has(.line)` padding override, M63 multi-line legend margin-top override
+- [ ] Aggiornare test obsoleti (M54, M62, M63, M57/M61 che verificavano padding)
+- [ ] Aggiungere test: line single ha `.md2-chart-data`, line multi ha `.md2-chart-data` con tutti i valori
+- [ ] Verificare con Playwright: tutti i valori visibili, nessun clipping, nessun overlap
+- [ ] Commit & push
+
+**Done when:** 
+- Slide-8 single-line "Projected User Growth" mostra tutti i valori (3200, 8500, 15000, 25000) in una data summary sotto il chart, nessun clipping del chart area
+- Slide-8 multi-line "User Growth by Segment" mostra tutti i 12 valori (3 serie × 4 quarter) in una tabella sotto il chart, con color dots
+- Slide-6 area "Event Pipeline" mostra tutti i valori (12, 8, 35, 50, 48, 30) in una data summary, "50" non più clipped
+- Nessun z-index/clipping/overlap visibile
+- Il chart area stesso è pulito, senza pill dentro
+
+---
+
+## M65: Endpoint labels per multi-line/area con override robusto `.data` ✅
+
+**Why:** Supersede M64 (data table sotto = rigettato). L'utente vuole valori SEMPRE visibili nel chart area, niente hover, niente tabelle separate, niente sparizioni. Print-ready stile LaTeX. Da M43 in poi ho accumulato 5 hack milestone (M54, M57, M61, M62, M63) per i line/area che non hanno mai funzionato bene perché combattevano il posizionamento nativo di Charts.css invece di sovrascriverlo in modo robusto. La ricerca della documentazione Charts.css ha confermato che la libreria NON supporta label inline robusti per line/area (gli esempi ufficiali usano `.hide-data`).
+
+**Approach:** Sovrascrivere completamente il posizionamento `.data` di Charts.css per line/area con CSS override robusto, e usare il pattern canonico di data visualization professionale ("endpoint labels alla Bloomberg/FT"):
+
+### Single-dataset line/area
+
+Mostrare TUTTI i valori, uno sopra ogni punto della linea:
+- CSS override: `.line .data, .area .data { position: absolute; transform: translate(-50%, -110%); z-index: 10; }`
+- Il `-110%` sposta la label COMPLETAMENTE SOPRA il punto della linea (non sovrapposta)
+- Wrapper padding-top riservato (es. 40px) per accogliere la label del max value (`--end: 1`)
+- Pill background solido con shadow → leggibile su qualsiasi sfondo
+- `z-index: 10` evita che il td sibling successivo nasconda il pill
+
+### Multi-dataset line/area
+
+Mostrare solo il valore FINALE di ogni serie, con formato "Nome: Valore" a destra del chart:
+- In `transform_charts`: emettere `<span class="data">` solo per l'ultima colonna di ogni riga (o l'ultima riga per il formato column-per-series)
+- Formato label: `{dataset_header}: {value}` (es. "Self-serve: 10000")
+- Posizionamento: immediatamente a destra dell'ultimo punto, allineato verticalmente
+- Wrapper padding-right aumentato (~120px) per ospitare le label
+- Pill background con colore dot (usa `::before` con `background: currentColor` dove `color` è settato dalla regola `nth-of-type` di Charts.css per la serie)
+- **Rimuovere la legenda classica** — inutile ora, la label endpoint ha sia nome sia valore
+
+### Text truncation
+
+Label names possono essere lunghi. CSS:
+- `max-width: 140px`
+- `overflow: hidden`
+- `text-overflow: ellipsis`
+- `white-space: nowrap`
+
+### Cleanup pre-esistente (da rimuovere)
+
+Questi hack diventano obsoleti:
+1. **M54**: `_CHART_TYPES_SHOW_DATA` include già line/area, mantenere ✓
+2. **M57**: `padding-block-start: 24px` su `.line/.area` → **RIMUOVERE**, non serve più
+3. **M58**: `if is_multiple and chart_type in ('line', 'area'): show_data = False` → **RIMUOVERE** (ora mostriamo endpoint label)
+4. **M61**: `.md2-chart:has(.line/.area)` wrapper padding → **SEMPLIFICARE** (resta padding-top 40px e padding-right 120px in multi, ma via selettore pulito)
+5. **M62**: `.line .data, .area .data { z-index: 2; position: relative; }` → **MANTENERE/UNIFICARE** con il nuovo override
+6. **M63**: `:has(.line.multiple) ul.legend { margin-top: 72px }` → **RIMUOVERE** (niente legenda per multi-line)
+
+**Tasks:**
+- [x] In `transform_charts`: per line/area multi-dataset, emettere `.data` span SOLO per l'ultima colonna di ogni riga (endpoint)
+- [x] Il formato del span per multi-line endpoint: `{header}: {value}` (prefissato con il nome della serie)
+- [x] Single-line/area resta invariato: tutti i valori, tutte le righe
+- [x] **Rimuovere** la generazione automatica di `ul.legend` per line/area multi (la label endpoint fa da legenda)
+- [x] CSS: override `.line .data, .area .data` con `transform: translate(-50%, -110%)`, `z-index: 10`, pill styling
+- [x] CSS: per multi-line/area, override `.data` per label endpoint → posizionamento a destra del punto (`transform: translate(8px, -50%)`)
+- [x] CSS: `max-width: 140px; text-overflow: ellipsis; white-space: nowrap` sulle label
+- [x] CSS: rimuovere `padding-block-start: 24px` da `.line/.area` (obsoleto M57)
+- [x] CSS: sostituire `:has(.line)/:has(.area)` padding con selettore più semplice (padding sempre, non conditional)
+- [x] CSS: wrapper per multi-line/area ha `padding-right: 120px` extra per le endpoint labels
+- [x] CSS: rimuovere `.md2-chart:has(.line.multiple/.area.multiple) ul.legend` margin override (M63 obsoleto)
+- [x] Test: unit — single-line emette data span per ogni punto, multi-line solo per endpoint
+- [x] Test: unit — multi-line label contiene `{header}:` prefix
+- [x] Test: unit — CSS contiene transform/z-index override per .line/.area .data
+- [x] Test: unit — CSS rimuove padding-block-start obsoleto
+- [x] Test: unit — niente `ul.legend` nell'HTML per multi-line/area
+- [x] Verificare con Playwright: single-line tutti i valori visibili senza clipping/overlap
+- [x] Verificare con Playwright: multi-line "Enterprise: 6000", "SMB: 9000", "Self-serve: 10000" a destra, chart pulito a sinistra
+- [x] Rigenerare example.html
+- [x] Commit & push
+
+**Done when:**
+- Single-line "Projected User Growth": tutti i valori (3200, 8500, 15000, 25000) visibili come pill sopra i punti, nessun clipping, nessun overlap
+- Multi-line "User Growth by Segment": solo i valori finali (Enterprise: 6000, SMB: 9000, Self-serve: 10000) visibili come pill a destra dei punti finali, niente ul.legend duplicata
+- Area single-dataset: stessa logica di line single
+- Nessun z-index issue, nessun clipping top/bottom, nessuna sovrapposizione
+- Pulizia CSS: rimossi padding-block-start, legend margin hack, ecc

@@ -279,9 +279,9 @@ def transform_charts(html_content):
         class_str = " ".join(classes)
         # Whether to show .data spans: auto per type
         show_data = raw_type in _CHART_TYPES_SHOW_DATA
-        # Multi-line/area: data labels collide when series converge — hide them
-        if is_multiple and chart_type in ("line", "area"):
-            show_data = False
+        # Multi-line/area: endpoint-only labels (series name + value)
+        # to avoid inline collision
+        is_multi_connected = is_multiple and chart_type in ("line", "area")
 
         # Build new table HTML
         parts = [f'<table class="{class_str}">']
@@ -313,9 +313,18 @@ def transform_charts(html_content):
         for row_idx, (label, values) in enumerate(data_rows):
             parts.append('<tr>')
             parts.append(f'<th scope="row">{label}</th>')
+            is_last_row = row_idx == len(data_rows) - 1
             for col_idx, v in enumerate(values):
                 num_val = parsed_values[row_idx][col_idx]
-                if show_data and num_val != 0:
+                # Multi-line/area: emit data span ONLY at the endpoint (last row)
+                # with format "SeriesName: Value"
+                if is_multi_connected:
+                    if is_last_row and num_val != 0 and col_idx < len(dataset_headers):
+                        series_name = dataset_headers[col_idx]
+                        data_span = f'<span class="data">{series_name}: {v.strip()}</span>'
+                    else:
+                        data_span = ""
+                elif show_data and num_val != 0:
                     data_span = f'<span class="data">{v.strip()}</span>'
                 else:
                     data_span = ""
@@ -347,8 +356,9 @@ def transform_charts(html_content):
 
         result = "\n".join(parts)
 
-        # Auto-add legend for multi-dataset charts
-        if is_multiple and dataset_headers:
+        # Auto-add legend for multi-dataset charts — EXCEPT line/area which use
+        # endpoint labels (Name: Value) that serve as legend
+        if is_multiple and dataset_headers and not is_multi_connected:
             legend_items = "".join(f'<li>{h}</li>' for h in dataset_headers)
             result += f'\n<ul class="charts-css legend legend-inline">{legend_items}</ul>'
         # Pie chart: always generate a legend with label + value (since values

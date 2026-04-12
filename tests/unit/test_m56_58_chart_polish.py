@@ -59,8 +59,8 @@ def test_area_wrapper_has_padding():
 
 # --- M58: Multi-line/area no data labels ---
 
-def test_line_multi_dataset_no_data_spans():
-    """Line multi-dataset does NOT show data spans (anti-collision)."""
+def test_line_multi_dataset_endpoint_labels_only():
+    """Line multi-dataset shows endpoint-only labels (M65 replaces M58 anti-collision)."""
     md = (
         ":::chart line\n"
         "| Q | A | B | C |\n"
@@ -70,7 +70,12 @@ def test_line_multi_dataset_no_data_spans():
         ":::"
     )
     html, _ = process_markdown(md)
-    assert '<span class="data">' not in html
+    # Only 3 endpoint labels (one per series at the last row)
+    assert html.count('<span class="data">') == 3
+    # With "Name: Value" format
+    assert "A: 150" in html
+    assert "B: 250" in html
+    assert "C: 350" in html
 
 
 def test_line_single_dataset_has_data_spans():
@@ -87,8 +92,8 @@ def test_line_single_dataset_has_data_spans():
     assert '<span class="data">' in html
 
 
-def test_area_multi_dataset_no_data_spans():
-    """Area multi-dataset does NOT show data spans."""
+def test_area_multi_dataset_endpoint_labels_only():
+    """Area multi-dataset shows endpoint-only labels (M65)."""
     md = (
         ":::chart area\n"
         "| T | A | B |\n"
@@ -98,7 +103,9 @@ def test_area_multi_dataset_no_data_spans():
         ":::"
     )
     html, _ = process_markdown(md)
-    assert '<span class="data">' not in html
+    assert html.count('<span class="data">') == 2
+    assert "A: 70" in html
+    assert "B: 90" in html
 
 
 def test_area_single_dataset_has_data_spans():

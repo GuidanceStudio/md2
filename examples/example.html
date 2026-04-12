@@ -190,14 +190,22 @@ body {
 .md2-chart .line .data,
 .md2-chart .area .data {
     color: var(--text-color); font-weight: 600; font-size: 0.8rem;
-    position: relative; z-index: 2;
-}
-/* Line/area: data labels need a small background for readability over the chart */
-.md2-chart .line .data,
-.md2-chart .area .data {
+    position: relative; z-index: 10;
     background: var(--bg-color);
-    padding: 1px 4px; border-radius: 3px;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    padding: 2px 6px; border-radius: 4px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+    white-space: nowrap;
+    /* Lift label above the exact data point so it doesn't sit on the line */
+    transform: translateY(-110%);
+}
+/* Multi-line/area endpoint labels: position to the right of the last point
+   (not above) and constrain width for long series names */
+.md2-chart .line.multiple .data,
+.md2-chart .area.multiple .data {
+    transform: translate(6px, -50%);
+    max-width: 140px;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 .md2-chart table.charts-css {
     box-shadow: none; border-radius: 0; border-collapse: separate;
@@ -236,11 +244,13 @@ body {
 .md2-chart:has(.charts-css.area) {
     padding-top: 40px; padding-bottom: 56px;
 }
-/* Multi-dataset line/area: legend needs extra margin to clear x-axis labels */
-.md2-chart:has(.charts-css.line.multiple) ul.legend,
-.md2-chart:has(.charts-css.area.multiple) ul.legend {
-    margin-top: 72px;
+/* Multi-line/area endpoint labels need room to the right of the chart */
+.md2-chart:has(.charts-css.line.multiple),
+.md2-chart:has(.charts-css.area.multiple) {
+    padding-right: 140px;
 }
+/* M63 removed in M65: multi-line/area no longer have ul.legend
+   (endpoint labels with "Name: Value" format serve as legend) */
 .md2-chart .charts-css.pie {
     max-width: min(50vh, 50vw); margin: 0 auto; aspect-ratio: 1;
 }
@@ -955,13 +965,12 @@ The move to event-driven architecture reduced API latency by <strong>60%</strong
 </tr>
 <tr>
 <th scope="row">Q4</th>
-<td style="--start: 0.3; --size: 0.6"></td>
-<td style="--start: 0.55; --size: 0.9"></td>
-<td style="--start: 0.65; --size: 1"></td>
+<td style="--start: 0.3; --size: 0.6"><span class="data">Enterprise: 6000</span></td>
+<td style="--start: 0.55; --size: 0.9"><span class="data">SMB: 9000</span></td>
+<td style="--start: 0.65; --size: 1"><span class="data">Self-serve: 10000</span></td>
 </tr>
 </tbody>
-</table>
-<ul class="charts-css legend legend-inline"><li>Enterprise</li><li>SMB</li><li>Self-serve</li></ul></div>
+</table></div>
 
 <h3>Q2: Launch &amp; Grow</h3>
 <ul>
