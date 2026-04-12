@@ -29,7 +29,8 @@ To hit our stretch targets, we must ship faster and smarter.
 We have reorganized from feature teams into **3 Platform Pillars** (Core, Growth, Intelligence) with shared infrastructure.
 
 :::col
-:::chart pie --labels --title "R&D Budget Allocation"
+:::chart pie
+### R&D Budget Allocation
 | Vertical | Budget |
 |----------|--------|
 | Platform | 48     |
@@ -61,7 +62,8 @@ We have reorganized from feature teams into **3 Platform Pillars** (Core, Growth
 | **Error Rate** | 2.1% | 0.8% | Improved |
 | **Test Coverage** | 62% | **87%** | Improved |
 
-:::chart bar --labels --legend
+:::chart bar
+### Key Metrics: Q3 2025 → Q1 2026
 | Metric        | Q3 2025 | Q1 2026 |
 |---------------|---------|---------|
 | Deploy/week   | 2       | 12      |
@@ -119,7 +121,8 @@ services:
 *   **Growth Engine:** The Accelerator (onboarding, activation, retention).
 *   **Intelligence Layer:** The Brain (ML models, recommendations, analytics).
 
-:::chart column --labels --legend --title "Team Allocation"
+:::chart stacked-column
+### Team Allocation
 | Pillar       | Engineers | ML Specialists |
 |--------------|-----------|----------------|
 | Core         | 8         | 0              |
@@ -157,11 +160,23 @@ services:
     *   **Interactive onboarding:** Guided setup wizard with live sandbox.
     *   **Usage-based billing:** Metered billing with real-time cost dashboard.
     *   **Referral system:** Two-sided incentive program.
-:::chart bar --labels --show-data --title "Growth Targets (%)"
-| Metric          | Current | Target |
-|-----------------|---------|--------|
-| Activation Rate | 35      | 60     |
-| Self-serve Conv | 12      | 25     |
+:::chart column
+### Q1 Conversion Targets
+| Stage       | Rate % |
+|-------------|--------|
+| Visitor     | 100    |
+| Signup      | 35     |
+| Activation  | 22     |
+| Paid        | 12     |
+:::
+
+:::chart stacked-bar
+### Customer Breakdown by Plan
+| Segment | Free | Pro | Enterprise |
+|---------|------|-----|------------|
+| SMB     | 400  | 250 | 50         |
+| Mid     | 150  | 200 | 120        |
+| Large   | 30   | 80  | 180        |
 :::
 
 ---
@@ -174,7 +189,8 @@ services:
     *   **Anomaly detection:** Real-time alerting on usage patterns.
     *   **Smart recommendations:** Content and feature suggestions based on behavior.
     *   **Natural language queries:** AI-powered search across documentation and data.
-:::chart area --labels --title "Event Pipeline Throughput (K events/sec)"
+:::chart area
+### Event Pipeline Throughput (K events/sec)
 | Hour  | Throughput |
 |-------|------------|
 | 00:00 | 12         |
@@ -215,13 +231,24 @@ services:
 
 *Objective: Scale and differentiation.*
 
-:::chart line --labels --show-data --title "Projected User Growth"
+:::chart line
+### Projected User Growth
 | Quarter | Active Users |
 |---------|--------------|
 | Q1      | 3200         |
 | Q2      | 8500         |
 | Q3      | 15000        |
 | Q4      | 25000        |
+:::
+
+:::chart line
+### User Growth by Segment
+| Quarter | Enterprise | SMB  | Self-serve |
+|---------|-----------|------|------------|
+| Q1      | 500       | 1200 | 1500       |
+| Q2      | 1500      | 3000 | 4000       |
+| Q3      | 3000      | 5500 | 6500       |
+| Q4      | 6000      | 9000 | 10000      |
 :::
 
 ### Q2: Launch & Grow

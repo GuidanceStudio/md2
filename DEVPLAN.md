@@ -1388,7 +1388,7 @@ Dopo investigazione, applicare il fix appropriato. Probabili candidati: aumentar
 
 ---
 
-## M44: Example showcase completo — tutti i tipi di chart
+## M44: Example showcase completo — tutti i tipi di chart ✅
 
 **Why:** L'example attuale non usa tutti i tipi/combinazioni. Per dimostrare la feature e come test visivo di regressione, l'example deve coprire tutti i casi d'uso.
 
@@ -1407,12 +1407,12 @@ Dopo investigazione, applicare il fix appropriato. Probabili candidati: aumentar
 Ogni chart con un titolo `### H3` per mostrare il rendering del titolo. I chart sono in contesti realistici nella presentazione (non una "galleria").
 
 **Tasks:**
-- [ ] Aggiungere line chart multi-dataset (es. user growth per segmento)
-- [ ] Aggiungere stacked-bar chart (es. breakdown costi)
-- [ ] Aggiungere stacked-column chart (es. revenue per categoria nel tempo)
-- [ ] Assicurare che ogni chart abbia un `### Titolo`
-- [ ] Rigenerare `examples/example.html`
-- [ ] Verificare tutti i chart con Playwright
-- [ ] Commit & push
+- [x] Aggiungere line chart multi-dataset (es. user growth per segmento)
+- [x] Aggiungere stacked-bar chart (es. breakdown costi)
+- [x] Aggiungere stacked-column chart (es. revenue per categoria nel tempo)
+- [x] Assicurare che ogni chart abbia un `### Titolo`
+- [x] Rigenerare `examples/example.html`
+- [x] Verificare tutti i chart con Playwright
+- [x] Commit & push
 
 **Done when:** L'example contiene almeno un chart per ogni tipo supportato (inclusi stacked e line multi-dataset), tutti con titolo visualizzato.
