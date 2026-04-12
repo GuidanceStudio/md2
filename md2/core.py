@@ -38,15 +38,22 @@ _CHART_DIRECTIVE_RE = re.compile(
     r'^:::chart\s+(\S+)(.*?)\n(.*?)\n:::',
     re.MULTILINE | re.DOTALL
 )
-_VALID_CHART_TYPES = {'bar', 'column', 'line', 'area', 'pie'}
+_VALID_CHART_TYPES = {
+    'bar', 'column', 'line', 'area', 'pie',
+    'stacked-bar', 'stacked-column',
+}
+# Chart types where data values are readable (inside or above bars/slices)
+_CHART_TYPES_SHOW_DATA = {'bar', 'column', 'pie', 'stacked-bar', 'stacked-column'}
+# Chart types where data values cluttered (sparse points)
+_CHART_TYPES_NO_DATA = {'line', 'area'}
+_CHART_TITLE_RE = re.compile(r'^#{1,6}\s+(.+?)$', re.MULTILINE)
 _COLUMNS_DIRECTIVE_RE = re.compile(
     r'^:::columns\n(.*?)\n:::[ \t]*$',
     re.MULTILINE | re.DOTALL
 )
 _CHART_DIV_RE = re.compile(
-    r'<div class="md2-chart" data-chart-type="(\w+)" '
-    r'data-chart-options="([^"]*)"'
-    r'(?:\s+data-chart-title="([^"]*)")?'
+    r'<div class="md2-chart" data-chart-type="([\w-]+)"'
+    r'(?:\s+data-chart-title="([^"]*)")?\s*'
     r'>(.*?)</div>',
     re.DOTALL
 )
@@ -114,32 +121,39 @@ def preprocess_chart_directives(markdown_text):
     """Find :::chart ... ::: blocks, parse tables, and produce chart HTML.
 
     Returns (modified_markdown, has_charts).
-    Each chart block is replaced with fully-formed chart HTML (using
-    markdown to parse the table independently).
+    The chart type is the only user input. All rendering decisions
+    (labels, legend, show-data, stacked) are automatic based on type
+    and data structure. An optional heading (# ... ######) inside the
+    block is used as the chart title.
     """
     has_charts = False
 
     def _replace_chart(match):
         nonlocal has_charts
         chart_type = match.group(1).strip().lower()
-        options_str = match.group(2).strip()
-        table_md = match.group(3)
+        # Old options are silently ignored (backward compat)
+        content = match.group(3)
 
         if chart_type not in _VALID_CHART_TYPES:
-            return table_md
+            return content
 
         has_charts = True
 
-        options, title = _parse_chart_options(options_str)
-        opts_attr = ",".join(options)
+        # Extract optional heading as title
+        title = ""
+        title_match = _CHART_TITLE_RE.search(content)
+        if title_match:
+            title = title_match.group(1).strip()
+            content = _CHART_TITLE_RE.sub('', content, count=1)
+
         title_attr = f' data-chart-title="{html.escape(title)}"' if title else ""
 
         # Parse table markdown independently
-        table_html = markdown.markdown(table_md.strip(), extensions=['tables'])
+        table_html = markdown.markdown(content.strip(), extensions=['tables'])
 
         return (
-            f'<div class="md2-chart" data-chart-type="{chart_type}" '
-            f'data-chart-options="{opts_attr}"{title_attr}>'
+            f'<div class="md2-chart" data-chart-type="{chart_type}"'
+            f'{title_attr}>'
             f'{table_html}'
             f'</div>'
         )
@@ -192,12 +206,20 @@ def transform_charts(html_content):
     extra attributes. This is safe because the input is controlled.
     """
     def _transform_chart(match):
-        chart_type = match.group(1)
-        options_str = match.group(2)
-        chart_title = match.group(3) or ""
-        inner_html = match.group(4)
+        raw_type = match.group(1)
+        chart_title = match.group(2) or ""
+        inner_html = match.group(3)
 
-        options = set(options_str.split(",")) if options_str else set()
+        # Resolve stacked-bar → bar + stacked class, stacked-column → column + stacked
+        if raw_type == "stacked-bar":
+            chart_type = "bar"
+            is_stacked = True
+        elif raw_type == "stacked-column":
+            chart_type = "column"
+            is_stacked = True
+        else:
+            chart_type = raw_type
+            is_stacked = False
 
         # Parse the HTML table
         headers = re.findall(r'<th>(.*?)</th>', inner_html)
@@ -245,18 +267,19 @@ def transform_charts(html_content):
         # Dataset headers (for legend)
         dataset_headers = headers[1:] if len(headers) > 1 else []
 
-        # Build CSS classes
+        # Build CSS classes — all visual options are auto-applied
         classes = ["charts-css", chart_type]
         if is_multiple:
             classes.append("multiple")
-        if "labels" in options:
-            classes.append("show-labels")
-        if "stacked" in options:
+        # Labels always on
+        classes.append("show-labels")
+        # Stacked when type is stacked-bar or stacked-column
+        if is_stacked:
             classes.append("stacked")
-        if "show-data" in options:
-            classes.append("show-data-on-hover")
 
         class_str = " ".join(classes)
+        # Whether to show .data spans: auto per type
+        show_data = raw_type in _CHART_TYPES_SHOW_DATA
 
         # Build new table HTML
         parts = [f'<table class="{class_str}">']
@@ -281,8 +304,11 @@ def transform_charts(html_content):
             parts.append(f'<th scope="row">{label}</th>')
             for col_idx, v in enumerate(values):
                 num_val = parsed_values[row_idx][col_idx]
-                # Suppress data label for zero values to avoid floating "0"
-                data_span = f'<span class="data">{v.strip()}</span>' if num_val != 0 else ""
+                # Show data span only if: type allows show-data AND value is non-zero
+                if show_data and num_val != 0:
+                    data_span = f'<span class="data">{v.strip()}</span>'
+                else:
+                    data_span = ""
                 if is_pie:
                     flat_idx = row_idx * len(values) + col_idx
                     start = cumulative
@@ -307,12 +333,17 @@ def transform_charts(html_content):
 
         result = "\n".join(parts)
 
-        # Add legend if requested
-        if "legend" in options and dataset_headers:
+        # Auto-add legend for multi-dataset charts
+        if is_multiple and dataset_headers:
             legend_items = "".join(f'<li>{h}</li>' for h in dataset_headers)
             result += f'\n<ul class="charts-css legend legend-inline">{legend_items}</ul>'
 
-        return f'<div class="md2-chart">{result}</div>'
+        # Prepend title if present
+        title_html = ""
+        if chart_title:
+            title_html = f'<div class="md2-chart-title">{chart_title}</div>'
+
+        return f'<div class="md2-chart">{title_html}{result}</div>'
 
     return _CHART_DIV_RE.sub(_transform_chart, html_content)
 

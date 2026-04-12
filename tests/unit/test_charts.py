@@ -59,48 +59,19 @@ def test_chart_type_pie():
     assert 'data-chart-type="pie"' in result
 
 
-def test_chart_options_labels():
-    """--labels is captured in data-chart-options."""
-    md = ":::chart bar --labels\n| A | B |\n|---|---|\n| x | 10 |\n:::"
+def test_chart_stacked_bar_type():
+    """stacked-bar is a valid type that produces bar + stacked classes."""
+    md = ":::chart stacked-bar\n| A | B | C |\n|---|---|---|\n| x | 10 | 20 |\n:::"
     result, _ = preprocess_chart_directives(md)
-    assert "labels" in result
+    assert 'data-chart-type="stacked-bar"' in result
 
 
-def test_chart_options_stacked():
-    """--stacked is captured."""
-    md = ":::chart bar --stacked\n| A | B |\n|---|---|\n| x | 10 |\n:::"
-    result, _ = preprocess_chart_directives(md)
-    assert "stacked" in result
-
-
-def test_chart_options_legend():
-    """--legend is captured."""
-    md = ":::chart bar --legend\n| A | B |\n|---|---|\n| x | 10 |\n:::"
-    result, _ = preprocess_chart_directives(md)
-    assert "legend" in result
-
-
-def test_chart_options_show_data():
-    """--show-data is captured."""
-    md = ":::chart bar --show-data\n| A | B |\n|---|---|\n| x | 10 |\n:::"
-    result, _ = preprocess_chart_directives(md)
-    assert "show-data" in result
-
-
-def test_chart_title():
-    """--title 'My Title' is captured."""
-    md = ':::chart bar --title "Sales Report"\n| A | B |\n|---|---|\n| x | 10 |\n:::'
+def test_chart_title_from_heading():
+    """A heading inside the chart block is extracted as title."""
+    md = ":::chart bar\n### Sales Report\n| A | B |\n|---|---|\n| x | 10 |\n:::"
     result, _ = preprocess_chart_directives(md)
     assert "Sales Report" in result
-
-
-def test_chart_multiple_options():
-    """Multiple options on one line."""
-    md = ":::chart column --labels --legend --stacked\n| A | B |\n|---|---|\n| x | 10 |\n:::"
-    result, _ = preprocess_chart_directives(md)
-    assert "labels" in result
-    assert "legend" in result
-    assert "stacked" in result
+    assert 'data-chart-title=' in result
 
 
 # --- transform_charts (post-processing HTML) ---
@@ -108,7 +79,7 @@ def test_chart_multiple_options():
 def test_transform_adds_charts_css_class():
     """Transformed table gets .charts-css class."""
     html = (
-        '<div class="md2-chart" data-chart-type="bar" data-chart-options="">'
+        '<div class="md2-chart" data-chart-type="bar" >'
         '<table><thead><tr><th>Label</th><th>Value</th></tr></thead>'
         '<tbody><tr><td>A</td><td>50</td></tr></tbody></table></div>'
     )
@@ -120,7 +91,7 @@ def test_transform_adds_charts_css_class():
 def test_chart_size_normalization():
     """Numeric values are normalized to 0-1 range with --size."""
     html = (
-        '<div class="md2-chart" data-chart-type="bar" data-chart-options="">'
+        '<div class="md2-chart" data-chart-type="bar" >'
         '<table><thead><tr><th>Label</th><th>Value</th></tr></thead>'
         '<tbody><tr><td>A</td><td>50</td></tr>'
         '<tr><td>B</td><td>100</td></tr></tbody></table></div>'
@@ -133,7 +104,7 @@ def test_chart_size_normalization():
 def test_chart_multi_dataset():
     """Table with multiple value columns produces .multiple class."""
     html = (
-        '<div class="md2-chart" data-chart-type="bar" data-chart-options="">'
+        '<div class="md2-chart" data-chart-type="bar" >'
         '<table><thead><tr><th>Label</th><th>Q1</th><th>Q2</th></tr></thead>'
         '<tbody><tr><td>A</td><td>50</td><td>80</td></tr></tbody></table></div>'
     )
@@ -144,7 +115,7 @@ def test_chart_multi_dataset():
 def test_chart_labels_class():
     """--labels option adds .show-labels class."""
     html = (
-        '<div class="md2-chart" data-chart-type="bar" data-chart-options="labels">'
+        '<div class="md2-chart" data-chart-type="bar" >'
         '<table><thead><tr><th>Label</th><th>Value</th></tr></thead>'
         '<tbody><tr><td>A</td><td>50</td></tr></tbody></table></div>'
     )
@@ -152,32 +123,33 @@ def test_chart_labels_class():
     assert "show-labels" in result
 
 
-def test_chart_stacked_class():
-    """--stacked option adds .stacked class."""
+def test_chart_stacked_bar_class():
+    """stacked-bar type produces bar + stacked classes."""
     html = (
-        '<div class="md2-chart" data-chart-type="bar" data-chart-options="stacked">'
+        '<div class="md2-chart" data-chart-type="stacked-bar">'
         '<table><thead><tr><th>Label</th><th>Q1</th><th>Q2</th></tr></thead>'
         '<tbody><tr><td>A</td><td>50</td><td>80</td></tr></tbody></table></div>'
     )
     result = transform_charts(html)
+    assert " bar" in result
     assert "stacked" in result
 
 
-def test_chart_show_data_class():
-    """--show-data adds .show-data-on-hover class."""
+def test_chart_bar_has_data_span():
+    """Bar chart auto-includes <span class='data'> with numeric values."""
     html = (
-        '<div class="md2-chart" data-chart-type="bar" data-chart-options="show-data">'
+        '<div class="md2-chart" data-chart-type="bar">'
         '<table><thead><tr><th>Label</th><th>Value</th></tr></thead>'
         '<tbody><tr><td>A</td><td>50</td></tr></tbody></table></div>'
     )
     result = transform_charts(html)
-    assert "show-data-on-hover" in result
+    assert '<span class="data">' in result
 
 
 def test_chart_legend_html():
     """--legend option produces a legend list."""
     html = (
-        '<div class="md2-chart" data-chart-type="bar" data-chart-options="legend">'
+        '<div class="md2-chart" data-chart-type="bar" >'
         '<table><thead><tr><th>Label</th><th>Q1</th><th>Q2</th></tr></thead>'
         '<tbody><tr><td>A</td><td>50</td><td>80</td></tr></tbody></table></div>'
     )
@@ -187,16 +159,16 @@ def test_chart_legend_html():
     assert "Q2" in result
 
 
-def test_chart_caption():
-    """--title produces a <caption> element."""
+def test_chart_title_rendered():
+    """data-chart-title produces a md2-chart-title div."""
     html = (
-        '<div class="md2-chart" data-chart-type="bar" data-chart-options="" '
+        '<div class="md2-chart" data-chart-type="bar" '
         'data-chart-title="Sales Report">'
         '<table><thead><tr><th>Label</th><th>Value</th></tr></thead>'
         '<tbody><tr><td>A</td><td>50</td></tr></tbody></table></div>'
     )
     result = transform_charts(html)
-    assert "<caption>" in result
+    assert "md2-chart-title" in result
     assert "Sales Report" in result
 
 
@@ -220,7 +192,7 @@ def test_chart_invalid_type():
 def test_chart_non_numeric_values():
     """Non-numeric values in data cells are handled gracefully."""
     html = (
-        '<div class="md2-chart" data-chart-type="bar" data-chart-options="">'
+        '<div class="md2-chart" data-chart-type="bar" >'
         '<table><thead><tr><th>Label</th><th>Value</th></tr></thead>'
         '<tbody><tr><td>A</td><td>not_a_number</td></tr>'
         '<tr><td>B</td><td>100</td></tr></tbody></table></div>'

@@ -1260,3 +1260,159 @@ Tutte le modifiche sono solo CSS — nessun cambiamento alla logica Python.
 - [x] Commit & push
 
 **Done when:** I numeri dentro le barre hanno respiro, la caption ha stile header, il wrapper non ha spazio vuoto eccessivo in alto, la legenda è pulita senza bordi.
+
+---
+
+## M39: Chart API semplificata — rimuovere opzioni, auto-defaults ✅
+
+**Why:** L'utente deve scrivere solo markdown (tipo + dati), nessuna conoscenza di rendering. Filosofia LaTeX: separazione netta tra contenuto e presentazione. Le opzioni attuali (`--labels`, `--legend`, `--show-data`, `--stacked`, `--title`) violano questo principio — l'utente non dovrebbe decidere queste cose.
+
+**Approach:** Rimuovere tutte le opzioni dalla direttiva `:::chart`. La sintassi diventa `:::chart TIPO` + tabella + eventuale `### Title` heading dentro il blocco. I tipi supportati aumentano per coprire le vecchie opzioni semanticamente: `stacked-bar` e `stacked-column` diventano tipi propri. Auto-applicazione:
+
+- **Labels**: sempre on (altrimenti chart illeggibile)
+- **Legend**: on se multi-dataset (altrimenti non si capisce)
+- **Show-data**: on per `bar`, `column`, `pie`, `stacked-bar`, `stacked-column`; off per `line`, `area` (troppo rumore)
+- **Title**: rilevato come primo `### H3` o `## H2` dentro il blocco chart
+- **Stacked**: tipo esplicito `stacked-bar` / `stacked-column`, non flag
+
+Modifiche in `core.py`: `_VALID_CHART_TYPES` estesi, `_parse_chart_options` rimosso/sostituito, regex `_CHART_DIRECTIVE_RE` semplificata (nessuna opzione), rilevamento heading-as-title nel preprocessore, auto-options in `transform_charts`.
+
+**Tasks:**
+- [x] Estendere `_VALID_CHART_TYPES` con `stacked-bar` e `stacked-column`
+- [x] Rimuovere parsing opzioni da `preprocess_chart_directives` (semplificare la regex)
+- [x] Rilevare `### Title` come prima riga non-vuota del blocco (se presente)
+- [x] In `transform_charts`: auto-apply labels, legend (se multi-dataset), show-data (per tipo), stacked (se tipo `stacked-*`)
+- [x] Mapping: `stacked-bar` → classi `bar stacked`, `stacked-column` → `column stacked`
+- [x] Aggiornare tutti i test esistenti per la nuova sintassi
+- [x] Aggiornare `examples/example.md` (rimuovere opzioni)
+- [x] Aggiornare README sezione "Grafici" con nuova sintassi semplificata
+- [x] Test: unit — auto-labels/legend/show-data per tipo
+- [x] Test: unit — heading dentro chart viene estratto come titolo
+- [x] Test: unit — `stacked-bar` produce classi `bar stacked`
+- [x] Commit & push
+
+**Done when:** `:::chart TIPO` + tabella (+ opzionale `### Title`) produce un chart completo e leggibile senza che l'utente abbia specificato nessuna opzione.
+
+---
+
+## M40: Title styling come intestazione di card
+
+**Why:** Il titolo del chart (rilevato dal heading) deve apparire graficamente come l'intestazione di una card — simile all'header di una tabella. Deve essere chiaramente "il titolo di quest'oggetto".
+
+**Approach:** Nel `transform_charts`, il titolo rilevato diventa un `<div class="md2-chart-title">` inserito come primo child del wrapper `.md2-chart`, prima della tabella. CSS: sfondo `--table-header-bg`, font bold, padding, border-radius in alto coerente col wrapper.
+
+Non usiamo `<caption>` della tabella perché: (1) Charts.css ha regole specifiche su caption, (2) vogliamo stile controllato, (3) semanticamente il titolo appartiene alla card, non alla tabella interna.
+
+**Tasks:**
+- [ ] Generare `<div class="md2-chart-title">` nel transform quando c'è un titolo
+- [ ] CSS: styling .md2-chart-title con sfondo header, bold, padding, border-radius top
+- [ ] Adattare padding wrapper per non duplicare spazio quando c'è il titolo
+- [ ] Rimuovere vecchio styling `.md2-chart caption` (ora non usato)
+- [ ] Test: unit — titolo presente genera div con classe e testo corretti
+- [ ] Test: unit — senza titolo non appare il div
+- [ ] Rigenerare example e verificare con Playwright
+- [ ] Commit & push
+
+**Done when:** Chart con titolo mostra un header bandeggio in alto, visivamente coerente con gli header delle tabelle.
+
+---
+
+## M41: Chart spacing — gap label/bars, row/group spacing, legend positioning
+
+**Why:** Nei multi-dataset le label degli assi sono attaccate alle barre, le righe (bar) o gruppi (column) sono attaccate tra loro rendendo difficile distinguere elementi separati, e la legenda si sovrappone alle label degli assi.
+
+**Approach:** CSS su `style.css`:
+1. **Gap label/bars**: aumentare `--labels-size` o aggiungere `padding-right` ai label cells
+2. **Row spacing (bar)**: `--data-spacing` tra `<tr>` del bar
+3. **Group spacing (column)**: spacing tra gruppi di colonne tramite `--data-spacing` orizzontale
+4. **Legend margin**: `margin-top` sufficiente per stare sotto le label degli assi
+
+Tutti CSS, nessuna logica Python.
+
+**Tasks:**
+- [ ] Aumentare gap tra label e barre nel bar chart
+- [ ] Settare spacing verticale tra righe del bar chart
+- [ ] Settare spacing orizzontale tra gruppi del column chart
+- [ ] Legend con margin-top adeguato
+- [ ] Test: unit — CSS contiene le nuove regole di spacing
+- [ ] Rigenerare example e verificare con Playwright
+- [ ] Commit & push
+
+**Done when:** Nei chart multi-dataset le label sono distanziate dalle barre, le righe/gruppi sono visibilmente separati, la legenda non si sovrappone.
+
+---
+
+## M42: Fix `.data` color per tipo — bianco dentro, colore testo fuori
+
+**Why:** Il testo `.data` è attualmente bianco per tutti i chart. Funziona per bar/pie (testo dentro barra/fetta colorata), ma produce bianco-su-bianco per column/line/area dove il testo è posizionato sopra/fuori dall'elemento colorato.
+
+**Approach:** CSS specializzato per tipo. Charts.css posiziona `.data`:
+- **Dentro segmenti colorati** (bar, pie, stacked-bar, stacked-column) → testo bianco con text-shadow
+- **Sopra barre/punti** (column, line, area) → testo colore normale (var(--text-color)) senza ombra
+
+Separare le regole CSS per tipo, rimuovere la regola generica `.md2-chart .data`.
+
+**Tasks:**
+- [ ] Rimuovere regola generica `.md2-chart .data`
+- [ ] Aggiungere regola per `.bar .data`, `.pie .data`, `.stacked-bar .data`, `.stacked-column .data` (bianco + shadow)
+- [ ] Aggiungere regola per `.column .data`, `.line .data`, `.area .data` (colore normale)
+- [ ] Test: unit — CSS contiene regole separate per tipo
+- [ ] Rigenerare example e verificare con Playwright
+- [ ] Commit & push
+
+**Done when:** I numeri sono leggibili in tutti i tipi di chart: bianchi dentro le barre, colore normale quando fuori.
+
+---
+
+## M43: Fix line chart ultimo valore invisibile
+
+**Why:** Nel line chart con 4 punti, il 4° valore (25000 nell'example) non appare visibile. La linea sembra fermarsi al 3° punto e il numero è nel vuoto.
+
+**Approach:** Investigare le cause possibili:
+1. Il punto al 100% è clippato dal container (overflow hidden sul wrapper)
+2. Charts.css non renderizza l'ultima interpolazione
+3. Normalizzazione errata (max_val troppo basso)
+4. Padding del wrapper taglia l'ultimo elemento
+
+Dopo investigazione, applicare il fix appropriato. Probabili candidati: aumentare padding-top del chart area, rimuovere `overflow: hidden` dal wrapper per i line/area chart, o aggiungere `padding-inline` specifico per line.
+
+**Tasks:**
+- [ ] Riprodurre il bug con Playwright (screenshot + HTML ispezionato)
+- [ ] Identificare la causa (CSS clipping vs normalizzazione vs Charts.css)
+- [ ] Applicare il fix minimo che risolve il problema
+- [ ] Test: unit — line chart con 4+ punti mostra tutti i valori
+- [ ] Rigenerare example e verificare visivamente
+- [ ] Commit & push
+
+**Done when:** Il line chart mostra tutti i punti inclusi il primo e l'ultimo, con valori leggibili.
+
+---
+
+## M44: Example showcase completo — tutti i tipi di chart
+
+**Why:** L'example attuale non usa tutti i tipi/combinazioni. Per dimostrare la feature e come test visivo di regressione, l'example deve coprire tutti i casi d'uso.
+
+**Approach:** Espandere `examples/example.md` aggiungendo slide o chart per coprire:
+- `bar` singola serie
+- `bar` multi-dataset (già presente)
+- `column` singola serie
+- `column` multi-dataset (già presente)
+- `stacked-bar`
+- `stacked-column`
+- `line` singola serie (già presente)
+- `line` **multi-dataset** (nuovo — per mostrare più linee sovrapposte)
+- `area` singola serie (già presente)
+- `pie` (già presente)
+
+Ogni chart con un titolo `### H3` per mostrare il rendering del titolo. I chart sono in contesti realistici nella presentazione (non una "galleria").
+
+**Tasks:**
+- [ ] Aggiungere line chart multi-dataset (es. user growth per segmento)
+- [ ] Aggiungere stacked-bar chart (es. breakdown costi)
+- [ ] Aggiungere stacked-column chart (es. revenue per categoria nel tempo)
+- [ ] Assicurare che ogni chart abbia un `### Titolo`
+- [ ] Rigenerare `examples/example.html`
+- [ ] Verificare tutti i chart con Playwright
+- [ ] Commit & push
+
+**Done when:** L'example contiene almeno un chart per ogni tipo supportato (inclusi stacked e line multi-dataset), tutti con titolo visualizzato.
