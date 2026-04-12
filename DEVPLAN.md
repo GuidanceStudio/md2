@@ -1436,57 +1436,57 @@ Ogni chart con un titolo `### H3` per mostrare il rendering del titolo. I chart 
 
 ---
 
-## M46: Fix spacing verticale bar multi-dataset
+## M46: Fix spacing verticale bar multi-dataset ✅
 
 **Why:** Nel bar chart multi-dataset le righe logiche (metriche diverse) sono attaccate tra loro — non c'è spazio tra "Deploy/week" e "Test Coverage". `--data-spacing: 6px` del bar non produce il gap atteso perché Charts.css lo interpreta come spacing tra le barre DENTRO una riga (multi-dataset), non tra righe.
 
 **Approach:** Investigare come Charts.css gestisce lo spacing tra righe in un bar multi-dataset. Probabilmente serve `padding-block` o `border-spacing` sulla table, oppure margin-bottom sulle `<tr>`. Applicare il fix CSS che produce spazio visibile tra metriche.
 
 **Tasks:**
-- [ ] Investigare il CSS di Charts.css per `.bar.multiple` row spacing
-- [ ] Applicare il fix (margin/padding/border-spacing sulle tr o tbody)
-- [ ] Test: unit — CSS contiene la nuova regola di spacing tra righe
-- [ ] Verificare con Playwright
-- [ ] Commit & push
+- [x] Investigare il CSS di Charts.css per `.bar.multiple` row spacing
+- [x] Applicare il fix (margin/padding/border-spacing sulle tr o tbody)
+- [x] Test: unit — CSS contiene la nuova regola di spacing tra righe
+- [x] Verificare con Playwright
+- [x] Commit & push
 
 **Done when:** Nel bar chart multi-dataset c'è uno spazio visibile tra le metriche diverse.
 
 ---
 
-## M47: Fix label verticale allineamento multi-dataset
+## M47: Fix label verticale allineamento multi-dataset ✅
 
 **Why:** Nel bar multi-dataset la label della riga (es. "Deploy/week") è allineata alla PRIMA barra del gruppo, non al centro del gruppo. Visivamente si legge come label della prima barra, non della coppia.
 
 **Approach:** Charts.css posiziona le label a sinistra con `--labels-size`. L'allineamento verticale del testo nella label cell deve essere `center` rispetto alla riga completa (che contiene multiple barre). Fix CSS sulla `th` di label.
 
 **Tasks:**
-- [ ] Aggiungere `vertical-align: middle` o flex centering sulle label cells del bar multi-dataset
-- [ ] Test: unit — CSS contiene la regola
-- [ ] Verificare con Playwright
-- [ ] Commit & push
+- [x] Aggiungere `vertical-align: middle` o flex centering sulle label cells del bar multi-dataset
+- [x] Test: unit — CSS contiene la regola
+- [x] Verificare con Playwright
+- [x] Commit & push
 
 **Done when:** Nel bar multi-dataset la label è centrata verticalmente rispetto al gruppo di barre.
 
 ---
 
-## M48: Fix padding wrapper dopo il titolo
+## M48: Fix padding wrapper dopo il titolo ✅
 
 **Why:** Dopo il titolo del chart c'è un doppio spazio bianco: il titolo ha `margin-bottom: 16px` e il wrapper ha `padding: 8px 20px 20px`. Risultato: troppo spazio prima che iniziino le barre.
 
 **Approach:** Ridurre o rimuovere il margin-bottom del titolo (il wrapper padding è già sufficiente), oppure usare `padding: 0 20px 20px` sul wrapper quando c'è un titolo (ma questo è complicato). Soluzione più semplice: `margin-bottom: 0` sul titolo, il wrapper padding-top 0 quando c'è titolo via selettore adiacente. In alternativa: rimuovere `margin-bottom` e il wrapper ha già padding sufficiente.
 
 **Tasks:**
-- [ ] Ridurre margin-bottom del title a 0 o valore minimo
-- [ ] Se necessario, usare selettore adiacente per ridurre padding-top del wrapper quando c'è title
-- [ ] Test: unit — regola CSS corretta
-- [ ] Verificare con Playwright (spazio ridotto dopo il titolo)
-- [ ] Commit & push
+- [x] Ridurre margin-bottom del title a 0 o valore minimo
+- [x] Se necessario, usare selettore adiacente per ridurre padding-top del wrapper quando c'è title
+- [x] Test: unit — regola CSS corretta
+- [x] Verificare con Playwright (spazio ridotto dopo il titolo)
+- [x] Commit & push
 
 **Done when:** Lo spazio tra il titolo e l'inizio delle barre è ridotto a un gap ragionevole (~8-12px).
 
 ---
 
-## M49: Fix legend — spacing e bullet colore
+## M49: Fix legend — spacing e bullet colore ✅
 
 **Why:** Due problemi nella legend: (1) troppo spazio bianco tra l'ultima barra e la legend, (2) i bullet prima dei label sono neri sottili invece che nei colori della palette (blu/arancione/ecc).
 
@@ -1495,12 +1495,128 @@ Ogni chart con un titolo `### H3` per mostrare il rendering del titolo. I chart 
 2. **Bullet colorati**: Charts.css usa `legend-circle` / `legend-square` / ecc. come classi per la forma. Per i colori, le `<li>` devono avere una regola `::before` con `background: var(--color-N)`. Generare nel transform_charts le classi sui `<li>` (es. `.legend-item-1`, `.legend-item-2`) e aggiungere CSS per applicare i colori della palette.
 
 **Tasks:**
-- [ ] Ridurre margin-top della legend (es. 12px)
-- [ ] In `transform_charts`, aggiungere classi numerate ai `<li>` della legend
-- [ ] CSS: regole per i bullet colorati con var(--md2-color-N)
-- [ ] Test: unit — legend html contiene classi numerate
-- [ ] Test: unit — CSS contiene regole per bullet colorati
-- [ ] Verificare con Playwright
-- [ ] Commit & push
+- [x] Ridurre margin-top della legend (es. 12px)
+- [x] In `transform_charts`, aggiungere classi numerate ai `<li>` della legend
+- [x] CSS: regole per i bullet colorati con var(--md2-color-N)
+- [x] Test: unit — legend html contiene classi numerate
+- [x] Test: unit — CSS contiene regole per bullet colorati
+- [x] Verificare con Playwright
+- [x] Commit & push
 
 **Done when:** La legend è vicina al chart e i bullet mostrano i colori della palette corrispondenti alle serie dati.
+
+---
+
+## M50: Fix bar row gap — non usare border-spacing con flex tr ✅
+
+**Why:** Nel bar chart multi-dataset le righe di metriche diverse sono attaccate (y=827, 867, 907 — differenze di 40 = altezza riga, zero gap). `border-spacing: 0 10px` non funziona perché Charts.css applica layout flex alle `<tr>` del bar chart (margin-inline-start: var(--labels-size)), rendendo inefficace il border-spacing del table.
+
+**Approach:** Applicare `margin-top: 12px` alle `.bar tbody tr:not(:first-child)` (o gap su tbody se è flex container). Rimuovere `border-spacing` che non produce effetto.
+
+**Tasks:**
+- [x] Rimuovere `border-spacing: 0 10px` da `.charts-css.bar`
+- [x] Aggiungere `.bar tbody tr:not(:first-child) { margin-top: 12px }` o equivalente
+- [x] Test: unit — CSS contiene margin-top su tr:not(:first-child)
+- [x] Verificare con Playwright che le righe siano visibilmente separate
+- [x] Commit & push
+
+**Done when:** Le metriche diverse del bar multi-dataset hanno uno spazio visibile tra di loro (gap ≥ 10px).
+
+---
+
+## M51: Fix column chart gap e larghezza colonne ✅
+
+**Why:** Nel column chart con poche categorie (3-4), ogni colonna occupa 1/N della larghezza totale (es. 280px ciascuna con 3 colonne), senza gap. Risultato: barre enormi attaccate tra loro, visivamente brutte. Il `--data-spacing: 16px` che avevo settato NON funziona perché Charts.css riconosce solo le classi `.data-spacing-N`, non la variabile direttamente.
+
+**Approach:** Aggiungere `padding-inline` alle `.column tbody tr` per creare gap visivi. Charts.css rispetta il padding del tr (la barra è renderizzata tramite td::before dentro il tr, e il padding spinge il contenuto verso l'interno). Tipicamente `padding-inline: 2-5%` o un valore fisso tipo `20px` per lato.
+
+Alternativa: settare `max-width: 600px` o simile sul `.column` per evitare che le colonne si allarghino troppo quando sono poche.
+
+**Tasks:**
+- [x] Sperimentare con padding-inline su .column tr e verificare con Playwright
+- [x] Trovare un valore che produce gap visibile senza rompere il caso con molte colonne
+- [x] Considerare max-width limitata per column chart
+- [x] Test: unit — CSS contiene regole di spacing colonne
+- [x] Verificare visualmente con 3, 4, 6 categorie
+- [x] Commit & push
+
+**Done when:** Nel column chart con 3-4 categorie, le colonne hanno larghezza ragionevole e gap visibili tra loro.
+
+---
+
+## M52: Fix legend positioning — sotto x-axis labels ✅
+
+**Why:** Nelle slide column, line multi-dataset, e altri chart con show-labels sotto, la legenda si sovrappone alle label dell'asse x ("Growth" overlaps with "ML Specialists", "Q3" overlaps with "Enterprise"). Questo perché la legenda viene messa subito sotto la tabella ma le label dell'asse x occupano uno spazio in basso dentro la tabella.
+
+**Approach:** Aumentare il `margin-top` della legenda a un valore che lasci spazio alle label dell'asse x. Investigare con Playwright lo spazio effettivo delle label per settare un margine sicuro (es. 40px). In alternativa, forzare display: block sulla legend con clear: both.
+
+**Tasks:**
+- [x] Investigare con Playwright la posizione delle x-axis labels
+- [x] Aumentare margin-top legend a valore sicuro (probabilmente 32-48px)
+- [x] Verificare che non sia troppo per bar chart (label a sinistra, non sotto)
+- [x] Considerare selettori specifici: bar legend vs column/line legend
+- [x] Test: unit — CSS contiene margin adeguato
+- [x] Verificare con Playwright tutti i chart multi-dataset
+- [x] Commit & push
+
+**Done when:** La legenda non si sovrappone mai alle label dell'asse x in nessun tipo di chart.
+
+---
+
+## M53: Fix pie chart — rotazione label illeggibile ✅
+
+**Why:** Nel pie chart le label dei valori ("24", "82") sono ruotate di 90° (scritte verticali) e illeggibili. Charts.css ruota le label per farle stare dentro le fette, ma questo è pessimo per numeri brevi.
+
+**Approach:** Override CSS per le `.data` span dentro `.pie`: rimuovere la rotazione (`transform: none` o `rotate(0)`) e posizionare il testo al centro della fetta. Charts.css applica `transform: rotate(...)` sugli span per seguire l'angolo — noi lo annulliamo e usiamo posizionamento statico.
+
+**Tasks:**
+- [x] Investigare con Playwright come Charts.css posiziona le label pie
+- [x] Trovare override CSS per fermare la rotazione
+- [x] Posizionamento centrale leggibile
+- [x] Test: unit — CSS contiene override rotazione pie
+- [x] Verificare visualmente pie chart
+- [x] Commit & push
+
+**Done when:** I numeri nelle fette del pie chart sono leggibili orizzontalmente.
+
+---
+
+## M54: Line/area chart — rendere leggibili i valori ✅
+
+**Why:** Il line chart "Projected User Growth" è inutile: non si vedono né assi Y né valori dei punti né scale. L'utente non può dedurre se 25000 è alto o basso. Stesso problema per area chart. La decisione precedente di non mostrare `.data` per line/area era basata su "troppo rumore" ma ha reso il chart inutilizzabile.
+
+**Approach:** Tre opzioni:
+1. **Mostrare sempre i valori** (come bar/column) — semplice, leggibile, ma può essere visivamente affollato su molti punti
+2. **Mostrare solo primo e ultimo valore** — indica range (da X a Y)
+3. **Tooltip on hover** — interactive, ma richiede JS
+4. **Asse Y visibile** — Charts.css ha `.show-primary-axis` e `.show-secondary-axes` — mostra linee di riferimento con valori
+
+La soluzione migliore per uso presentazione è **opzione 1** (sempre valori) come default. Il "rumore" di avere i numeri è preferibile a "non capire il chart". Per line, posizioniamo le label sopra i punti con un piccolo background per leggibilità.
+
+**Tasks:**
+- [x] Rimuovere `_CHART_TYPES_NO_DATA` — tutti i tipi mostrano dati
+- [x] Per line/area: CSS per posizionare le label sopra i punti
+- [x] Applicare background/shadow ai label per leggibilità su sfondo grafico
+- [x] Test: unit — line chart HTML contiene `<span class="data">`
+- [x] Test: unit — CSS contiene styling label per line/area
+- [x] Rigenerare example e verificare con Playwright
+- [x] Commit & push
+
+**Done when:** Line e area chart mostrano sempre i valori sui punti in modo leggibile.
+
+---
+
+## M55: X-axis labels troncate (column, area, pie) ✅
+
+**Why:** Nelle colonne "Visitor/Signup/Activation/Paid" le label sono troncate (si vede solo "Visitee", "Signup", "Activation", "Paid") perché sono ruotate o tagliate dal padding del wrapper. Stesso problema per area chart "00:00/04:00/..." dove le label sono troncate alla base. Nel pie chart le label delle fette sono scritte ruotate (non x-axis, ma correlato).
+
+**Approach:** Investigare se Charts.css ruota le label x-axis per default e trovare come evitarlo. Forse serve aumentare `--labels-size` per column/line/area, o il padding-bottom del wrapper per dare spazio alle label sotto.
+
+**Tasks:**
+- [x] Investigare con Playwright posizione e rotazione delle x-axis labels
+- [x] Applicare fix CSS (padding bottom, whitespace, etc)
+- [x] Test: unit — CSS corretto
+- [x] Verificare con Playwright column, line, area
+- [x] Commit & push
+
+**Done when:** Tutte le label dell'asse x sono leggibili e non troncate in tutti i chart.

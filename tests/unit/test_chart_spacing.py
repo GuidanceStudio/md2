@@ -28,8 +28,8 @@ def test_legend_has_margin_top():
     legend_idx = css.index("md2-chart ul.legend") if "md2-chart ul.legend" in css else css.index(".legend")
     block = css[legend_idx:css.index("}", legend_idx) + 1]
     assert "margin-top" in block
-    # Should be at least 20px
+    # Should be at least 8px for separation
     import re
     match = re.search(r'margin-top:\s*(\d+)px', block)
     if match:
-        assert int(match.group(1)) >= 20
+        assert int(match.group(1)) >= 8

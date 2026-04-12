@@ -42,10 +42,12 @@ _VALID_CHART_TYPES = {
     'bar', 'column', 'line', 'area', 'pie',
     'stacked-bar', 'stacked-column',
 }
-# Chart types where data values are readable (inside or above bars/slices)
-_CHART_TYPES_SHOW_DATA = {'bar', 'column', 'pie', 'stacked-bar', 'stacked-column'}
-# Chart types where data values cluttered (sparse points)
-_CHART_TYPES_NO_DATA = {'line', 'area'}
+# Chart types that show data values directly on the chart
+# (pie uses a legend with values instead, since slice labels would be rotated)
+_CHART_TYPES_SHOW_DATA = {
+    'bar', 'column', 'stacked-bar', 'stacked-column',
+    'line', 'area',
+}
 _CHART_TITLE_RE = re.compile(r'^#{1,6}\s+(.+?)$', re.MULTILINE)
 _COLUMNS_DIRECTIVE_RE = re.compile(
     r'^:::columns\n(.*?)\n:::[ \t]*$',
@@ -345,6 +347,14 @@ def transform_charts(html_content):
         # Auto-add legend for multi-dataset charts
         if is_multiple and dataset_headers:
             legend_items = "".join(f'<li>{h}</li>' for h in dataset_headers)
+            result += f'\n<ul class="charts-css legend legend-inline">{legend_items}</ul>'
+        # Pie chart: always generate a legend with label + value (since values
+        # can't be shown inside slices due to rotation)
+        elif is_pie:
+            legend_items = "".join(
+                f'<li>{label} ({values[0].strip()})</li>'
+                for label, values in data_rows
+            )
             result += f'\n<ul class="charts-css legend legend-inline">{legend_items}</ul>'
 
         # Prepend title if present

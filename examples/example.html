@@ -166,15 +166,16 @@ body {
 
 /* Charts — override table styles inside chart wrappers */
 .md2-chart {
-    margin: 30px auto; max-width: 100%; padding: 8px 20px 20px;
+    margin: 30px auto; max-width: 100%; padding: 8px 20px 24px;
     box-shadow: 0 2px 15px rgba(0,0,0,0.05);
-    border-radius: 8px; overflow: hidden;
+    border-radius: 8px;
 }
 .md2-chart-title {
     font-weight: bold; padding: 10px 16px; text-align: left;
     background-color: var(--table-header-bg);
-    margin: -8px -20px 16px; font-size: 1rem;
+    margin: -8px -20px 8px; font-size: 1rem;
     border-bottom: 1px solid var(--table-border);
+    border-radius: 8px 8px 0 0;
 }
 /* Data text: white INSIDE colored segments (bar/pie/stacked), normal color OUTSIDE (column/line/area) */
 .md2-chart .bar .data,
@@ -188,7 +189,14 @@ body {
 .md2-chart .column .data,
 .md2-chart .line .data,
 .md2-chart .area .data {
-    color: var(--text-color); font-weight: 600; font-size: 0.85rem;
+    color: var(--text-color); font-weight: 600; font-size: 0.8rem;
+}
+/* Line/area: data labels need a small background for readability over the chart */
+.md2-chart .line .data,
+.md2-chart .area .data {
+    background: var(--bg-color);
+    padding: 1px 4px; border-radius: 3px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
 }
 .md2-chart table.charts-css {
     box-shadow: none; border-radius: 0; border-collapse: separate;
@@ -202,10 +210,18 @@ body {
     --labels-size: 130px; --data-spacing: 6px;
     min-height: 40px;
 }
-.md2-chart .charts-css.bar tbody tr { min-height: 40px; }
+.md2-chart .charts-css.bar tbody tr { min-height: 40px; padding: 6px 0; }
+.md2-chart .charts-css.bar tbody tr:not(:first-child) { margin-top: 14px; }
+.md2-chart .charts-css.bar tbody tr th {
+    align-items: center; vertical-align: middle;
+}
 .md2-chart .charts-css.column {
     --labels-size: 100px; --data-spacing: 16px;
     height: min(300px, 40vh);
+    max-width: 800px; margin-left: auto; margin-right: auto;
+}
+.md2-chart .charts-css.column tbody tr {
+    padding-inline: 12px;
 }
 .md2-chart .charts-css.line { height: min(300px, 40vh); --line-size: 3px; }
 .md2-chart .charts-css.area { height: min(300px, 40vh); --line-size: 3px; }
@@ -230,9 +246,28 @@ body {
 .md2-chart .charts-css.multiple tbody td:nth-child(9) { --color: var(--md2-color-8); }
 .md2-chart ul.legend {
     display: flex; gap: 20px; justify-content: center;
-    margin-top: 24px; font-size: 0.85rem; list-style: none;
+    margin-top: 40px; font-size: 0.85rem; list-style: none;
     padding: 8px 0 0; border: none;
+    clear: both;
 }
+/* Bar chart has labels on the left, not below — less margin needed */
+.md2-chart .charts-css.bar + ul.legend { margin-top: 16px; }
+.md2-chart ul.legend li {
+    display: flex; align-items: center; gap: 6px;
+}
+.md2-chart ul.legend li::before {
+    content: ""; display: inline-block;
+    width: 12px; height: 12px; border-radius: 2px;
+    background: var(--md2-color-1);
+}
+.md2-chart ul.legend li:nth-child(1)::before { background: var(--md2-color-1); }
+.md2-chart ul.legend li:nth-child(2)::before { background: var(--md2-color-2); }
+.md2-chart ul.legend li:nth-child(3)::before { background: var(--md2-color-3); }
+.md2-chart ul.legend li:nth-child(4)::before { background: var(--md2-color-4); }
+.md2-chart ul.legend li:nth-child(5)::before { background: var(--md2-color-5); }
+.md2-chart ul.legend li:nth-child(6)::before { background: var(--md2-color-6); }
+.md2-chart ul.legend li:nth-child(7)::before { background: var(--md2-color-7); }
+.md2-chart ul.legend li:nth-child(8)::before { background: var(--md2-color-8); }
 body.dark-mode .md2-chart .charts-css { color: var(--text-color); }
 
 /* Columns layout */
@@ -537,18 +572,19 @@ We have reorganized from feature teams into <strong>3 Platform Pillars</strong> 
 <tbody>
 <tr>
 <th scope="row">Platform</th>
-<td style="--start: 0; --end: 0.48"><span class="data">48</span></td>
+<td style="--start: 0; --end: 0.48"></td>
 </tr>
 <tr>
 <th scope="row">Mobile</th>
-<td style="--start: 0.48; --end: 0.76"><span class="data">28</span></td>
+<td style="--start: 0.48; --end: 0.76"></td>
 </tr>
 <tr>
 <th scope="row">AI</th>
-<td style="--start: 0.76; --end: 1"><span class="data">24</span></td>
+<td style="--start: 0.76; --end: 1"></td>
 </tr>
 </tbody>
-</table></div></div></div></div></div>
+</table>
+<ul class="charts-css legend legend-inline"><li>Platform (48)</li><li>Mobile (28)</li><li>AI (24)</li></ul></div></div></div></div></div>
         
         <div class="slide" id="slide-1"><h2>2. Current State: Platform Metrics</h2><div class="content"><p><em>Context: The Foundation Phase (Q3 2025 - Q1 2026).</em></p>
 <p><strong>What We Built:</strong></p>
@@ -610,13 +646,13 @@ We have reorganized from feature teams into <strong>3 Platform Pillars</strong> 
 <tbody>
 <tr>
 <th scope="row">Deploy/week</th>
-<td style="--size: 0.166667"><span class="data">2</span></td>
-<td style="--size: 1"><span class="data">12</span></td>
+<td style="--size: 0.02"><span class="data">2</span></td>
+<td style="--size: 0.12"><span class="data">12</span></td>
 </tr>
 <tr>
 <th scope="row">Test Coverage</th>
-<td style="--size: 0.712644"><span class="data">62</span></td>
-<td style="--size: 1"><span class="data">87</span></td>
+<td style="--size: 0.62"><span class="data">62</span></td>
+<td style="--size: 0.87"><span class="data">87</span></td>
 </tr>
 <tr>
 <th scope="row">Uptime %</th>
@@ -681,13 +717,13 @@ The move to event-driven architecture reduced API latency by <strong>60%</strong
 </tr>
 <tr>
 <th scope="row">Growth</th>
-<td style="--size: 1"><span class="data">6</span></td>
+<td style="--size: 0.75"><span class="data">6</span></td>
 <td style="--size: 0"></td>
 </tr>
 <tr>
 <th scope="row">Intelligence</th>
-<td style="--size: 1"><span class="data">5</span></td>
-<td style="--size: 0.4"><span class="data">2</span></td>
+<td style="--size: 0.625"><span class="data">5</span></td>
+<td style="--size: 0.25"><span class="data">2</span></td>
 </tr>
 </tbody>
 </table>
@@ -769,15 +805,15 @@ The move to event-driven architecture reduced API latency by <strong>60%</strong
 </tr>
 <tr>
 <th scope="row">Mid</th>
-<td style="--size: 0.75"><span class="data">150</span></td>
-<td style="--size: 1"><span class="data">200</span></td>
-<td style="--size: 0.6"><span class="data">120</span></td>
+<td style="--size: 0.375"><span class="data">150</span></td>
+<td style="--size: 0.5"><span class="data">200</span></td>
+<td style="--size: 0.3"><span class="data">120</span></td>
 </tr>
 <tr>
 <th scope="row">Large</th>
-<td style="--size: 0.166667"><span class="data">30</span></td>
-<td style="--size: 0.444444"><span class="data">80</span></td>
-<td style="--size: 1"><span class="data">180</span></td>
+<td style="--size: 0.075"><span class="data">30</span></td>
+<td style="--size: 0.2"><span class="data">80</span></td>
+<td style="--size: 0.45"><span class="data">180</span></td>
 </tr>
 </tbody>
 </table>
@@ -802,27 +838,27 @@ The move to event-driven architecture reduced API latency by <strong>60%</strong
 <tbody>
 <tr>
 <th scope="row">00:00</th>
-<td style="--start: 0.24; --size: 0.24"></td>
+<td style="--start: 0.24; --size: 0.24"><span class="data">12</span></td>
 </tr>
 <tr>
 <th scope="row">04:00</th>
-<td style="--start: 0.24; --size: 0.16"></td>
+<td style="--start: 0.24; --size: 0.16"><span class="data">8</span></td>
 </tr>
 <tr>
 <th scope="row">08:00</th>
-<td style="--start: 0.16; --size: 0.7"></td>
+<td style="--start: 0.16; --size: 0.7"><span class="data">35</span></td>
 </tr>
 <tr>
 <th scope="row">12:00</th>
-<td style="--start: 0.7; --size: 1"></td>
+<td style="--start: 0.7; --size: 1"><span class="data">50</span></td>
 </tr>
 <tr>
 <th scope="row">16:00</th>
-<td style="--start: 1; --size: 0.96"></td>
+<td style="--start: 1; --size: 0.96"><span class="data">48</span></td>
 </tr>
 <tr>
 <th scope="row">20:00</th>
-<td style="--start: 0.96; --size: 0.6"></td>
+<td style="--start: 0.96; --size: 0.6"><span class="data">30</span></td>
 </tr>
 </tbody>
 </table></div></div></div>
@@ -857,19 +893,19 @@ The move to event-driven architecture reduced API latency by <strong>60%</strong
 <tbody>
 <tr>
 <th scope="row">Q1</th>
-<td style="--start: 0.128; --size: 0.128"></td>
+<td style="--start: 0.128; --size: 0.128"><span class="data">3200</span></td>
 </tr>
 <tr>
 <th scope="row">Q2</th>
-<td style="--start: 0.128; --size: 0.34"></td>
+<td style="--start: 0.128; --size: 0.34"><span class="data">8500</span></td>
 </tr>
 <tr>
 <th scope="row">Q3</th>
-<td style="--start: 0.34; --size: 0.6"></td>
+<td style="--start: 0.34; --size: 0.6"><span class="data">15000</span></td>
 </tr>
 <tr>
 <th scope="row">Q4</th>
-<td style="--start: 0.6; --size: 1"></td>
+<td style="--start: 0.6; --size: 1"><span class="data">25000</span></td>
 </tr>
 </tbody>
 </table></div>
@@ -885,27 +921,27 @@ The move to event-driven architecture reduced API latency by <strong>60%</strong
 <tbody>
 <tr>
 <th scope="row">Q1</th>
-<td style="--start: 0.333333; --size: 0.333333"></td>
-<td style="--start: 0.8; --size: 0.8"></td>
-<td style="--start: 1; --size: 1"></td>
+<td style="--start: 0.05; --size: 0.05"><span class="data">500</span></td>
+<td style="--start: 0.12; --size: 0.12"><span class="data">1200</span></td>
+<td style="--start: 0.15; --size: 0.15"><span class="data">1500</span></td>
 </tr>
 <tr>
 <th scope="row">Q2</th>
-<td style="--start: 0.333333; --size: 0.375"></td>
-<td style="--start: 0.8; --size: 0.75"></td>
-<td style="--start: 1; --size: 1"></td>
+<td style="--start: 0.05; --size: 0.15"><span class="data">1500</span></td>
+<td style="--start: 0.12; --size: 0.3"><span class="data">3000</span></td>
+<td style="--start: 0.15; --size: 0.4"><span class="data">4000</span></td>
 </tr>
 <tr>
 <th scope="row">Q3</th>
-<td style="--start: 0.375; --size: 0.461538"></td>
-<td style="--start: 0.75; --size: 0.846154"></td>
-<td style="--start: 1; --size: 1"></td>
+<td style="--start: 0.15; --size: 0.3"><span class="data">3000</span></td>
+<td style="--start: 0.3; --size: 0.55"><span class="data">5500</span></td>
+<td style="--start: 0.4; --size: 0.65"><span class="data">6500</span></td>
 </tr>
 <tr>
 <th scope="row">Q4</th>
-<td style="--start: 0.461538; --size: 0.6"></td>
-<td style="--start: 0.846154; --size: 0.9"></td>
-<td style="--start: 1; --size: 1"></td>
+<td style="--start: 0.3; --size: 0.6"><span class="data">6000</span></td>
+<td style="--start: 0.55; --size: 0.9"><span class="data">9000</span></td>
+<td style="--start: 0.65; --size: 1"><span class="data">10000</span></td>
 </tr>
 </tbody>
 </table>

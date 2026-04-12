@@ -86,10 +86,28 @@ def test_chart_show_data_for_column():
     assert "<span class=\"data\">" in html
 
 
-def test_chart_show_data_for_pie():
-    """show-data is auto-applied for pie charts."""
+def test_chart_pie_has_legend_with_values():
+    """Pie chart auto-generates a legend with label + value (M53)."""
     md = (
         ":::chart pie\n"
+        "| A | B |\n"
+        "|---|---|\n"
+        "| x | 50 |\n"
+        "| y | 30 |\n"
+        ":::"
+    )
+    html, _ = process_markdown(md)
+    # Pie no longer shows data inside slices (illegible rotated labels).
+    # Instead it has a legend with label + value.
+    assert "charts-css legend" in html
+    assert "50" in html
+    assert "30" in html
+
+
+def test_chart_show_data_for_line():
+    """Line charts show data values for readability (M54)."""
+    md = (
+        ":::chart line\n"
         "| A | B |\n"
         "|---|---|\n"
         "| x | 50 |\n"
@@ -100,22 +118,8 @@ def test_chart_show_data_for_pie():
     assert "<span class=\"data\">" in html
 
 
-def test_chart_no_show_data_for_line():
-    """Line charts do NOT show data values (too noisy)."""
-    md = (
-        ":::chart line\n"
-        "| A | B |\n"
-        "|---|---|\n"
-        "| x | 50 |\n"
-        "| y | 30 |\n"
-        ":::"
-    )
-    html, _ = process_markdown(md)
-    assert "<span class=\"data\">" not in html
-
-
-def test_chart_no_show_data_for_area():
-    """Area charts do NOT show data values."""
+def test_chart_show_data_for_area():
+    """Area charts show data values for readability (M54)."""
     md = (
         ":::chart area\n"
         "| A | B |\n"
@@ -125,7 +129,7 @@ def test_chart_no_show_data_for_area():
         ":::"
     )
     html, _ = process_markdown(md)
-    assert "<span class=\"data\">" not in html
+    assert "<span class=\"data\">" in html
 
 
 # --- Stacked types ---

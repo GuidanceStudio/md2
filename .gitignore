@@ -6,3 +6,7 @@ build/
 dist/
 __pycache__
 uv.lock
+
+node_modules/
+package-lock.json
+package.json
