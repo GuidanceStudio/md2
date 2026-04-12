@@ -177,8 +177,9 @@ body {
     border-bottom: 1px solid var(--table-border);
     border-radius: 8px 8px 0 0;
 }
-/* Data text: white INSIDE colored segments (bar/pie/stacked), normal color OUTSIDE (column/line/area) */
+/* Data text: white INSIDE colored segments (bar/column/pie/stacked), normal color OUTSIDE (line/area) */
 .md2-chart .bar .data,
+.md2-chart .column .data,
 .md2-chart .pie .data,
 .md2-chart .bar.stacked .data,
 .md2-chart .column.stacked .data {
@@ -186,7 +187,6 @@ body {
     text-shadow: 0 1px 2px rgba(0,0,0,0.5);
     padding-right: 6px;
 }
-.md2-chart .column .data,
 .md2-chart .line .data,
 .md2-chart .area .data {
     color: var(--text-color); font-weight: 600; font-size: 0.8rem;
@@ -225,11 +225,15 @@ body {
 }
 .md2-chart .charts-css.line {
     height: min(300px, 40vh); --line-size: 3px;
-    padding-block-start: 24px;
 }
 .md2-chart .charts-css.area {
     height: min(300px, 40vh); --line-size: 3px;
-    padding-block-start: 24px;
+}
+/* Line/area need extra wrapper padding for x-axis labels (overflow tbody)
+   and for the max value pill at the top */
+.md2-chart:has(.charts-css.line),
+.md2-chart:has(.charts-css.area) {
+    padding-top: 32px; padding-bottom: 56px;
 }
 .md2-chart .charts-css.pie {
     max-width: min(50vh, 50vw); margin: 0 auto; aspect-ratio: 1;

@@ -32,19 +32,29 @@ def test_bar_labels_size_unchanged():
 
 # --- M57: Line/area top padding ---
 
-def test_line_has_top_padding():
-    """Line chart has padding-block-start to prevent max-value label clipping."""
+def test_line_wrapper_has_padding():
+    """Line chart wrapper has extra padding (M61 replaces M57's padding-block-start)."""
     css = _get_style_css()
-    # Find .charts-css.line rule
-    match = re.search(r'\.charts-css\.line\s*\{[^}]*padding-block-start', css)
-    assert match, "Line chart should have padding-block-start"
+    # M61: extra padding moved to the wrapper via :has()
+    assert re.search(
+        r'\.md2-chart:has\([^)]*line[^)]*\)[^{]*\{[^}]*padding',
+        css, re.DOTALL,
+    ) or re.search(
+        r'\.md2-chart:has\([^)]*area[^)]*\)[^{]*\{[^}]*padding',
+        css, re.DOTALL,
+    )
 
 
-def test_area_has_top_padding():
-    """Area chart has padding-block-start to prevent max-value label clipping."""
+def test_area_wrapper_has_padding():
+    """Area chart wrapper has extra padding."""
     css = _get_style_css()
-    match = re.search(r'\.charts-css\.area\s*\{[^}]*padding-block-start', css)
-    assert match, "Area chart should have padding-block-start"
+    assert re.search(
+        r'\.md2-chart:has\([^)]*area[^)]*\)[^{]*\{[^}]*padding',
+        css, re.DOTALL,
+    ) or re.search(
+        r'\.md2-chart:has\([^)]*line[^)]*\)[^{]*\{[^}]*padding',
+        css, re.DOTALL,
+    )
 
 
 # --- M58: Multi-line/area no data labels ---

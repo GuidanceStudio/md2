@@ -1695,3 +1695,49 @@ Implementazione: in `transform_charts`, controllare `is_multiple` insieme al tip
 - [x] Push
 
 **Done when:** Tutti gli 8 chart dell'example sono visivamente puliti e leggibili.
+
+---
+
+## M60: Column data labels — torna a bianco (testo dentro la barra) ✅
+
+**Why:** Nel column chart i numeri "100", "35", "22", "12" sono renderizzati neri su sfondo colorato (blu/arancione/rosso/verde) — illeggibili. Misurato: `.data` ha `color: rgb(51,51,51)` (nero), il padre `<td>` è dentro la barra colorata. Charts.css posiziona il `.data` con `align-items: flex-start` al top della barra colorata, quindi il testo è VISUALMENTE dentro la barra.
+
+**Causa:** in M42 ho separato `bar/pie/stacked = bianco` da `column/line/area = nero`. Per column ho assunto "fuori dalla barra" ma in realtà i valori sono al top della barra colorata (dentro).
+
+**Approach:** Spostare `.column .data` dalla regola "text-color" alla regola "white + shadow", insieme a `.bar/.pie/.stacked-*`. Solo `.line` e `.area` restano col colore testo (lì il testo è davvero sopra la linea, su sfondo card).
+
+**Tasks:**
+- [x] Aggiungere `.column .data` alla regola white+shadow
+- [x] Rimuovere `.column .data` dalla regola text-color
+- [x] Test: unit — CSS contiene `.column .data` con `#fff`
+- [x] Verificare visualmente con Playwright (Q1 Conversion, Team Allocation)
+- [x] Commit & push
+
+**Done when:** I valori nelle column chart sono bianchi con text-shadow, leggibili sopra qualsiasi colore di barra.
+
+---
+
+## M61: Line/area — fix overflow x-labels fuori dalla card ✅
+
+**Why:** Le label dell'asse x ("Q1, Q2, Q3, Q4" / "00:00...") di line e area appaiono FUORI dalla card, sotto il bordo. Misurato in slide-8 line: wrapper.bottom=9932, xLabels.y=9939 (7-31px sotto). Causa duplice:
+1. Charts.css per line/area genera un `tbody` che è ~60px più alto del `table` (l'area labels è oltre la chart area). Il wrapper non riserva questo spazio.
+2. In M57 ho aggiunto `padding-block-start: 24px` al table per il top clipping, ma questo padding RIDUCE l'area di disegno dentro il table mantenendo la stessa altezza, e Charts.css spinge le labels più in basso → fuori dal wrapper.
+
+**Approach:** Due fix combinati:
+1. **Rimuovere `padding-block-start: 24px`** da `.charts-css.line` e `.charts-css.area`
+2. **Aggiungere padding extra al wrapper** per riservare lo spazio per le x-labels in line/area. Usare `.md2-chart:has(.line)` / `.md2-chart:has(.area)` con `padding-bottom: 56px` e `padding-top: 32px` extra.
+
+Verificare con Playwright che:
+- xLabels.bottom < wrapper.bottom
+- Il max value pill è completamente visibile
+
+**Tasks:**
+- [x] Rimuovere `padding-block-start: 24px` da `.charts-css.line` e `.charts-css.area`
+- [x] Aggiungere padding extra al wrapper line/area via `:has()`
+- [x] Test: unit — CSS no padding-block-start su line/area table
+- [x] Test: unit — wrapper ha padding-bottom esteso per line/area
+- [x] Verificare con Playwright — xLabels.bottom < wrapper.bottom
+- [x] Verificare con Playwright — max value pill completamente visibile
+- [x] Commit & push
+
+**Done when:** Le x-axis labels e il max value pill di line/area sono completamente dentro la card, nessun overflow visivo.

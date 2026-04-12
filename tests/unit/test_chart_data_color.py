@@ -22,16 +22,17 @@ def test_pie_data_is_white():
         or re.search(r'\.pie\s+\.data[^{]*\{[^}]*#fff', css)
 
 
-def test_column_data_uses_text_color():
-    """Column chart .data uses --text-color (not white)."""
+def test_line_data_uses_text_color():
+    """Line/area chart .data uses --text-color (text outside line, on card bg)."""
     css = _get_style_css()
-    # Find a selector that includes .column .data (not .column.stacked .data)
-    # and uses var(--text-color)
     match = re.search(
-        r'\.column \.data[^{]*\{[^}]*var\(--text-color\)',
+        r'\.line \.data[^{]*\{[^}]*var\(--text-color\)',
+        css,
+    ) or re.search(
+        r'\.area \.data[^{]*\{[^}]*var\(--text-color\)',
         css,
     )
-    assert match, "Column .data should use var(--text-color)"
+    assert match, "Line/area .data should use var(--text-color)"
 
 
 def test_no_generic_data_color_rule():
