@@ -1,4 +1,5 @@
 import html
+import math
 import re
 from pathlib import Path
 
@@ -67,6 +68,38 @@ DEFAULT_THEME = {
     "h2_color": "#333",
     "font_family": '"Ubuntu", sans-serif'
 }
+
+
+def _nice_ticks(max_val):
+    """Return 5 'nice' Y-axis tick values from 0 to ~max_val.
+
+    Uses the 1/2/5 nice-number algorithm common in data visualization.
+    For max_val=10000 returns [0, 2500, 5000, 7500, 10000] (or similar).
+    """
+    if max_val <= 0:
+        return [0, 1, 2, 3, 4]
+    raw_step = max_val / 4
+    power = 10 ** math.floor(math.log10(raw_step))
+    normalized = raw_step / power
+    if normalized <= 1:
+        nice = 1
+    elif normalized <= 2:
+        nice = 2
+    elif normalized <= 5:
+        nice = 5
+    else:
+        nice = 10
+    step = nice * power
+    # Ensure last tick is >= max_val
+    ticks = []
+    for i in range(5):
+        v = step * i
+        ticks.append(int(v) if v == int(v) else round(v, 2))
+    # If last tick < max_val, bump all ticks up by one step
+    while ticks[-1] < max_val:
+        ticks = [t + step for t in ticks]
+        ticks = [int(t) if t == int(t) else round(t, 2) for t in ticks]
+    return ticks
 
 
 def parse_frontmatter(markdown_text):
@@ -276,12 +309,17 @@ def transform_charts(html_content):
         if is_stacked:
             classes.append("stacked")
 
+        # Line/area: use graduated Y-axis pattern (Charts.css official examples)
+        if chart_type in ("line", "area"):
+            classes.append("show-primary-axis")
+            classes.append("show-4-secondary-axes")
+            classes.append("hide-data")
         class_str = " ".join(classes)
         # Whether to show .data spans: auto per type
         show_data = raw_type in _CHART_TYPES_SHOW_DATA
-        # Multi-line/area: endpoint-only labels (series name + value)
-        # to avoid inline collision
-        is_multi_connected = is_multiple and chart_type in ("line", "area")
+        # Line/area always hide data (graduated Y-axis shows scale)
+        if chart_type in ("line", "area"):
+            show_data = False
 
         # Build new table HTML
         parts = [f'<table class="{class_str}">']
@@ -310,45 +348,17 @@ def transform_charts(html_content):
         # so each column's line connects its points (single dataset only here)
         prev_norm_by_col = {}
 
-        # Multi-line/area endpoint labels: stagger by rank of final value.
-        # Charts.css positions .data in line charts unpredictably — compute-from-
-        # value y doesn't match actual rendered position. Instead, we stagger
-        # ALL labels by their value rank (highest at top, each below by 28px).
-        # This guarantees no overlap regardless of native positioning.
-        endpoint_offsets = {}  # col_idx -> pixel offset from default position
-        if is_multi_connected and data_rows:
-            last_row_vals = parsed_values[-1]
-            # Sort cols by value descending (highest first → visually at top)
-            ranked = sorted(
-                range(len(last_row_vals)),
-                key=lambda c: -last_row_vals[c],
-            )
-            # Assign offset: rank 0 → 0px, rank 1 → +28px, rank 2 → +56px
-            for rank, col_idx in enumerate(ranked):
-                endpoint_offsets[col_idx] = rank * 28
-
         for row_idx, (label, values) in enumerate(data_rows):
             parts.append('<tr>')
             parts.append(f'<th scope="row">{label}</th>')
-            is_last_row = row_idx == len(data_rows) - 1
             for col_idx, v in enumerate(values):
                 num_val = parsed_values[row_idx][col_idx]
-                # Multi-line/area: emit data span ONLY at the endpoint (last row)
-                # with format "SeriesName: Value"
-                if is_multi_connected:
-                    if is_last_row and num_val != 0 and col_idx < len(dataset_headers):
-                        series_name = dataset_headers[col_idx]
-                        offset = endpoint_offsets.get(col_idx, 0)
-                        if offset != 0:
-                            data_span = (
-                                f'<span class="data" style="--label-offset: {offset}px">'
-                                f'{series_name}: {v.strip()}</span>'
-                            )
-                        else:
-                            data_span = f'<span class="data">{series_name}: {v.strip()}</span>'
-                    else:
-                        data_span = ""
-                elif show_data and num_val != 0:
+                # For accessibility, always include .data span (Charts.css
+                # hides it when .hide-data class is on the table)
+                if show_data and num_val != 0:
+                    data_span = f'<span class="data">{v.strip()}</span>'
+                elif chart_type in ("line", "area"):
+                    # Include for a11y but hide-data class will hide visually
                     data_span = f'<span class="data">{v.strip()}</span>'
                 else:
                     data_span = ""
@@ -380,9 +390,8 @@ def transform_charts(html_content):
 
         result = "\n".join(parts)
 
-        # Auto-add legend for multi-dataset charts — EXCEPT line/area which use
-        # endpoint labels (Name: Value) that serve as legend
-        if is_multiple and dataset_headers and not is_multi_connected:
+        # Auto-add legend for multi-dataset charts
+        if is_multiple and dataset_headers:
             legend_items = "".join(f'<li>{h}</li>' for h in dataset_headers)
             result += f'\n<ul class="charts-css legend legend-inline">{legend_items}</ul>'
         # Pie chart: always generate a legend with label + value (since values
@@ -399,7 +408,17 @@ def transform_charts(html_content):
         if chart_title:
             title_html = f'<div class="md2-chart-title">{chart_title}</div>'
 
-        return f'<div class="md2-chart">{title_html}{result}</div>'
+        # Generate Y-axis for line/area charts (graduated scale)
+        yaxis_html = ""
+        if chart_type in ("line", "area"):
+            ticks = _nice_ticks(max_val)
+            # High to low (top to bottom visually)
+            tick_spans = "".join(
+                f'<span>{t}</span>' for t in reversed(ticks)
+            )
+            yaxis_html = f'<div class="md2-chart-yaxis">{tick_spans}</div>'
+
+        return f'<div class="md2-chart">{title_html}{yaxis_html}{result}</div>'
 
     return _CHART_DIV_RE.sub(_transform_chart, html_content)
 

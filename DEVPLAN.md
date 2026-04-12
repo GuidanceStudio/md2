@@ -1961,3 +1961,164 @@ Incrementare `.md2-chart:has(.charts-css.line), .md2-chart:has(.charts-css.area)
 **Done when:**
 - Multi-line "User Growth by Segment": tutte e 3 le label (Enterprise: 6000, SMB: 9000, Self-serve: 10000) visibili e non sovrapposte
 - Area "Event Pipeline": valore "50" al top completamente visibile, pill non clippato
+
+---
+
+## M67: Graduated Y-axis per line/area + cleanup endpoint labels ✅
+
+**Why:** Dopo 8 milestone di fix fragili (M43, M54, M57, M58, M61, M62, M63, M65, M66) per mostrare i valori nei line/area chart, il pattern ufficiale di Charts.css (visibile nei suoi esempi: `show-primary-axis show-secondary-axes hide-data`) è più robusto. Un asse Y graduato con gridline e Y-labels risolve: zero collision, zero z-index, zero clipping, scalabile a N serie. In più fixa il phantom card sopra il titolo (il padding-top 56px del wrapper `:has(.line)` lascia 48px di area grigia vuota sopra il titolo). Allineato al canone del data visualization professionale (Excel, FT, Bloomberg).
+
+**Approach:**
+
+### Chart structure
+
+Classi Charts.css sulle line/area:
+- `charts-css line show-labels show-primary-axis show-4-secondary-axes`
+- Per multi: anche `multiple`
+- Ripristinare `<span class="data">` HIDDEN (no più endpoint labels o transform hacks)
+
+### Generazione asse Y custom
+
+In `transform_charts`, per line/area:
+1. Calcolare `max_val` (già disponibile)
+2. Calcolare 5 tick values "nice" (0, 25%, 50%, 75%, 100% di max, arrotondati a multipli puliti tipo 0/2500/5000/7500/10000)
+3. Generare HTML:
+   ```html
+   <div class="md2-chart-yaxis">
+     <span>10000</span>
+     <span>7500</span>
+     <span>5000</span>
+     <span>2500</span>
+     <span>0</span>
+   </div>
+   ```
+4. Inserire nel wrapper `.md2-chart` insieme al chart table
+
+### CSS per l'asse Y
+
+```css
+.md2-chart:has(.line), .md2-chart:has(.area) {
+    position: relative;
+    padding-left: 68px;  /* spazio per asse Y */
+    padding-top: 16px;   /* normale, no 56px */
+    padding-bottom: 16px;
+}
+.md2-chart-yaxis {
+    position: absolute;
+    top: [title_height + top_padding];
+    left: 8px;
+    bottom: [x_labels_height + bottom_padding];
+    width: 50px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    text-align: right;
+    font-size: 0.75rem;
+    color: var(--text-color);
+    opacity: 0.7;
+}
+.md2-chart-yaxis span { line-height: 1; }
+```
+
+### Tick value "nice number" algorithm
+
+Per max=25000:
+- raw step = 25000 / 4 = 6250
+- nice step ≈ 7500 (ceil to 1/2/5 × 10^n)
+- ticks: 0, 7500, 15000, 22500, 30000 → troppo grande, usa max esatto
+- Più semplice: max_val, 75%, 50%, 25%, 0 arrotondati a 1/2/5 × 10^n del max
+
+Implementazione: funzione `_nice_ticks(max_val)` che ritorna 5 valori [0, t1, t2, t3, t_max].
+
+Formula base:
+```python
+def _nice_ticks(max_val):
+    """Return 5 'nice' tick values from 0 to ~max_val."""
+    # Find nice interval
+    import math
+    raw_step = max_val / 4
+    power = 10 ** math.floor(math.log10(raw_step))
+    normalized = raw_step / power
+    if normalized <= 1:
+        nice = 1
+    elif normalized <= 2:
+        nice = 2
+    elif normalized <= 5:
+        nice = 5
+    else:
+        nice = 10
+    step = nice * power
+    return [int(step * i) for i in range(5)]
+```
+
+### Cleanup
+
+Rimuovere da `core.py`:
+- Logic `is_multi_connected` per endpoint labels
+- Il blocco `endpoint_offsets` con stagger algorithm
+- La generazione di data span con formato "Name: Value"
+
+Rimuovere da `style.css`:
+- `.md2-chart .line .data` con transform/translate -110% !important
+- `.md2-chart .line.multiple .data` con transform endpoint
+- `.md2-chart:has(.charts-css.line)` padding-top 56px
+- `.md2-chart:has(.charts-css.line.multiple)` padding-right 140px
+- Le regole `--label-offset` inline
+
+### Legenda per multi-dataset
+
+Ripristinare la legenda classica (già presente per bar/column multi-dataset, solo rimossa dall'M65 per line/area):
+- `ul.legend` con `<li>` per dataset
+- Bullet colorati via `::before` che usano `--md2-color-N`
+- Margin-top ragionevole sotto il chart
+
+### Single vs multi
+
+- **Single-dataset**: axis graduato + nessun endpoint label (l'utente legge dai tick)
+- **Multi-dataset**: axis graduato + legenda con colori + nomi serie
+
+Uniforme, semplice, no casi speciali.
+
+### Data span strategy
+
+Charts.css genera `<span class="data">` ma noi lo nascondiamo con CSS: `.md2-chart .line .data, .md2-chart .area .data { display: none !important; }`. O usiamo la classe Charts.css `.hide-data`.
+
+Preferibile: aggiungere la classe `hide-data` al chart table nella generazione HTML. Così è il pattern Charts.css ufficiale.
+
+### Phantom card fix
+
+Il phantom sparisce automaticamente perché:
+- Wrapper padding torna a `8px 20px 20px` (normale)
+- Title con `margin: -8px -20px 8px` occupa esattamente la fascia superiore (8px reale = 8px negative margin)
+- Niente area vuota sopra
+
+**Tasks:**
+- [x] Implementare `_nice_ticks(max_val)` in core.py con algoritmo nice number
+- [x] In `transform_charts`, per line/area: aggiungere classi `show-primary-axis show-4-secondary-axes hide-data`
+- [x] In `transform_charts`, per line/area: generare `<div class="md2-chart-yaxis">` con 5 tick span
+- [x] Wrappare chart table + yaxis in una struttura che permetta posizionamento assoluto
+- [x] CSS: `.md2-chart-yaxis` con flex column space-between, absolute left
+- [x] CSS: `.md2-chart:has(.line), :has(.area)` con `position: relative`, `padding-left: 68px`, normale `padding-top/bottom`
+- [x] CSS: rimuovere transform hacks su `.line .data, .area .data`
+- [x] CSS: rimuovere `!important` e endpoint label styling
+- [x] CSS: rimuovere `:has(.line) { padding-top: 56px; padding-bottom: 56px }`
+- [x] CSS: rimuovere `:has(.line.multiple) { padding-right: 140px }`
+- [x] core.py: rimuovere `is_multi_connected` logic e `endpoint_offsets` stagger
+- [x] core.py: rimuovere formato "Name: Value" per multi-line/area
+- [x] core.py: ripristinare `ul.legend` per multi-line/area (come bar/column)
+- [x] Aggiornare/rimuovere test obsoleti: M65 endpoint tests, M66 stagger tests
+- [x] Aggiungere test: line/area CSS contiene `md2-chart-yaxis` class rules
+- [x] Aggiungere test: `_nice_ticks(25000)` produce `[0, 7500, 15000, 22500, 30000]` o simile
+- [x] Aggiungere test: line/area HTML contiene `md2-chart-yaxis` div con 5 span
+- [x] Verificare con Playwright: phantom card sparito, axis Y visibile a sinistra, gridline renderizzate
+- [x] Verificare con Playwright: multi-line ha legenda sotto con colori
+- [x] Rigenerare example.html
+- [x] Commit & push
+
+**Done when:**
+- Chart line/area hanno un asse Y graduato a sinistra con 5 valori (0 → max)
+- 4 gridline orizzontali visibili nel chart area
+- Multi-line ha legenda classica sotto con bullet colorati
+- Nessun phantom card sopra il titolo
+- Codice CSS e Python semplificato (rimossi tutti gli hack M65/M66)
+- Tutti i 8 chart dell'example visivamente puliti

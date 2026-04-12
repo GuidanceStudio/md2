@@ -22,17 +22,18 @@ def test_pie_data_is_white():
         or re.search(r'\.pie\s+\.data[^{]*\{[^}]*#fff', css)
 
 
-def test_line_data_uses_text_color():
-    """Line/area chart .data uses --text-color (text outside line, on card bg)."""
-    css = _get_style_css()
-    match = re.search(
-        r'\.line \.data[^{]*\{[^}]*var\(--text-color\)',
-        css,
-    ) or re.search(
-        r'\.area \.data[^{]*\{[^}]*var\(--text-color\)',
-        css,
+def test_line_area_hidden_data_via_class():
+    """Line/area use Charts.css .hide-data class (M67 graduated Y-axis replaces inline labels)."""
+    from md2.core import process_markdown
+    md = (
+        ":::chart line\n"
+        "| Q | V |\n"
+        "|---|---|\n"
+        "| 1 | 100 |\n"
+        ":::"
     )
-    assert match, "Line/area .data should use var(--text-color)"
+    html, _ = process_markdown(md)
+    assert "hide-data" in html
 
 
 def test_no_generic_data_color_rule():

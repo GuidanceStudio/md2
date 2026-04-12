@@ -59,9 +59,8 @@ def test_area_wrapper_has_padding():
 
 # --- M58: Multi-line/area no data labels ---
 
-def test_line_multi_dataset_endpoint_labels_only():
-    """Line multi-dataset shows endpoint-only labels (M65 replaces M58 anti-collision)."""
-    import re as _re
+def test_line_multi_dataset_has_hide_data_and_legend():
+    """M67: line multi has hide-data + graduated Y-axis + classic legend."""
     md = (
         ":::chart line\n"
         "| Q | A | B | C |\n"
@@ -71,10 +70,9 @@ def test_line_multi_dataset_endpoint_labels_only():
         ":::"
     )
     html, _ = process_markdown(md)
-    assert len(_re.findall(r'<span class="data"[^>]*>', html)) == 3
-    assert "A: 150" in html
-    assert "B: 250" in html
-    assert "C: 350" in html
+    assert "hide-data" in html
+    assert "md2-chart-yaxis" in html
+    assert "charts-css legend" in html
 
 
 def test_line_single_dataset_has_data_spans():
@@ -91,9 +89,8 @@ def test_line_single_dataset_has_data_spans():
     assert '<span class="data">' in html
 
 
-def test_area_multi_dataset_endpoint_labels_only():
-    """Area multi-dataset shows endpoint-only labels (M65)."""
-    import re as _re
+def test_area_multi_dataset_has_hide_data_and_yaxis():
+    """M67: area multi has hide-data + graduated Y-axis + legend."""
     md = (
         ":::chart area\n"
         "| T | A | B |\n"
@@ -103,9 +100,9 @@ def test_area_multi_dataset_endpoint_labels_only():
         ":::"
     )
     html, _ = process_markdown(md)
-    assert len(_re.findall(r'<span class="data"[^>]*>', html)) == 2
-    assert "A: 70" in html
-    assert "B: 90" in html
+    assert "hide-data" in html
+    assert "md2-chart-yaxis" in html
+    assert "charts-css legend" in html
 
 
 def test_area_single_dataset_has_data_spans():

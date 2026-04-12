@@ -187,29 +187,8 @@ body {
     text-shadow: 0 1px 2px rgba(0,0,0,0.5);
     padding-right: 6px;
 }
-.md2-chart .line .data,
-.md2-chart .area .data {
-    color: var(--text-color); font-weight: 600; font-size: 0.8rem;
-    position: relative; z-index: 10;
-    background: var(--bg-color);
-    padding: 2px 6px; border-radius: 4px;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.15);
-    white-space: nowrap;
-    /* Override Charts.css's positioning (it uses :not() pseudo-classes for
-       higher specificity — we need !important to win). Lift label above the
-       exact data point so it doesn't sit on the line. */
-    transform: translateY(-110%) !important;
-}
-/* Multi-line/area endpoint labels: position to the right of the last point
-   (not above) and constrain width for long series names.
-   --label-offset allows de-collision when endpoints are close. */
-.md2-chart .line.multiple .data,
-.md2-chart .area.multiple .data {
-    transform: translate(6px, calc(-50% + var(--label-offset, 0px))) !important;
-    max-width: 140px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
+/* Line/area use .hide-data class → Charts.css hides .data inline values.
+   The graduated Y-axis (.md2-chart-yaxis) shows scale instead. */
 .md2-chart table.charts-css {
     box-shadow: none; border-radius: 0; border-collapse: separate;
 }
@@ -243,15 +222,29 @@ body {
 }
 /* Line/area need extra wrapper padding for x-axis labels (overflow tbody)
    and for the max value pill at the top */
+/* Line/area wrapper: reserve left padding for the graduated Y-axis */
 .md2-chart:has(.charts-css.line),
 .md2-chart:has(.charts-css.area) {
-    padding-top: 56px; padding-bottom: 56px;
+    position: relative;
+    padding-left: 64px;
 }
-/* Multi-line/area endpoint labels need room to the right of the chart */
-.md2-chart:has(.charts-css.line.multiple),
-.md2-chart:has(.charts-css.area.multiple) {
-    padding-right: 140px;
+/* Graduated Y-axis: 5 tick labels positioned along the left side of the chart */
+.md2-chart-yaxis {
+    position: absolute;
+    left: 8px;
+    top: 48px;     /* after title area */
+    bottom: 56px;  /* above x-axis labels */
+    width: 48px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    text-align: right;
+    font-size: 0.75rem;
+    color: var(--text-color);
+    opacity: 0.7;
+    pointer-events: none;
 }
+.md2-chart-yaxis span { line-height: 1; }
 /* M63 removed in M65: multi-line/area no longer have ul.legend
    (endpoint labels with "Name: Value" format serve as legend) */
 .md2-chart .charts-css.pie {
@@ -858,7 +851,7 @@ The move to event-driven architecture reduced API latency by <strong>60%</strong
 </ul>
 </li>
 </ul>
-<div class="md2-chart"><div class="md2-chart-title">Event Pipeline Throughput (K events/sec)</div><table class="charts-css area show-labels">
+<div class="md2-chart"><div class="md2-chart-title">Event Pipeline Throughput (K events/sec)</div><div class="md2-chart-yaxis"><span>80</span><span>60</span><span>40</span><span>20</span><span>0</span></div><table class="charts-css area show-labels show-primary-axis show-4-secondary-axes hide-data">
 <caption>Event Pipeline Throughput (K events/sec)</caption>
 <thead><tr>
 <th scope="col">Hour</th>
@@ -913,7 +906,7 @@ The move to event-driven architecture reduced API latency by <strong>60%</strong
 </ul></div></div>
         
         <div class="slide" id="slide-8"><h2>6. Roadmap: Phase 2 (Q2-Q4 2026)</h2><div class="content"><p><em>Objective: Scale and differentiation.</em></p>
-<div class="md2-chart"><div class="md2-chart-title">Projected User Growth</div><table class="charts-css line show-labels">
+<div class="md2-chart"><div class="md2-chart-title">Projected User Growth</div><div class="md2-chart-yaxis"><span>40000</span><span>30000</span><span>20000</span><span>10000</span><span>0</span></div><table class="charts-css line show-labels show-primary-axis show-4-secondary-axes hide-data">
 <caption>Projected User Growth</caption>
 <thead><tr>
 <th scope="col">Quarter</th>
@@ -939,7 +932,7 @@ The move to event-driven architecture reduced API latency by <strong>60%</strong
 </tbody>
 </table></div>
 
-<div class="md2-chart"><div class="md2-chart-title">User Growth by Segment</div><table class="charts-css line multiple show-labels">
+<div class="md2-chart"><div class="md2-chart-title">User Growth by Segment</div><div class="md2-chart-yaxis"><span>20000</span><span>15000</span><span>10000</span><span>5000</span><span>0</span></div><table class="charts-css line multiple show-labels show-primary-axis show-4-secondary-axes hide-data">
 <caption>User Growth by Segment</caption>
 <thead><tr>
 <th scope="col">Quarter</th>
@@ -950,30 +943,31 @@ The move to event-driven architecture reduced API latency by <strong>60%</strong
 <tbody>
 <tr>
 <th scope="row">Q1</th>
-<td style="--start: 0.05; --size: 0.05"></td>
-<td style="--start: 0.12; --size: 0.12"></td>
-<td style="--start: 0.15; --size: 0.15"></td>
+<td style="--start: 0.05; --size: 0.05"><span class="data">500</span></td>
+<td style="--start: 0.12; --size: 0.12"><span class="data">1200</span></td>
+<td style="--start: 0.15; --size: 0.15"><span class="data">1500</span></td>
 </tr>
 <tr>
 <th scope="row">Q2</th>
-<td style="--start: 0.05; --size: 0.15"></td>
-<td style="--start: 0.12; --size: 0.3"></td>
-<td style="--start: 0.15; --size: 0.4"></td>
+<td style="--start: 0.05; --size: 0.15"><span class="data">1500</span></td>
+<td style="--start: 0.12; --size: 0.3"><span class="data">3000</span></td>
+<td style="--start: 0.15; --size: 0.4"><span class="data">4000</span></td>
 </tr>
 <tr>
 <th scope="row">Q3</th>
-<td style="--start: 0.15; --size: 0.3"></td>
-<td style="--start: 0.3; --size: 0.55"></td>
-<td style="--start: 0.4; --size: 0.65"></td>
+<td style="--start: 0.15; --size: 0.3"><span class="data">3000</span></td>
+<td style="--start: 0.3; --size: 0.55"><span class="data">5500</span></td>
+<td style="--start: 0.4; --size: 0.65"><span class="data">6500</span></td>
 </tr>
 <tr>
 <th scope="row">Q4</th>
-<td style="--start: 0.3; --size: 0.6"><span class="data" style="--label-offset: 56px">Enterprise: 6000</span></td>
-<td style="--start: 0.55; --size: 0.9"><span class="data" style="--label-offset: 28px">SMB: 9000</span></td>
-<td style="--start: 0.65; --size: 1"><span class="data">Self-serve: 10000</span></td>
+<td style="--start: 0.3; --size: 0.6"><span class="data">6000</span></td>
+<td style="--start: 0.55; --size: 0.9"><span class="data">9000</span></td>
+<td style="--start: 0.65; --size: 1"><span class="data">10000</span></td>
 </tr>
 </tbody>
-</table></div>
+</table>
+<ul class="charts-css legend legend-inline"><li>Enterprise</li><li>SMB</li><li>Self-serve</li></ul></div>
 
 <h3>Q2: Launch &amp; Grow</h3>
 <ul>

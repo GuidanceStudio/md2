@@ -175,29 +175,8 @@ body {
     text-shadow: 0 1px 2px rgba(0,0,0,0.5);
     padding-right: 6px;
 }
-.md2-chart .line .data,
-.md2-chart .area .data {
-    color: var(--text-color); font-weight: 600; font-size: 0.8rem;
-    position: relative; z-index: 10;
-    background: var(--bg-color);
-    padding: 2px 6px; border-radius: 4px;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.15);
-    white-space: nowrap;
-    /* Override Charts.css's positioning (it uses :not() pseudo-classes for
-       higher specificity — we need !important to win). Lift label above the
-       exact data point so it doesn't sit on the line. */
-    transform: translateY(-110%) !important;
-}
-/* Multi-line/area endpoint labels: position to the right of the last point
-   (not above) and constrain width for long series names.
-   --label-offset allows de-collision when endpoints are close. */
-.md2-chart .line.multiple .data,
-.md2-chart .area.multiple .data {
-    transform: translate(6px, calc(-50% + var(--label-offset, 0px))) !important;
-    max-width: 140px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
+/* Line/area use .hide-data class → Charts.css hides .data inline values.
+   The graduated Y-axis (.md2-chart-yaxis) shows scale instead. */
 .md2-chart table.charts-css {
     box-shadow: none; border-radius: 0; border-collapse: separate;
 }
@@ -231,15 +210,29 @@ body {
 }
 /* Line/area need extra wrapper padding for x-axis labels (overflow tbody)
    and for the max value pill at the top */
+/* Line/area wrapper: reserve left padding for the graduated Y-axis */
 .md2-chart:has(.charts-css.line),
 .md2-chart:has(.charts-css.area) {
-    padding-top: 56px; padding-bottom: 56px;
+    position: relative;
+    padding-left: 64px;
 }
-/* Multi-line/area endpoint labels need room to the right of the chart */
-.md2-chart:has(.charts-css.line.multiple),
-.md2-chart:has(.charts-css.area.multiple) {
-    padding-right: 140px;
+/* Graduated Y-axis: 5 tick labels positioned along the left side of the chart */
+.md2-chart-yaxis {
+    position: absolute;
+    left: 8px;
+    top: 48px;     /* after title area */
+    bottom: 56px;  /* above x-axis labels */
+    width: 48px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    text-align: right;
+    font-size: 0.75rem;
+    color: var(--text-color);
+    opacity: 0.7;
+    pointer-events: none;
 }
+.md2-chart-yaxis span { line-height: 1; }
 /* M63 removed in M65: multi-line/area no longer have ul.legend
    (endpoint labels with "Name: Value" format serve as legend) */
 .md2-chart .charts-css.pie {
