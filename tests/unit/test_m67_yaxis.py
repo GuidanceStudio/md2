@@ -12,8 +12,8 @@ def _get_style_css():
 # --- Nice ticks algorithm ---
 
 def test_nice_ticks_round_number():
-    """_nice_ticks(10000) returns 5 values from 0 to ~10000."""
-    ticks = _nice_ticks(10000)
+    """_nice_ticks(0, 10000) returns 5 values from 0 to ~10000."""
+    ticks = _nice_ticks(0, 10000)
     assert len(ticks) == 5
     assert ticks[0] == 0
     assert ticks[-1] >= 10000
@@ -22,8 +22,8 @@ def test_nice_ticks_round_number():
 
 
 def test_nice_ticks_25000():
-    """_nice_ticks(25000) returns nice round values."""
-    ticks = _nice_ticks(25000)
+    """_nice_ticks(0, 25000) returns nice round values."""
+    ticks = _nice_ticks(0, 25000)
     assert ticks[0] == 0
     assert ticks[-1] >= 25000
     # Step should be a "nice" number (1, 2, 5, 10, 25, 50 × 10^n)
@@ -33,15 +33,15 @@ def test_nice_ticks_25000():
 
 
 def test_nice_ticks_small_value():
-    """_nice_ticks(50) handles small values."""
-    ticks = _nice_ticks(50)
+    """_nice_ticks(0, 50) handles small values."""
+    ticks = _nice_ticks(0, 50)
     assert ticks[0] == 0
     assert ticks[-1] >= 50
 
 
 def test_nice_ticks_100():
-    """_nice_ticks(100) returns [0, 25, 50, 75, 100] or similar."""
-    ticks = _nice_ticks(100)
+    """_nice_ticks(0, 100) returns [0, 25, 50, 75, 100] or similar."""
+    ticks = _nice_ticks(0, 100)
     assert ticks[0] == 0
     assert ticks[-1] >= 100
 

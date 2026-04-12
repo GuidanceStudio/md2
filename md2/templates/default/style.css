@@ -211,14 +211,22 @@ body {
 /* Line/area need extra wrapper padding for x-axis labels (overflow tbody)
    and for the max value pill at the top */
 /* Line/area: chart body is a flex row with Y-axis on the left and the
-   chart table on the right. The yaxis stretches to match the table height,
-   ensuring Y-labels align with the chart area gridlines. */
+   chart table on the right. Explicit height matches the chart table
+   (Charts.css height: min(300px, 40vh)), so the yaxis stretches exactly
+   to the chart area and not beyond (which would cause label misalignment
+   with the tbody overflow for x-axis labels). */
 .md2-chart-body {
     display: flex;
     align-items: stretch;
     gap: 8px;
+    height: min(300px, 40vh);
 }
-.md2-chart-body > .charts-css { flex: 1; min-width: 0; }
+.md2-chart-body > .charts-css {
+    flex: 1;
+    min-width: 0;
+    margin: 0 !important;
+    align-self: flex-start;
+}
 .md2-chart-yaxis {
     box-sizing: border-box;
     flex: 0 0 48px;

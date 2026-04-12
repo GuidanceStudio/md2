@@ -23,7 +23,7 @@ def test_line_size_uses_tick_max_not_data_max():
         ":::"
     )
     html, _ = process_markdown(md)
-    ticks = _nice_ticks(25000)
+    ticks = _nice_ticks(0, 25000)
     tick_max = ticks[-1]
     expected_end = 25000 / tick_max
     # --size for the last point should be expected_end, not 1
@@ -52,7 +52,7 @@ def test_area_size_uses_tick_max():
         ":::"
     )
     html, _ = process_markdown(md)
-    ticks = _nice_ticks(80)
+    ticks = _nice_ticks(0, 80)
     tick_max = ticks[-1]
     expected_end = 80 / tick_max
     sizes = [float(s) for s in re.findall(r'--size:\s*([\d.]+)', html)]

@@ -70,35 +70,63 @@ DEFAULT_THEME = {
 }
 
 
-def _nice_ticks(max_val):
-    """Return 5 'nice' Y-axis tick values from 0 to ~max_val.
-
-    Uses the 1/2/5 nice-number algorithm common in data visualization.
-    For max_val=10000 returns [0, 2500, 5000, 7500, 10000] (or similar).
-    """
-    if max_val <= 0:
-        return [0, 1, 2, 3, 4]
-    raw_step = max_val / 4
+def _nice_step(raw_step):
+    """Round a raw step to a 'nice' value: 1, 2, 2.5, 5, 7.5, 10 × 10^n."""
+    if raw_step <= 0:
+        return 1
     power = 10 ** math.floor(math.log10(raw_step))
     normalized = raw_step / power
     if normalized <= 1:
         nice = 1
     elif normalized <= 2:
         nice = 2
+    elif normalized <= 2.5:
+        nice = 2.5
     elif normalized <= 5:
         nice = 5
+    elif normalized <= 7.5:
+        nice = 7.5
     else:
         nice = 10
-    step = nice * power
-    # Ensure last tick is >= max_val
-    ticks = []
-    for i in range(5):
-        v = step * i
-        ticks.append(int(v) if v == int(v) else round(v, 2))
-    # If last tick < max_val, bump all ticks up by one step
-    while ticks[-1] < max_val:
-        ticks = [t + step for t in ticks]
-        ticks = [int(t) if t == int(t) else round(t, 2) for t in ticks]
+    return nice * power
+
+
+def _fmt_tick(v):
+    """Format a tick value as int if integer, else rounded."""
+    if v == int(v):
+        return int(v)
+    return round(v, 2)
+
+
+def _nice_ticks(data_min, data_max):
+    """Return 5 'nice' Y-axis tick values covering [data_min, data_max].
+
+    - If data_min > data_max/2 (clustered data), start from nice floor
+      below data_min with a small padding.
+    - Otherwise (data spans a wide range, or includes 0), start from 0.
+    """
+    if data_max <= 0:
+        return [0, 1, 2, 3, 4]
+
+    # Clustering detection: if the min is close to the max, don't start at 0
+    clustered = data_min > 0 and data_min > data_max * 0.5
+
+    if clustered:
+        range_val = data_max - data_min
+        # Pad 10% on each side of the range for a bit of breathing room
+        padding = range_val * 0.1
+        raw_step = (data_max + padding - (data_min - padding)) / 4
+        step = _nice_step(raw_step)
+        # axis start = nice floor of (data_min - padding)
+        axis_start = math.floor((data_min - padding) / step) * step
+    else:
+        axis_start = 0
+        step = _nice_step(data_max / 4)
+
+    ticks = [_fmt_tick(axis_start + step * i) for i in range(5)]
+    # Ensure last tick >= data_max
+    while ticks[-1] < data_max:
+        ticks = [_fmt_tick(t + step) for t in ticks]
     return ticks
 
 
@@ -296,15 +324,22 @@ def transform_charts(html_content):
         all_values = [v for row in parsed_values for v in row]
         max_val = max(all_values) if all_values and max(all_values) > 0 else 1
 
-        # For line/area: compute nice ticks and use tick_max as normalization
-        # denominator so values align with the graduated Y-axis.
+        # For line/area: compute nice ticks spanning [data_min, data_max],
+        # possibly starting above 0 for clustered data. Normalize values
+        # against the tick range so Charts.css --size/--end align with Y-axis.
         is_connected = chart_type in ("line", "area")
         if is_connected:
-            ticks = _nice_ticks(max_val)
+            positive_values = [v for v in all_values if v > 0]
+            data_min = min(positive_values) if positive_values else 0
+            ticks = _nice_ticks(data_min, max_val)
+            norm_min = ticks[0]
             norm_max = ticks[-1]
+            norm_range = norm_max - norm_min if norm_max > norm_min else 1
         else:
             ticks = None
+            norm_min = 0
             norm_max = max_val
+            norm_range = max_val
 
         # Dataset headers (for legend)
         dataset_headers = headers[1:] if len(headers) > 1 else []
@@ -382,7 +417,14 @@ def transform_charts(html_content):
                     e_str = f"{end:g}"
                     parts.append(f'<td style="--start: {s_str}; --end: {e_str}">{data_span}</td>')
                 else:
-                    norm = num_val / norm_max
+                    if is_connected:
+                        # Offset-based normalization for line/area: value
+                        # is relative to the tick axis range [norm_min, norm_max]
+                        norm = (num_val - norm_min) / norm_range
+                        if norm < 0:
+                            norm = 0
+                    else:
+                        norm = num_val / norm_max
                     size_str = f"{norm:g}" if norm != int(norm) else str(int(norm))
                     if is_connected:
                         # Line/area: --start is the previous point's value for this column

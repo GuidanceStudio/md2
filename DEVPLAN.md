@@ -2174,3 +2174,106 @@ I valori hardcoded sono un guess. Se il disallineamento persiste dopo Fix 1+2, m
 - La linea di `:::chart line` con max dato 25000 raggiunge esattamente il livello "25000" sull'asse Y (non il top)
 - Le gridline orizzontali coincidono visivamente con i numeri dell'asse Y
 - Tutti gli 8 chart dell'example ancora renderizzati correttamente
+
+---
+
+## M69: Parametrizzazione Y-axis intelligente (data_min + clustering detection) ✅
+
+**Why:** Due problemi intrecciati con l'asse Y:
+
+1. **tick_max troppo alto**: per `max=10000` l'algoritmo produce `tick_max=20000` (doppio). Chart usa metà altezza.
+2. **Dati clustered non gestiti**: per `[50000, 55000, 60000]`, partire da 0 mette i dati nel 10% superiore, rendendo invisibili le differenze. Serve Y-axis `[48000, 51000, ..., 60000]`.
+
+L'utente osserva: "dovresti parametrizzare bene da lasciare spazio sotto al più piccolo valore, o zero se sono tutti positivi, e sopra un piccolo spazio sopra il più alto".
+
+**Approach:** Riscrivere `_nice_ticks(data_min, data_max)` (nuova firma con entrambi i parametri) con due migliorie:
+
+### Fix 1 — Set di nice numbers più fitto
+
+Da `[1, 2, 5, 10]` → `[1, 2, 2.5, 5, 7.5, 10]`:
+- `max=10000`, step raw=2500 → normalized=2.5 → `nice=2.5` → step=2500 → `[0,2500,5000,7500,10000]` ✓
+- `max=25000`, step raw=6250 → normalized=6.25 → `nice=7.5` → step=7500 → `[0,7500,15000,22500,30000]` ✓
+
+### Fix 2 — Clustering detection per axis_min
+
+Nuova logica:
+```python
+def _nice_ticks(data_min, data_max):
+    if data_min > 0 and data_min > data_max * 0.5:
+        # Clustered data — start from nice floor(data_min - padding)
+        range_val = data_max - data_min
+        padding = range_val * 0.1  # 10% headroom
+        axis_start_raw = data_min - padding
+        step = _nice_step((data_max + padding - axis_start_raw) / 4)
+        axis_start = floor(axis_start_raw / step) * step
+    else:
+        # Default: all positive spanning range or includes 0 — start from 0
+        axis_start = 0
+        step = _nice_step(data_max / 4)
+    # Generate 5 ticks starting from axis_start
+    ticks = [axis_start + step * i for i in range(5)]
+    # Ensure last tick >= data_max
+    while ticks[-1] < data_max:
+        ticks = [t + step for t in ticks]
+    return ticks
+```
+
+**Soglia clustering**: `data_min > data_max * 0.5` (cioè `min/max > 0.5`, o `range/max < 0.5`). Standard in data viz (Excel, Tableau).
+
+### Esempi esaustivi
+
+| data | min/max | clustered? | axis | tick_max/max |
+|---|---|---|---|---|
+| `[500, 1200, 10000]` | 0.05 | no | `[0, 2500, 5000, 7500, 10000]` | 1.0 |
+| `[3200, 25000]` | 0.128 | no | `[0, 7500, 15000, 22500, 30000]` | 1.2 |
+| `[50000, 55000, 60000]` | 0.83 | sì | `[48000, 51000, 54000, 57000, 60000]` | 1.0 |
+| `[90, 95, 100]` | 0.9 | sì | `[88, 91, 94, 97, 100]` | 1.0 |
+| `[40, 80]` | 0.5 (borderline) | no (strict `>`) | `[0, 20, 40, 60, 80]` | 1.0 |
+| `[30, 50]` | 0.6 | sì | `[28, 34, 40, 46, 52]` o simile | ~1.0 |
+
+### Propagazione in transform_charts
+
+La normalizzazione cambia da:
+```python
+norm = val / tick_max
+```
+a:
+```python
+norm_min = ticks[0]
+norm_max = ticks[-1]
+norm = (val - norm_min) / (norm_max - norm_min)
+```
+
+Per Charts.css `--start`/`--size`/`--end`, il valore va da 0 (a norm_min) a 1 (a norm_max). La linea di 60000 con axis `[48000..60000]` ha `--size = (60000 - 48000) / (60000 - 48000) = 1.0` (top del chart). 50000 → `(50000 - 48000) / 12000 = 0.167` (vicino al bottom).
+
+### Fix CSS flex body (già sperimentato)
+
+Applicare `.md2-chart-body { height: min(300px, 40vh); }` per forzare il body a coincidere col chart table, eliminando lo stretching a 360px che causava il disallineamento residuo.
+
+**Tasks:**
+- [x] Riscrivere `_nice_ticks(data_min, data_max)` con nuova firma
+- [x] Aggiungere helper `_nice_step(raw_step)` con set `[1,2,2.5,5,7.5,10]`
+- [x] Clustering detection `data_min > data_max * 0.5`
+- [x] In `transform_charts` per line/area: calcolare `data_min_positive` (escludendo 0 e valori ≤ 0 — usare 0 se tutti ≥ 0 e nessuno > 0 oppure direttamente data min)
+- [x] Passare `(data_min, data_max)` a `_nice_ticks`
+- [x] Normalizzazione `(val - norm_min) / (norm_max - norm_min)` per line/area
+- [x] CSS: `.md2-chart-body { height: min(300px, 40vh); }` per allineamento preciso
+- [x] Test: unit — `_nice_ticks(0, 10000)` = `[0, 2500, 5000, 7500, 10000]`
+- [x] Test: unit — `_nice_ticks(0, 25000)` = `[0, 7500, 15000, 22500, 30000]`
+- [x] Test: unit — `_nice_ticks(50000, 60000)` = `[48000, 51000, 54000, 57000, 60000]` o simile (clustered)
+- [x] Test: unit — `_nice_ticks(90, 100)` = ticks che partono da ~88
+- [x] Test: unit — `_nice_ticks(0, 50)` — all positive non clustered = `[0, 15, 30, 45, 60]` o simile
+- [x] Aggiornare test esistenti di `_nice_ticks` alla nuova firma
+- [x] Aggiornare `test_line_chart_connection.py` per i nuovi valori normalizzati
+- [x] Test: line chart con dati clustered mostra Y-axis partente da ~data_min
+- [x] Verificare visualmente con Playwright tutti i line/area charts
+- [x] Rigenerare example
+- [x] Commit & push
+
+**Done when:**
+- `_nice_ticks(0, 10000)` = `[0, 2500, 5000, 7500, 10000]`
+- `_nice_ticks(50000, 60000)` non parte da 0, usa tick vicini al range
+- Multi-line "User Growth by Segment" con max 10000 ha Y-axis 0-10000
+- Single-line "Projected User Growth" con max 25000 ha Y-axis 0-30000
+- Y labels allineati visivamente con gridline (grazie a flex body height esplicito)
+- Chart con dati clustered `[50, 55, 60]` usa tutta l'altezza del chart
