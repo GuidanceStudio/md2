@@ -1741,3 +1741,42 @@ Verificare con Playwright che:
 - [x] Commit & push
 
 **Done when:** Le x-axis labels e il max value pill di line/area sono completamente dentro la card, nessun overflow visivo.
+
+---
+
+## M62: Data pill z-index fix per line/area ✅
+
+**Why:** Nei line/area chart i pill background dei valori dati (es. "35", "50", "8500", "15000") hanno il bordo destro nascosto dal td sibling successivo. Il pill è dentro un `<td>` che ha `::before` colorato (area/linea), e il td successivo nel DOM sovrappone visivamente il pill del precedente perché Charts.css posiziona ogni td con position:relative e il pill (absolute) eredita lo stacking context del proprio td — il td successivo è "sopra" nel painting order.
+
+**Approach:** Applicare `position: relative; z-index: 2;` al `.data` per line/area. Questo lo promuove nello stacking context del proprio td. Se non basta, bisogna anche settare `isolation: isolate` o `z-index: 2` sul `.data`'s td parent per assicurare che il pill esca dal layer del td successivo.
+
+Investigare con Playwright dopo il primo tentativo per confermare.
+
+**Tasks:**
+- [x] Aggiungere `position: relative; z-index: 2;` a `.line .data, .area .data`
+- [x] Verificare con Playwright che il pill sia completamente visibile
+- [x] Se insufficiente, escalate: settare z-index sul td parent
+- [x] Test: unit — CSS contiene z-index su .line/area .data
+- [x] Commit & push
+
+**Done when:** I pill dei valori nei line/area chart non sono coperti dal colore dei td sibling successivi.
+
+---
+
+## M63: Legend overlap con x-axis labels in line/area multi-dataset ✅
+
+**Why:** Nel line multi-dataset "User Growth by Segment" la legend ("Enterprise", "SMB", "Self-serve") si sovrappone alle x-axis labels ("Q2" dentro "Enterprise", "Q3" dentro "Self-serve"). Motivo: M61 ha aggiunto `padding-bottom: 56px` al wrapper `:has(.line)` per riservare spazio alle x-labels, ma la legend è piazzata come sibling DOPO il tbody e usa `margin-top: 40px` (M52). In multi-dataset la legend viene aggiunta dopo il tbody, quindi si trova alla stessa y delle x-labels che sono nell'area overflow del tbody.
+
+**Approach:** La legend deve stare SOTTO le x-labels, non alla stessa y. Fix: aumentare margin-top della legend per line/area multi-dataset, oppure spostare la legend FUORI del flow del tbody con posizionamento esplicito.
+
+Soluzione più semplice: aumentare `margin-top` della legend per i tipi che hanno x-axis labels in overflow (line, area). Selettore: `.md2-chart:has(.line.multiple) ul.legend, .md2-chart:has(.area.multiple) ul.legend { margin-top: 72px; }`.
+
+Verificare con Playwright che legend.y > xLabels.bottom.
+
+**Tasks:**
+- [x] Aggiungere regola CSS che aumenta margin-top della legend quando il chart è line/area multi-dataset
+- [x] Verificare con Playwright — legend.y > xLabels.bottom
+- [x] Test: unit — CSS contiene la regola
+- [x] Commit & push
+
+**Done when:** La legend nei line/area multi-dataset è sotto le x-axis labels, nessuna sovrapposizione.

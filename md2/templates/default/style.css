@@ -178,6 +178,7 @@ body {
 .md2-chart .line .data,
 .md2-chart .area .data {
     color: var(--text-color); font-weight: 600; font-size: 0.8rem;
+    position: relative; z-index: 2;
 }
 /* Line/area: data labels need a small background for readability over the chart */
 .md2-chart .line .data,
@@ -221,7 +222,12 @@ body {
    and for the max value pill at the top */
 .md2-chart:has(.charts-css.line),
 .md2-chart:has(.charts-css.area) {
-    padding-top: 32px; padding-bottom: 56px;
+    padding-top: 40px; padding-bottom: 56px;
+}
+/* Multi-dataset line/area: legend needs extra margin to clear x-axis labels */
+.md2-chart:has(.charts-css.line.multiple) ul.legend,
+.md2-chart:has(.charts-css.area.multiple) ul.legend {
+    margin-top: 72px;
 }
 .md2-chart .charts-css.pie {
     max-width: min(50vh, 50vw); margin: 0 auto; aspect-ratio: 1;
