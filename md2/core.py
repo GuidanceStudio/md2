@@ -257,12 +257,9 @@ def transform_charts(html_content):
                     row_vals.append(0)
             parsed_values.append(row_vals)
 
-        # Flat list for pie/global use
+        # Flat list and global max for normalization
         all_values = [v for row in parsed_values for v in row]
         max_val = max(all_values) if all_values and max(all_values) > 0 else 1
-
-        # Per-row max for multi-dataset normalization
-        row_maxes = [max(row) if max(row) > 0 else 1 for row in parsed_values]
 
         # Dataset headers (for legend)
         dataset_headers = headers[1:] if len(headers) > 1 else []
@@ -327,11 +324,7 @@ def transform_charts(html_content):
                     e_str = f"{end:g}"
                     parts.append(f'<td style="--start: {s_str}; --end: {e_str}">{data_span}</td>')
                 else:
-                    if is_multiple:
-                        row_max = row_maxes[row_idx]
-                    else:
-                        row_max = max_val
-                    norm = num_val / row_max
+                    norm = num_val / max_val
                     size_str = f"{norm:g}" if norm != int(norm) else str(int(norm))
                     if is_connected:
                         # Line/area: --start is the previous point's value for this column

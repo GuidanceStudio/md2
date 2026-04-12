@@ -1416,3 +1416,91 @@ Ogni chart con un titolo `### H3` per mostrare il rendering del titolo. I chart 
 - [x] Commit & push
 
 **Done when:** L'example contiene almeno un chart per ogni tipo supportato (inclusi stacked e line multi-dataset), tutti con titolo visualizzato.
+
+---
+
+## M45: Normalizzazione globale chart (rollback M35) ✅
+
+**Why:** La normalizzazione per-riga introdotta in M35 rende ogni metrica self-comparable ma confonde l'utente perché due dataset sulla stessa scala visiva rappresentano valori molto diversi (Test Coverage 62 e Uptime 99 appaiono quasi uguali). L'utente preferisce la normalizzazione globale (scala comune) anche se metriche con range molto diverso producono barre piccole per i valori bassi — la scelta delle metriche da mettere insieme è responsabilità di chi scrive il markdown.
+
+**Approach:** Ripristinare la normalizzazione globale in `transform_charts()`: un unico `max_val` su tutti i valori del chart, tutti i `--size` relativi a quello. Rimuovere `row_maxes` e la logica per-riga. Aggiornare `test_chart_normalization.py` di conseguenza.
+
+**Tasks:**
+- [x] Rimuovere `row_maxes` e normalizzazione per-riga da `transform_charts`
+- [x] Tutti i `--size` usano `max_val` globale
+- [x] Aggiornare test M35 per riflettere il nuovo comportamento
+- [x] Test: unit — normalizzazione globale produce scala comune
+- [x] Commit & push
+
+**Done when:** Multi-dataset chart mostra tutte le barre sulla stessa scala globale (100% = max globale del chart).
+
+---
+
+## M46: Fix spacing verticale bar multi-dataset
+
+**Why:** Nel bar chart multi-dataset le righe logiche (metriche diverse) sono attaccate tra loro — non c'è spazio tra "Deploy/week" e "Test Coverage". `--data-spacing: 6px` del bar non produce il gap atteso perché Charts.css lo interpreta come spacing tra le barre DENTRO una riga (multi-dataset), non tra righe.
+
+**Approach:** Investigare come Charts.css gestisce lo spacing tra righe in un bar multi-dataset. Probabilmente serve `padding-block` o `border-spacing` sulla table, oppure margin-bottom sulle `<tr>`. Applicare il fix CSS che produce spazio visibile tra metriche.
+
+**Tasks:**
+- [ ] Investigare il CSS di Charts.css per `.bar.multiple` row spacing
+- [ ] Applicare il fix (margin/padding/border-spacing sulle tr o tbody)
+- [ ] Test: unit — CSS contiene la nuova regola di spacing tra righe
+- [ ] Verificare con Playwright
+- [ ] Commit & push
+
+**Done when:** Nel bar chart multi-dataset c'è uno spazio visibile tra le metriche diverse.
+
+---
+
+## M47: Fix label verticale allineamento multi-dataset
+
+**Why:** Nel bar multi-dataset la label della riga (es. "Deploy/week") è allineata alla PRIMA barra del gruppo, non al centro del gruppo. Visivamente si legge come label della prima barra, non della coppia.
+
+**Approach:** Charts.css posiziona le label a sinistra con `--labels-size`. L'allineamento verticale del testo nella label cell deve essere `center` rispetto alla riga completa (che contiene multiple barre). Fix CSS sulla `th` di label.
+
+**Tasks:**
+- [ ] Aggiungere `vertical-align: middle` o flex centering sulle label cells del bar multi-dataset
+- [ ] Test: unit — CSS contiene la regola
+- [ ] Verificare con Playwright
+- [ ] Commit & push
+
+**Done when:** Nel bar multi-dataset la label è centrata verticalmente rispetto al gruppo di barre.
+
+---
+
+## M48: Fix padding wrapper dopo il titolo
+
+**Why:** Dopo il titolo del chart c'è un doppio spazio bianco: il titolo ha `margin-bottom: 16px` e il wrapper ha `padding: 8px 20px 20px`. Risultato: troppo spazio prima che iniziino le barre.
+
+**Approach:** Ridurre o rimuovere il margin-bottom del titolo (il wrapper padding è già sufficiente), oppure usare `padding: 0 20px 20px` sul wrapper quando c'è un titolo (ma questo è complicato). Soluzione più semplice: `margin-bottom: 0` sul titolo, il wrapper padding-top 0 quando c'è titolo via selettore adiacente. In alternativa: rimuovere `margin-bottom` e il wrapper ha già padding sufficiente.
+
+**Tasks:**
+- [ ] Ridurre margin-bottom del title a 0 o valore minimo
+- [ ] Se necessario, usare selettore adiacente per ridurre padding-top del wrapper quando c'è title
+- [ ] Test: unit — regola CSS corretta
+- [ ] Verificare con Playwright (spazio ridotto dopo il titolo)
+- [ ] Commit & push
+
+**Done when:** Lo spazio tra il titolo e l'inizio delle barre è ridotto a un gap ragionevole (~8-12px).
+
+---
+
+## M49: Fix legend — spacing e bullet colore
+
+**Why:** Due problemi nella legend: (1) troppo spazio bianco tra l'ultima barra e la legend, (2) i bullet prima dei label sono neri sottili invece che nei colori della palette (blu/arancione/ecc).
+
+**Approach:**
+1. **Spacing**: ridurre `margin-top` della legend (ora 24px, troppo)
+2. **Bullet colorati**: Charts.css usa `legend-circle` / `legend-square` / ecc. come classi per la forma. Per i colori, le `<li>` devono avere una regola `::before` con `background: var(--color-N)`. Generare nel transform_charts le classi sui `<li>` (es. `.legend-item-1`, `.legend-item-2`) e aggiungere CSS per applicare i colori della palette.
+
+**Tasks:**
+- [ ] Ridurre margin-top della legend (es. 12px)
+- [ ] In `transform_charts`, aggiungere classi numerate ai `<li>` della legend
+- [ ] CSS: regole per i bullet colorati con var(--md2-color-N)
+- [ ] Test: unit — legend html contiene classi numerate
+- [ ] Test: unit — CSS contiene regole per bullet colorati
+- [ ] Verificare con Playwright
+- [ ] Commit & push
+
+**Done when:** La legend è vicina al chart e i bullet mostrano i colori della palette corrispondenti alle serie dati.

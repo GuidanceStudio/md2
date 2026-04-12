@@ -9,15 +9,18 @@ def _get_sizes(html):
     return [float(s) for s in re.findall(r'--size:\s*([\d.]+)', html)]
 
 
-def test_multi_dataset_per_column_normalization():
-    """Multi-dataset normalizes per-column, not globally.
+def test_multi_dataset_global_normalization():
+    """Multi-dataset normalizes to a single global max across all values.
 
-    Deploy/week (2, 12) and Uptime (99, 100) have very different scales.
-    Each column should normalize to its own max, so Deploy/week=12 gets
-    --size: 1 (not 0.12).
+    All bars share the same scale so they're truly comparable.
+    With values [2, 12, 62, 87, 99, 100], max = 100, so:
+    - Deploy/week Q3=2 → 0.02
+    - Deploy/week Q1=12 → 0.12
+    - Test Coverage Q3=62 → 0.62
+    - Uptime Q1=100 → 1.0
     """
     md = (
-        ":::chart bar --labels --legend\n"
+        ":::chart bar\n"
         "| Metric        | Q3 2025 | Q1 2026 |\n"
         "|---------------|---------|----------|\n"
         "| Deploy/week   | 2       | 12       |\n"
@@ -27,24 +30,11 @@ def test_multi_dataset_per_column_normalization():
     )
     html, _ = process_markdown(md)
     sizes = _get_sizes(html)
-    # No --size should be < 0.1 for significant values
-    # Deploy/week=2 should be 2/99 ≈ 0.02 with global normalization
-    # but with per-column: Q3 max=99, so 2/99≈0.02 — still small.
-    # Wait — per-column means Q3 column max is max(2,62,99)=99 and
-    # Q1 column max is max(12,87,100)=100. That's still cross-row.
-    #
-    # Actually the right approach for bar charts: each ROW should be
-    # independently normalized. Deploy/week: max(2,12)=12, so 2/12=0.17.
-    # This way each metric's bars are comparable to itself.
-    #
-    # Let me test: the highest --size in each row should be 1.0
-    # Row 1 (Deploy): 2, 12 → 2/12=0.17, 12/12=1.0
-    # Row 2 (Coverage): 62, 87 → 62/87=0.71, 87/87=1.0
-    # Row 3 (Uptime): 99, 100 → 99/100=0.99, 100/100=1.0
-    assert max(sizes) == 1.0
-    # The key assertion: no --size below 0.1 (Deploy/week=2 should NOT be 0.02)
-    assert all(s >= 0.1 for s in sizes if s > 0), \
-        f"All significant values should have --size >= 0.1, got {sizes}"
+    # Global max = 100, so values are normalized to their ratio of 100
+    assert 0.02 in sizes  # Deploy/week Q3 = 2/100
+    assert 0.12 in sizes  # Deploy/week Q1 = 12/100
+    assert 0.62 in sizes  # Test Coverage Q3 = 62/100
+    assert 1.0 in sizes  # Uptime Q1 = 100/100
 
 
 def test_single_dataset_normalization_unchanged():
