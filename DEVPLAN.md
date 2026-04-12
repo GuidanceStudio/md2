@@ -1364,7 +1364,7 @@ Separare le regole CSS per tipo, rimuovere la regola generica `.md2-chart .data`
 
 ---
 
-## M43: Fix line chart ultimo valore invisibile
+## M43: Fix line chart ultimo valore invisibile ✅
 
 **Why:** Nel line chart con 4 punti, il 4° valore (25000 nell'example) non appare visibile. La linea sembra fermarsi al 3° punto e il numero è nel vuoto.
 
@@ -1377,12 +1377,12 @@ Separare le regole CSS per tipo, rimuovere la regola generica `.md2-chart .data`
 Dopo investigazione, applicare il fix appropriato. Probabili candidati: aumentare padding-top del chart area, rimuovere `overflow: hidden` dal wrapper per i line/area chart, o aggiungere `padding-inline` specifico per line.
 
 **Tasks:**
-- [ ] Riprodurre il bug con Playwright (screenshot + HTML ispezionato)
-- [ ] Identificare la causa (CSS clipping vs normalizzazione vs Charts.css)
-- [ ] Applicare il fix minimo che risolve il problema
-- [ ] Test: unit — line chart con 4+ punti mostra tutti i valori
-- [ ] Rigenerare example e verificare visivamente
-- [ ] Commit & push
+- [x] Riprodurre il bug con Playwright (screenshot + HTML ispezionato)
+- [x] Identificare la causa (CSS clipping vs normalizzazione vs Charts.css)
+- [x] Applicare il fix minimo che risolve il problema
+- [x] Test: unit — line chart con 4+ punti mostra tutti i valori
+- [x] Rigenerare example e verificare visivamente
+- [x] Commit & push
 
 **Done when:** Il line chart mostra tutti i punti inclusi il primo e l'ultimo, con valori leggibili.
 

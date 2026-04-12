@@ -170,15 +170,25 @@ body {
     box-shadow: 0 2px 15px rgba(0,0,0,0.05);
     border-radius: 8px; overflow: hidden;
 }
-.md2-chart caption {
-    font-weight: bold; padding: 8px 12px; text-align: left;
-    background-color: var(--table-header-bg); border-radius: 6px 6px 0 0;
-    margin-bottom: 8px; font-size: 0.95rem;
+.md2-chart-title {
+    font-weight: bold; padding: 10px 16px; text-align: left;
+    background-color: var(--table-header-bg);
+    margin: -8px -20px 16px; font-size: 1rem;
+    border-bottom: 1px solid var(--table-border);
 }
-.md2-chart .data {
+/* Data text: white INSIDE colored segments (bar/pie/stacked), normal color OUTSIDE (column/line/area) */
+.md2-chart .bar .data,
+.md2-chart .pie .data,
+.md2-chart .bar.stacked .data,
+.md2-chart .column.stacked .data {
     color: #fff; font-weight: 600; font-size: 0.85rem;
     text-shadow: 0 1px 2px rgba(0,0,0,0.5);
     padding-right: 6px;
+}
+.md2-chart .column .data,
+.md2-chart .line .data,
+.md2-chart .area .data {
+    color: var(--text-color); font-weight: 600; font-size: 0.85rem;
 }
 .md2-chart table.charts-css {
     box-shadow: none; border-radius: 0; border-collapse: separate;
@@ -187,10 +197,16 @@ body {
 .md2-chart .charts-css td {
     border: none; background: none; padding: 0;
 }
-.md2-chart .charts-css { --data-spacing: 8px; }
-.md2-chart .charts-css.bar { --labels-size: 100px; min-height: 40px; }
+.md2-chart .charts-css { --data-spacing: 12px; }
+.md2-chart .charts-css.bar {
+    --labels-size: 130px; --data-spacing: 6px;
+    min-height: 40px;
+}
 .md2-chart .charts-css.bar tbody tr { min-height: 40px; }
-.md2-chart .charts-css.column { --labels-size: 100px; height: min(300px, 40vh); }
+.md2-chart .charts-css.column {
+    --labels-size: 100px; --data-spacing: 16px;
+    height: min(300px, 40vh);
+}
 .md2-chart .charts-css.line { height: min(300px, 40vh); --line-size: 3px; }
 .md2-chart .charts-css.area { height: min(300px, 40vh); --line-size: 3px; }
 .md2-chart .charts-css.pie {
@@ -213,8 +229,8 @@ body {
 .md2-chart .charts-css.multiple tbody td:nth-child(8) { --color: var(--md2-color-7); }
 .md2-chart .charts-css.multiple tbody td:nth-child(9) { --color: var(--md2-color-8); }
 .md2-chart ul.legend {
-    display: flex; gap: 15px; justify-content: center;
-    margin-top: 10px; font-size: 0.85rem; list-style: none;
+    display: flex; gap: 20px; justify-content: center;
+    margin-top: 24px; font-size: 0.85rem; list-style: none;
     padding: 8px 0 0; border: none;
 }
 body.dark-mode .md2-chart .charts-css { color: var(--text-color); }
@@ -513,7 +529,6 @@ We are transforming from a single-product company into a <strong>platform ecosys
 To hit our stretch targets, we must ship faster and smarter.</p>
 <p><strong>Key Evolution:</strong><br>
 We have reorganized from feature teams into <strong>3 Platform Pillars</strong> (Core, Growth, Intelligence) with shared infrastructure.</p></div><div class="md2-col"><div class="md2-chart"><table class="charts-css pie show-labels">
-<caption>R&amp;D Budget Allocation</caption>
 <thead><tr>
 <th scope="col">Vertical</th>
 <th scope="col">Budget</th>
@@ -650,7 +665,6 @@ The move to event-driven architecture reduced API latency by <strong>60%</strong
 <li><strong>Intelligence Layer:</strong> The Brain (ML models, recommendations, analytics).</li>
 </ul>
 <div class="md2-chart"><table class="charts-css column multiple show-labels">
-<caption>Team Allocation</caption>
 <thead><tr>
 <th scope="col">Pillar</th>
 <th scope="col">Engineers</th>
@@ -709,8 +723,7 @@ The move to event-driven architecture reduced API latency by <strong>60%</strong
 </ul>
 </li>
 </ul>
-<div class="md2-chart"><table class="charts-css bar multiple show-labels show-data-on-hover">
-<caption>Growth Targets (%)</caption>
+<div class="md2-chart"><table class="charts-css bar multiple show-labels">
 <thead><tr>
 <th scope="col">Metric</th>
 <th scope="col">Current</th>
@@ -728,7 +741,8 @@ The move to event-driven architecture reduced API latency by <strong>60%</strong
 <td style="--size: 1"><span class="data">25</span></td>
 </tr>
 </tbody>
-</table></div></div></div>
+</table>
+<ul class="charts-css legend legend-inline"><li>Current</li><li>Target</li></ul></div></div></div>
         
         <div class="slide" id="slide-6"><h2>4c. Intelligence Layer Pillar</h2><div class="content"><ul>
 <li><strong>Team Size:</strong> 5 engineers + 2 ML specialists</li>
@@ -741,7 +755,6 @@ The move to event-driven architecture reduced API latency by <strong>60%</strong
 </li>
 </ul>
 <div class="md2-chart"><table class="charts-css area show-labels">
-<caption>Event Pipeline Throughput (K events/sec)</caption>
 <thead><tr>
 <th scope="col">Hour</th>
 <th scope="col">Throughput</th>
@@ -749,27 +762,27 @@ The move to event-driven architecture reduced API latency by <strong>60%</strong
 <tbody>
 <tr>
 <th scope="row">00:00</th>
-<td style="--size: 0.24"><span class="data">12</span></td>
+<td style="--start: 0.24; --size: 0.24"></td>
 </tr>
 <tr>
 <th scope="row">04:00</th>
-<td style="--size: 0.16"><span class="data">8</span></td>
+<td style="--start: 0.24; --size: 0.16"></td>
 </tr>
 <tr>
 <th scope="row">08:00</th>
-<td style="--size: 0.7"><span class="data">35</span></td>
+<td style="--start: 0.16; --size: 0.7"></td>
 </tr>
 <tr>
 <th scope="row">12:00</th>
-<td style="--size: 1"><span class="data">50</span></td>
+<td style="--start: 0.7; --size: 1"></td>
 </tr>
 <tr>
 <th scope="row">16:00</th>
-<td style="--size: 0.96"><span class="data">48</span></td>
+<td style="--start: 1; --size: 0.96"></td>
 </tr>
 <tr>
 <th scope="row">20:00</th>
-<td style="--size: 0.6"><span class="data">30</span></td>
+<td style="--start: 0.96; --size: 0.6"></td>
 </tr>
 </tbody>
 </table></div></div></div>
@@ -795,8 +808,7 @@ The move to event-driven architecture reduced API latency by <strong>60%</strong
 </ul></div></div>
         
         <div class="slide" id="slide-8"><h2>6. Roadmap: Phase 2 (Q2-Q4 2026)</h2><div class="content"><p><em>Objective: Scale and differentiation.</em></p>
-<div class="md2-chart"><table class="charts-css line show-labels show-data-on-hover">
-<caption>Projected User Growth</caption>
+<div class="md2-chart"><table class="charts-css line show-labels">
 <thead><tr>
 <th scope="col">Quarter</th>
 <th scope="col">Active Users</th>
@@ -804,19 +816,19 @@ The move to event-driven architecture reduced API latency by <strong>60%</strong
 <tbody>
 <tr>
 <th scope="row">Q1</th>
-<td style="--size: 0.128"><span class="data">3200</span></td>
+<td style="--start: 0.128; --size: 0.128"></td>
 </tr>
 <tr>
 <th scope="row">Q2</th>
-<td style="--size: 0.34"><span class="data">8500</span></td>
+<td style="--start: 0.128; --size: 0.34"></td>
 </tr>
 <tr>
 <th scope="row">Q3</th>
-<td style="--size: 0.6"><span class="data">15000</span></td>
+<td style="--start: 0.34; --size: 0.6"></td>
 </tr>
 <tr>
 <th scope="row">Q4</th>
-<td style="--size: 1"><span class="data">25000</span></td>
+<td style="--start: 0.6; --size: 1"></td>
 </tr>
 </tbody>
 </table></div>

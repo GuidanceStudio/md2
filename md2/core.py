@@ -294,17 +294,25 @@ def transform_charts(html_content):
             parts.append(f'<th scope="col">{h}</th>')
         parts.append('</tr></thead>')
 
-        # Tbody — pie uses --start/--end (cumulative), others use --size
+        # Tbody — rendering differs by type:
+        # - pie: --start/--end cumulative
+        # - line/area: --start = previous value (to connect segments)
+        # - bar/column: --size only
         is_pie = chart_type == "pie"
+        is_connected = chart_type in ("line", "area")
         parts.append('<tbody>')
         cumulative = 0.0
         total = sum(all_values) if is_pie and sum(all_values) > 0 else 1
+
+        # For connected charts: precompute normalized values per column
+        # so each column's line connects its points (single dataset only here)
+        prev_norm_by_col = {}
+
         for row_idx, (label, values) in enumerate(data_rows):
             parts.append('<tr>')
             parts.append(f'<th scope="row">{label}</th>')
             for col_idx, v in enumerate(values):
                 num_val = parsed_values[row_idx][col_idx]
-                # Show data span only if: type allows show-data AND value is non-zero
                 if show_data and num_val != 0:
                     data_span = f'<span class="data">{v.strip()}</span>'
                 else:
@@ -319,14 +327,22 @@ def transform_charts(html_content):
                     e_str = f"{end:g}"
                     parts.append(f'<td style="--start: {s_str}; --end: {e_str}">{data_span}</td>')
                 else:
-                    # Multi-dataset: normalize per-row so each metric is self-comparable
                     if is_multiple:
                         row_max = row_maxes[row_idx]
                     else:
                         row_max = max_val
                     norm = num_val / row_max
                     size_str = f"{norm:g}" if norm != int(norm) else str(int(norm))
-                    parts.append(f'<td style="--size: {size_str}">{data_span}</td>')
+                    if is_connected:
+                        # Line/area: --start is the previous point's value for this column
+                        prev = prev_norm_by_col.get(col_idx, norm)
+                        start_str = f"{prev:g}" if prev != int(prev) else str(int(prev))
+                        prev_norm_by_col[col_idx] = norm
+                        parts.append(
+                            f'<td style="--start: {start_str}; --size: {size_str}">{data_span}</td>'
+                        )
+                    else:
+                        parts.append(f'<td style="--size: {size_str}">{data_span}</td>')
             parts.append('</tr>')
         parts.append('</tbody>')
         parts.append('</table>')
