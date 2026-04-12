@@ -310,6 +310,23 @@ def transform_charts(html_content):
         # so each column's line connects its points (single dataset only here)
         prev_norm_by_col = {}
 
+        # Multi-line/area endpoint labels: stagger by rank of final value.
+        # Charts.css positions .data in line charts unpredictably — compute-from-
+        # value y doesn't match actual rendered position. Instead, we stagger
+        # ALL labels by their value rank (highest at top, each below by 28px).
+        # This guarantees no overlap regardless of native positioning.
+        endpoint_offsets = {}  # col_idx -> pixel offset from default position
+        if is_multi_connected and data_rows:
+            last_row_vals = parsed_values[-1]
+            # Sort cols by value descending (highest first → visually at top)
+            ranked = sorted(
+                range(len(last_row_vals)),
+                key=lambda c: -last_row_vals[c],
+            )
+            # Assign offset: rank 0 → 0px, rank 1 → +28px, rank 2 → +56px
+            for rank, col_idx in enumerate(ranked):
+                endpoint_offsets[col_idx] = rank * 28
+
         for row_idx, (label, values) in enumerate(data_rows):
             parts.append('<tr>')
             parts.append(f'<th scope="row">{label}</th>')
@@ -321,7 +338,14 @@ def transform_charts(html_content):
                 if is_multi_connected:
                     if is_last_row and num_val != 0 and col_idx < len(dataset_headers):
                         series_name = dataset_headers[col_idx]
-                        data_span = f'<span class="data">{series_name}: {v.strip()}</span>'
+                        offset = endpoint_offsets.get(col_idx, 0)
+                        if offset != 0:
+                            data_span = (
+                                f'<span class="data" style="--label-offset: {offset}px">'
+                                f'{series_name}: {v.strip()}</span>'
+                            )
+                        else:
+                            data_span = f'<span class="data">{series_name}: {v.strip()}</span>'
                     else:
                         data_span = ""
                 elif show_data and num_val != 0:

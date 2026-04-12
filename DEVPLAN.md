@@ -1910,3 +1910,54 @@ Questi hack diventano obsoleti:
 - Area single-dataset: stessa logica di line single
 - Nessun z-index issue, nessun clipping top/bottom, nessuna sovrapposizione
 - Pulizia CSS: rimossi padding-block-start, legend margin hack, ecc
+
+---
+
+## M66: Fix residui — collision endpoint labels + top clipping area ✅
+
+**Why:** Dopo M65, restano due problemi residui visibili negli screenshot:
+
+1. **Multi-line endpoint label collision** (slide-8 "User Growth by Segment"): le label endpoint di SMB (9000) e Self-serve (10000) sono posizionate a x identico (right of last point) e y molto vicini (delta 10% del chart height ≈ 30px vs 22px label height). La label SMB è visivamente nascosta o sovrapposta da Self-serve. Enterprise (6000) invece è distante e visibile.
+
+2. **Area chart "50" ancora parzialmente clippato al top** (slide-6 "Event Pipeline"): con `transform: translateY(-110%)` il pill è spostato 110% sopra la posizione naturale. Per `--end: 1` (chart top), la label esce SOPRA il chart top di 22px+10%. Il wrapper ha `padding-top: 40px` ma non è abbastanza perché il translate va oltre il padding.
+
+**Approach:**
+
+### Fix 1 — Stagger verticale endpoint labels in collision
+
+Algoritmo in `transform_charts`:
+1. Per multi-line/area, calcolare la y finale (ultima `--size`) di ogni serie
+2. Ordinare le serie per y (alto→basso)
+3. Verificare se c'è collision tra label adiacenti (delta y < soglia, es. 26px su chart 300px = 8.6% = 0.086 in unità --size)
+4. Se collision, applicare un offset cumulativo alla label che si sovrappone
+5. Emettere le label con `style="--label-offset: Npx"` che CSS usa per spostare verticalmente
+
+Oppure più semplice: in CSS, usare `translateY(-50%)` base e aggiungere un offset per le label successive via `nth-of-type`:
+- 1° label: `transform: translate(6px, -50%)`
+- 2° label: `transform: translate(6px, calc(-50% - 24px))`
+- 3° label: `transform: translate(6px, calc(-50% + 24px))`
+
+Ma questo non conosce l'ordine dei valori, stagger fisso non funziona.
+
+**Approccio pratico**: calcolare in Python le posizioni y di ogni serie endpoint, de-colliderle con algoritmo semplice, e passare `--label-y` come CSS variable inline. CSS poi usa `top: var(--label-y)` invece del posizionamento Charts.css nativo.
+
+### Fix 2 — Aumentare padding-top wrapper per area chart
+
+Incrementare `.md2-chart:has(.charts-css.line), .md2-chart:has(.charts-css.area)` da `padding-top: 40px` a `padding-top: 56px`. Oppure: modificare il `translateY(-110%)` a `translateY(-100%)` per ridurre l'overshoot.
+
+**Tasks:**
+- [x] Calcolare in `transform_charts` le posizioni normalizzate delle endpoint labels (per multi-line/area)
+- [x] Implementare de-collision: se due label sono a < 0.09 di distanza, offset la seconda verso il basso/alto
+- [x] Emettere `style="--label-offset: Npx"` inline sulla label span
+- [x] CSS: `.line.multiple .data, .area.multiple .data` usa `translate(6px, calc(-50% + var(--label-offset, 0px)))`
+- [x] Aumentare padding-top wrapper line/area da 40 a 56px
+- [x] Test: unit — multi-line con valori vicini genera offset diversi
+- [x] Test: unit — CSS padding-top è 56px
+- [x] Verificare con Playwright: SMB e Self-serve separati visivamente
+- [x] Verificare con Playwright: "50" in area chart non più clippato
+- [x] Rigenerare example
+- [x] Commit & push
+
+**Done when:**
+- Multi-line "User Growth by Segment": tutte e 3 le label (Enterprise: 6000, SMB: 9000, Self-serve: 10000) visibili e non sovrapposte
+- Area "Event Pipeline": valore "50" al top completamente visibile, pill non clippato

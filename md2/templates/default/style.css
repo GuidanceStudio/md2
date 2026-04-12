@@ -183,14 +183,17 @@ body {
     padding: 2px 6px; border-radius: 4px;
     box-shadow: 0 1px 3px rgba(0,0,0,0.15);
     white-space: nowrap;
-    /* Lift label above the exact data point so it doesn't sit on the line */
-    transform: translateY(-110%);
+    /* Override Charts.css's positioning (it uses :not() pseudo-classes for
+       higher specificity — we need !important to win). Lift label above the
+       exact data point so it doesn't sit on the line. */
+    transform: translateY(-110%) !important;
 }
 /* Multi-line/area endpoint labels: position to the right of the last point
-   (not above) and constrain width for long series names */
+   (not above) and constrain width for long series names.
+   --label-offset allows de-collision when endpoints are close. */
 .md2-chart .line.multiple .data,
 .md2-chart .area.multiple .data {
-    transform: translate(6px, -50%);
+    transform: translate(6px, calc(-50% + var(--label-offset, 0px))) !important;
     max-width: 140px;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -230,7 +233,7 @@ body {
    and for the max value pill at the top */
 .md2-chart:has(.charts-css.line),
 .md2-chart:has(.charts-css.area) {
-    padding-top: 40px; padding-bottom: 56px;
+    padding-top: 56px; padding-bottom: 56px;
 }
 /* Multi-line/area endpoint labels need room to the right of the chart */
 .md2-chart:has(.charts-css.line.multiple),

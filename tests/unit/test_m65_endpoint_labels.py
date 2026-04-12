@@ -25,9 +25,10 @@ def test_single_line_shows_all_values():
     )
     html, _ = process_markdown(md)
     # Should have 4 data spans, one per point
-    assert html.count('<span class="data">') == 4
+    assert len(re.findall(r'<span class="data"[^>]*>', html)) == 4
     # No "Name: Value" format for single (no series name)
-    assert ":" not in re.findall(r'<span class="data">([^<]+)</span>', html)[0]
+    spans = re.findall(r'<span class="data"[^>]*>([^<]+)</span>', html)
+    assert ":" not in spans[0]
 
 
 def test_single_area_shows_all_values():
@@ -42,7 +43,7 @@ def test_single_area_shows_all_values():
         ":::"
     )
     html, _ = process_markdown(md)
-    assert html.count('<span class="data">') == 3
+    assert len(re.findall(r'<span class="data"[^>]*>', html)) == 3
 
 
 # --- Multi-dataset: only endpoint labels with Name: Value format ---
@@ -60,7 +61,8 @@ def test_multi_line_only_endpoint_labels():
     )
     html, _ = process_markdown(md)
     # 3 series, only endpoint = 3 data spans total
-    assert html.count('<span class="data">') == 3
+    # Match span with or without inline style (M66 adds --label-offset inline)
+    assert len(re.findall(r'<span class="data"[^>]*>', html)) == 3
 
 
 def test_multi_line_label_has_header_prefix():
@@ -74,11 +76,10 @@ def test_multi_line_label_has_header_prefix():
         ":::"
     )
     html, _ = process_markdown(md)
-    # Endpoint labels should include series name
     assert "Enterprise" in html
     assert "SMB" in html
-    # Format "Name: Value" (both series and value in same span)
-    spans = re.findall(r'<span class="data">([^<]+)</span>', html)
+    # Match span with or without inline style
+    spans = re.findall(r'<span class="data"[^>]*>([^<]+)</span>', html)
     assert len(spans) == 2
     assert any("Enterprise" in s and "6000" in s for s in spans)
     assert any("SMB" in s and "9000" in s for s in spans)
@@ -95,8 +96,8 @@ def test_multi_area_only_endpoint_labels():
         ":::"
     )
     html, _ = process_markdown(md)
-    assert html.count('<span class="data">') == 2
-    spans = re.findall(r'<span class="data">([^<]+)</span>', html)
+    assert len(re.findall(r'<span class="data"[^>]*>', html)) == 2
+    spans = re.findall(r'<span class="data"[^>]*>([^<]+)</span>', html)
     assert any("X" in s and "30" in s for s in spans)
     assert any("Y" in s and "40" in s for s in spans)
 
