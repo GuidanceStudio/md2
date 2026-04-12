@@ -14,16 +14,13 @@ def test_chart_td_has_padding():
     assert "padding" in css
 
 
-def test_chart_caption_styled():
-    """Chart caption is styled like table header (background, font-weight)."""
+def test_chart_title_styled():
+    """Chart title (md2-chart-title) is styled like a card header."""
     css = _get_style_css()
-    assert "caption" in css
-    # Find caption rule in chart context
-    chart_section = css[css.index(".md2-chart"):]
-    assert "caption" in chart_section
-    caption_area = chart_section[chart_section.index("caption"):]
-    caption_block = caption_area[:caption_area.index("}") + 1]
-    assert "font-weight" in caption_block or "bold" in caption_block
+    assert ".md2-chart-title" in css
+    idx = css.index(".md2-chart-title")
+    title_block = css[idx:css.index("}", idx) + 1]
+    assert "font-weight" in title_block or "bold" in title_block
 
 
 def test_chart_wrapper_asymmetric_padding():

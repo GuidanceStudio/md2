@@ -1295,7 +1295,7 @@ Modifiche in `core.py`: `_VALID_CHART_TYPES` estesi, `_parse_chart_options` rimo
 
 ---
 
-## M40: Title styling come intestazione di card
+## M40: Title styling come intestazione di card ✅
 
 **Why:** Il titolo del chart (rilevato dal heading) deve apparire graficamente come l'intestazione di una card — simile all'header di una tabella. Deve essere chiaramente "il titolo di quest'oggetto".
 
@@ -1304,14 +1304,14 @@ Modifiche in `core.py`: `_VALID_CHART_TYPES` estesi, `_parse_chart_options` rimo
 Non usiamo `<caption>` della tabella perché: (1) Charts.css ha regole specifiche su caption, (2) vogliamo stile controllato, (3) semanticamente il titolo appartiene alla card, non alla tabella interna.
 
 **Tasks:**
-- [ ] Generare `<div class="md2-chart-title">` nel transform quando c'è un titolo
-- [ ] CSS: styling .md2-chart-title con sfondo header, bold, padding, border-radius top
-- [ ] Adattare padding wrapper per non duplicare spazio quando c'è il titolo
-- [ ] Rimuovere vecchio styling `.md2-chart caption` (ora non usato)
-- [ ] Test: unit — titolo presente genera div con classe e testo corretti
-- [ ] Test: unit — senza titolo non appare il div
-- [ ] Rigenerare example e verificare con Playwright
-- [ ] Commit & push
+- [x] Generare `<div class="md2-chart-title">` nel transform quando c'è un titolo
+- [x] CSS: styling .md2-chart-title con sfondo header, bold, padding, border-radius top
+- [x] Adattare padding wrapper per non duplicare spazio quando c'è il titolo
+- [x] Rimuovere vecchio styling `.md2-chart caption` (ora non usato)
+- [x] Test: unit — titolo presente genera div con classe e testo corretti
+- [x] Test: unit — senza titolo non appare il div
+- [x] Rigenerare example e verificare con Playwright
+- [x] Commit & push
 
 **Done when:** Chart con titolo mostra un header bandeggio in alto, visivamente coerente con gli header delle tabelle.
 
