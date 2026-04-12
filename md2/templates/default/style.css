@@ -210,19 +210,18 @@ body {
 }
 /* Line/area need extra wrapper padding for x-axis labels (overflow tbody)
    and for the max value pill at the top */
-/* Line/area wrapper: reserve left padding for the graduated Y-axis */
-.md2-chart:has(.charts-css.line),
-.md2-chart:has(.charts-css.area) {
-    position: relative;
-    padding-left: 64px;
+/* Line/area: chart body is a flex row with Y-axis on the left and the
+   chart table on the right. The yaxis stretches to match the table height,
+   ensuring Y-labels align with the chart area gridlines. */
+.md2-chart-body {
+    display: flex;
+    align-items: stretch;
+    gap: 8px;
 }
-/* Graduated Y-axis: 5 tick labels positioned along the left side of the chart */
+.md2-chart-body > .charts-css { flex: 1; min-width: 0; }
 .md2-chart-yaxis {
-    position: absolute;
-    left: 8px;
-    top: 48px;     /* after title area */
-    bottom: 56px;  /* above x-axis labels */
-    width: 48px;
+    box-sizing: border-box;
+    flex: 0 0 48px;
     display: flex;
     flex-direction: column;
     justify-content: space-between;
@@ -231,6 +230,11 @@ body {
     color: var(--text-color);
     opacity: 0.7;
     pointer-events: none;
+    /* Compensate for Charts.css --labels-size (x-axis labels area at
+       bottom of tbody). The yaxis labels should cover only the DATA area.
+       box-sizing: border-box ensures padding is included in the flex height. */
+    padding-bottom: 24px;
+    padding-top: 6px;
 }
 .md2-chart-yaxis span { line-height: 1; }
 /* M63 removed in M65: multi-line/area no longer have ul.legend

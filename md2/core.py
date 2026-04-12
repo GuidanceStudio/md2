@@ -296,6 +296,16 @@ def transform_charts(html_content):
         all_values = [v for row in parsed_values for v in row]
         max_val = max(all_values) if all_values and max(all_values) > 0 else 1
 
+        # For line/area: compute nice ticks and use tick_max as normalization
+        # denominator so values align with the graduated Y-axis.
+        is_connected = chart_type in ("line", "area")
+        if is_connected:
+            ticks = _nice_ticks(max_val)
+            norm_max = ticks[-1]
+        else:
+            ticks = None
+            norm_max = max_val
+
         # Dataset headers (for legend)
         dataset_headers = headers[1:] if len(headers) > 1 else []
 
@@ -312,7 +322,7 @@ def transform_charts(html_content):
         # Line/area: use graduated Y-axis pattern (Charts.css official examples)
         if chart_type in ("line", "area"):
             classes.append("show-primary-axis")
-            classes.append("show-4-secondary-axes")
+            classes.append("show-3-secondary-axes")
             classes.append("hide-data")
         class_str = " ".join(classes)
         # Whether to show .data spans: auto per type
@@ -336,10 +346,10 @@ def transform_charts(html_content):
 
         # Tbody — rendering differs by type:
         # - pie: --start/--end cumulative
-        # - line/area: --start = previous value (to connect segments)
-        # - bar/column: --size only
+        # - line/area: --start = previous value (to connect segments),
+        #   normalized against tick_max for Y-axis alignment
+        # - bar/column: --size normalized against data max
         is_pie = chart_type == "pie"
-        is_connected = chart_type in ("line", "area")
         parts.append('<tbody>')
         cumulative = 0.0
         total = sum(all_values) if is_pie and sum(all_values) > 0 else 1
@@ -372,7 +382,7 @@ def transform_charts(html_content):
                     e_str = f"{end:g}"
                     parts.append(f'<td style="--start: {s_str}; --end: {e_str}">{data_span}</td>')
                 else:
-                    norm = num_val / max_val
+                    norm = num_val / norm_max
                     size_str = f"{norm:g}" if norm != int(norm) else str(int(norm))
                     if is_connected:
                         # Line/area: --start is the previous point's value for this column
@@ -388,37 +398,42 @@ def transform_charts(html_content):
         parts.append('</tbody>')
         parts.append('</table>')
 
-        result = "\n".join(parts)
+        table_html = "\n".join(parts)
+        legend_html = ""
 
         # Auto-add legend for multi-dataset charts
         if is_multiple and dataset_headers:
             legend_items = "".join(f'<li>{h}</li>' for h in dataset_headers)
-            result += f'\n<ul class="charts-css legend legend-inline">{legend_items}</ul>'
-        # Pie chart: always generate a legend with label + value (since values
-        # can't be shown inside slices due to rotation)
+            legend_html = f'\n<ul class="charts-css legend legend-inline">{legend_items}</ul>'
+        # Pie chart: always generate a legend with label + value
         elif is_pie:
             legend_items = "".join(
                 f'<li>{label} ({values[0].strip()})</li>'
                 for label, values in data_rows
             )
-            result += f'\n<ul class="charts-css legend legend-inline">{legend_items}</ul>'
+            legend_html = f'\n<ul class="charts-css legend legend-inline">{legend_items}</ul>'
+
+        result = table_html + legend_html
 
         # Prepend title if present
         title_html = ""
         if chart_title:
             title_html = f'<div class="md2-chart-title">{chart_title}</div>'
 
-        # Generate Y-axis for line/area charts (graduated scale)
-        yaxis_html = ""
-        if chart_type in ("line", "area"):
-            ticks = _nice_ticks(max_val)
-            # High to low (top to bottom visually)
+        # Generate Y-axis for line/area charts (graduated scale).
+        # Wrap ONLY the chart table (not the legend) in a flex row with the
+        # Y-axis on the left so that the yaxis height matches the chart
+        # table height exactly (flex stretch), and x-axis labels area is
+        # compensated via padding-bottom.
+        if is_connected and ticks:
             tick_spans = "".join(
                 f'<span>{t}</span>' for t in reversed(ticks)
             )
             yaxis_html = f'<div class="md2-chart-yaxis">{tick_spans}</div>'
+            body_html = f'<div class="md2-chart-body">{yaxis_html}{table_html}</div>'
+            result = body_html + legend_html
 
-        return f'<div class="md2-chart">{title_html}{yaxis_html}{result}</div>'
+        return f'<div class="md2-chart">{title_html}{result}</div>'
 
     return _CHART_DIV_RE.sub(_transform_chart, html_content)
 

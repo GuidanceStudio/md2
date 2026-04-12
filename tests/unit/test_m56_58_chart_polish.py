@@ -32,29 +32,17 @@ def test_bar_labels_size_unchanged():
 
 # --- M57: Line/area top padding ---
 
-def test_line_wrapper_has_padding():
-    """Line chart wrapper has extra padding (M61 replaces M57's padding-block-start)."""
+def test_line_chart_body_flex_layout():
+    """Line chart body uses flex layout (M67+M68 graduated Y-axis approach)."""
     css = _get_style_css()
-    # M61: extra padding moved to the wrapper via :has()
-    assert re.search(
-        r'\.md2-chart:has\([^)]*line[^)]*\)[^{]*\{[^}]*padding',
-        css, re.DOTALL,
-    ) or re.search(
-        r'\.md2-chart:has\([^)]*area[^)]*\)[^{]*\{[^}]*padding',
-        css, re.DOTALL,
-    )
+    assert ".md2-chart-body" in css
+    assert "display: flex" in css
 
 
-def test_area_wrapper_has_padding():
-    """Area chart wrapper has extra padding."""
+def test_yaxis_stretch_alignment():
+    """Y-axis stretches with chart via flex align-items (M68 alignment fix)."""
     css = _get_style_css()
-    assert re.search(
-        r'\.md2-chart:has\([^)]*area[^)]*\)[^{]*\{[^}]*padding',
-        css, re.DOTALL,
-    ) or re.search(
-        r'\.md2-chart:has\([^)]*line[^)]*\)[^{]*\{[^}]*padding',
-        css, re.DOTALL,
-    )
+    assert "align-items: stretch" in css or ".md2-chart-yaxis" in css
 
 
 # --- M58: Multi-line/area no data labels ---

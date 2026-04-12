@@ -50,14 +50,8 @@ def test_area_no_padding_block_start():
     assert "padding-block-start" not in area_match.group(1)
 
 
-def test_wrapper_extra_padding_for_line_area():
-    """Wrapper has extra padding when containing line/area chart."""
+def test_line_area_uses_flex_body():
+    """Line/area use flex body with Y-axis (M67 approach replaces padding hack)."""
     css = _get_style_css()
-    # Check for :has() selector with line or area
-    assert re.search(
-        r'\.md2-chart:has\([^)]*line[^)]*\)[^{]*\{[^}]*padding',
-        css, re.DOTALL,
-    ) or re.search(
-        r'\.md2-chart:has\([^)]*area[^)]*\)[^{]*\{[^}]*padding',
-        css, re.DOTALL,
-    ), "Wrapper should have extra padding for line/area"
+    assert ".md2-chart-body" in css
+    assert ".md2-chart-yaxis" in css

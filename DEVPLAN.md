@@ -2122,3 +2122,55 @@ Il phantom sparisce automaticamente perché:
 - Nessun phantom card sopra il titolo
 - Codice CSS e Python semplificato (rimossi tutti gli hack M65/M66)
 - Tutti i 8 chart dell'example visivamente puliti
+
+---
+
+## M68: Fix graduated Y-axis alignment con i dati ✅
+
+**Why:** In M67 ho implementato l'asse Y graduato ma ci sono due bug critici visibili nello screenshot dell'utente:
+
+1. **Normalizzazione errata**: i valori `--end`/`--size` sono normalizzati contro `max_val` (il massimo dei dati), non contro `ticks[-1]` (il massimo dell'asse Y). Quando `_nice_ticks(25000)` bumpa l'asse a [0, 10000, 20000, 30000, 40000], la linea raggiunge `--end: 1.0 = 25000` che visivamente corrisponde al TOP del chart, ma l'asse Y mostra il top come 40000. Risultato: il dato 25000 appare come 40000.
+
+2. **Gridline disallineate dai tick**: `show-4-secondary-axes` crea 4 gridline a 20%/40%/60%/80%. I miei tick sono a 0%/25%/50%/75%/100% (5 valori). Le posizioni non coincidono. Deve essere `show-3-secondary-axes` (3 linee a 25%/50%/75%) + primary axis (0%) = 5 righe allineate con i 5 tick.
+
+**Approach:**
+
+### Fix 1 — Normalizzare contro tick_max
+
+In `transform_charts`, per line/area:
+- Calcolare `ticks = _nice_ticks(max_val)` **prima** del loop di generazione td
+- Sostituire `max_val` con `tick_max = ticks[-1]` come denominatore di normalizzazione
+- Così `--end` va da 0 a `max_val/tick_max` (≤ 1), e visivamente la linea si ferma al livello corretto dell'asse Y
+
+### Fix 2 — 3 secondary axes invece di 4
+
+Cambiare la classe `show-4-secondary-axes` → `show-3-secondary-axes` per line/area.
+- Charts.css con `.show-3-secondary-axes` disegna 3 gridline orizzontali (a 25%, 50%, 75%)
+- Combinate con primary-axis (baseline 0%) e top border del chart (100%) = 5 riferimenti visivi
+- Coincidono con i 5 tick Y: 0, 25%, 50%, 75%, 100%
+
+### Fix 3 — Verificare allineamento yaxis con chart area
+
+Il `.md2-chart-yaxis` ha `top: 48px, bottom: 56px` hardcoded. Il chart area interno di Charts.css (zona dove le linee sono disegnate) ha un offset diverso perché:
+- Il wrapper ha `padding-top` (normale per line/area dopo M67, ~8-16px)
+- Il title (se presente) occupa ~40px
+- Il tbody può avere padding/margin interno
+
+I valori hardcoded sono un guess. Se il disallineamento persiste dopo Fix 1+2, misurare con Playwright le y esatte del chart tbody e adeguare `top`/`bottom` del yaxis.
+
+**Tasks:**
+- [x] Compute `ticks` **prima** del tbody loop, salvare `tick_max = ticks[-1]`
+- [x] Sostituire `max_val` con `tick_max` nella normalizzazione `--end`/`--size` per line/area
+- [x] Per bar/column/pie mantenere `max_val` invariato (non usano tick)
+- [x] Cambiare `show-4-secondary-axes` → `show-3-secondary-axes` in `transform_charts`
+- [x] Aggiornare test: line/area usano tick_max per normalizzazione
+- [x] Aggiornare test: line/area hanno `show-3-secondary-axes`
+- [x] Verificare con Playwright: linea raggiunge il livello corretto dell'asse Y
+- [x] Verificare con Playwright: gridline coincidono con i tick Y
+- [x] Se disallineamento yaxis residuo, misurare e correggere top/bottom CSS
+- [x] Commit & push
+
+**Done when:**
+- La linea di `:::chart line` con max dato 25000 raggiunge esattamente il livello "25000" sull'asse Y (non il top)
+- Le gridline orizzontali coincidono visivamente con i numeri dell'asse Y
+- Tutti gli 8 chart dell'example ancora renderizzati correttamente
