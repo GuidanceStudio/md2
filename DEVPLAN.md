@@ -1317,7 +1317,7 @@ Non usiamo `<caption>` della tabella perché: (1) Charts.css ha regole specifich
 
 ---
 
-## M41: Chart spacing — gap label/bars, row/group spacing, legend positioning
+## M41: Chart spacing — gap label/bars, row/group spacing, legend positioning ✅
 
 **Why:** Nei multi-dataset le label degli assi sono attaccate alle barre, le righe (bar) o gruppi (column) sono attaccate tra loro rendendo difficile distinguere elementi separati, e la legenda si sovrappone alle label degli assi.
 
@@ -1330,13 +1330,13 @@ Non usiamo `<caption>` della tabella perché: (1) Charts.css ha regole specifich
 Tutti CSS, nessuna logica Python.
 
 **Tasks:**
-- [ ] Aumentare gap tra label e barre nel bar chart
-- [ ] Settare spacing verticale tra righe del bar chart
-- [ ] Settare spacing orizzontale tra gruppi del column chart
-- [ ] Legend con margin-top adeguato
-- [ ] Test: unit — CSS contiene le nuove regole di spacing
-- [ ] Rigenerare example e verificare con Playwright
-- [ ] Commit & push
+- [x] Aumentare gap tra label e barre nel bar chart
+- [x] Settare spacing verticale tra righe del bar chart
+- [x] Settare spacing orizzontale tra gruppi del column chart
+- [x] Legend con margin-top adeguato
+- [x] Test: unit — CSS contiene le nuove regole di spacing
+- [x] Rigenerare example e verificare con Playwright
+- [x] Commit & push
 
 **Done when:** Nei chart multi-dataset le label sono distanziate dalle barre, le righe/gruppi sono visibilmente separati, la legenda non si sovrappone.
 

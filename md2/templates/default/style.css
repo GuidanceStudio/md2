@@ -176,10 +176,16 @@ body {
 .md2-chart .charts-css td {
     border: none; background: none; padding: 0;
 }
-.md2-chart .charts-css { --data-spacing: 8px; }
-.md2-chart .charts-css.bar { --labels-size: 100px; min-height: 40px; }
+.md2-chart .charts-css { --data-spacing: 12px; }
+.md2-chart .charts-css.bar {
+    --labels-size: 130px; --data-spacing: 6px;
+    min-height: 40px;
+}
 .md2-chart .charts-css.bar tbody tr { min-height: 40px; }
-.md2-chart .charts-css.column { --labels-size: 100px; height: min(300px, 40vh); }
+.md2-chart .charts-css.column {
+    --labels-size: 100px; --data-spacing: 16px;
+    height: min(300px, 40vh);
+}
 .md2-chart .charts-css.line { height: min(300px, 40vh); --line-size: 3px; }
 .md2-chart .charts-css.area { height: min(300px, 40vh); --line-size: 3px; }
 .md2-chart .charts-css.pie {
@@ -202,8 +208,8 @@ body {
 .md2-chart .charts-css.multiple tbody td:nth-child(8) { --color: var(--md2-color-7); }
 .md2-chart .charts-css.multiple tbody td:nth-child(9) { --color: var(--md2-color-8); }
 .md2-chart ul.legend {
-    display: flex; gap: 15px; justify-content: center;
-    margin-top: 10px; font-size: 0.85rem; list-style: none;
+    display: flex; gap: 20px; justify-content: center;
+    margin-top: 24px; font-size: 0.85rem; list-style: none;
     padding: 8px 0 0; border: none;
 }
 body.dark-mode .md2-chart .charts-css { color: var(--text-color); }
