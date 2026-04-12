@@ -164,10 +164,19 @@ body {
     margin: -8px -20px 16px; font-size: 1rem;
     border-bottom: 1px solid var(--table-border);
 }
-.md2-chart .data {
+/* Data text: white INSIDE colored segments (bar/pie/stacked), normal color OUTSIDE (column/line/area) */
+.md2-chart .bar .data,
+.md2-chart .pie .data,
+.md2-chart .bar.stacked .data,
+.md2-chart .column.stacked .data {
     color: #fff; font-weight: 600; font-size: 0.85rem;
     text-shadow: 0 1px 2px rgba(0,0,0,0.5);
     padding-right: 6px;
+}
+.md2-chart .column .data,
+.md2-chart .line .data,
+.md2-chart .area .data {
+    color: var(--text-color); font-weight: 600; font-size: 0.85rem;
 }
 .md2-chart table.charts-css {
     box-shadow: none; border-radius: 0; border-collapse: separate;

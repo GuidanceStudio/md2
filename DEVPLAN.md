@@ -1342,7 +1342,7 @@ Tutti CSS, nessuna logica Python.
 
 ---
 
-## M42: Fix `.data` color per tipo — bianco dentro, colore testo fuori
+## M42: Fix `.data` color per tipo — bianco dentro, colore testo fuori ✅
 
 **Why:** Il testo `.data` è attualmente bianco per tutti i chart. Funziona per bar/pie (testo dentro barra/fetta colorata), ma produce bianco-su-bianco per column/line/area dove il testo è posizionato sopra/fuori dall'elemento colorato.
 
@@ -1353,12 +1353,12 @@ Tutti CSS, nessuna logica Python.
 Separare le regole CSS per tipo, rimuovere la regola generica `.md2-chart .data`.
 
 **Tasks:**
-- [ ] Rimuovere regola generica `.md2-chart .data`
-- [ ] Aggiungere regola per `.bar .data`, `.pie .data`, `.stacked-bar .data`, `.stacked-column .data` (bianco + shadow)
-- [ ] Aggiungere regola per `.column .data`, `.line .data`, `.area .data` (colore normale)
-- [ ] Test: unit — CSS contiene regole separate per tipo
-- [ ] Rigenerare example e verificare con Playwright
-- [ ] Commit & push
+- [x] Rimuovere regola generica `.md2-chart .data`
+- [x] Aggiungere regola per `.bar .data`, `.pie .data`, `.stacked-bar .data`, `.stacked-column .data` (bianco + shadow)
+- [x] Aggiungere regola per `.column .data`, `.line .data`, `.area .data` (colore normale)
+- [x] Test: unit — CSS contiene regole separate per tipo
+- [x] Rigenerare example e verificare con Playwright
+- [x] Commit & push
 
 **Done when:** I numeri sono leggibili in tutti i tipi di chart: bianchi dentro le barre, colore normale quando fuori.
 
