@@ -279,6 +279,9 @@ def transform_charts(html_content):
         class_str = " ".join(classes)
         # Whether to show .data spans: auto per type
         show_data = raw_type in _CHART_TYPES_SHOW_DATA
+        # Multi-line/area: data labels collide when series converge — hide them
+        if is_multiple and chart_type in ("line", "area"):
+            show_data = False
 
         # Build new table HTML
         parts = [f'<table class="{class_str}">']

@@ -216,15 +216,21 @@ body {
     align-items: center; vertical-align: middle;
 }
 .md2-chart .charts-css.column {
-    --labels-size: 100px; --data-spacing: 16px;
+    --labels-size: 32px; --data-spacing: 16px;
     height: min(300px, 40vh);
     max-width: 800px; margin-left: auto; margin-right: auto;
 }
 .md2-chart .charts-css.column tbody tr {
     padding-inline: 12px;
 }
-.md2-chart .charts-css.line { height: min(300px, 40vh); --line-size: 3px; }
-.md2-chart .charts-css.area { height: min(300px, 40vh); --line-size: 3px; }
+.md2-chart .charts-css.line {
+    height: min(300px, 40vh); --line-size: 3px;
+    padding-block-start: 24px;
+}
+.md2-chart .charts-css.area {
+    height: min(300px, 40vh); --line-size: 3px;
+    padding-block-start: 24px;
+}
 .md2-chart .charts-css.pie {
     max-width: min(50vh, 50vw); margin: 0 auto; aspect-ratio: 1;
 }
@@ -921,27 +927,27 @@ The move to event-driven architecture reduced API latency by <strong>60%</strong
 <tbody>
 <tr>
 <th scope="row">Q1</th>
-<td style="--start: 0.05; --size: 0.05"><span class="data">500</span></td>
-<td style="--start: 0.12; --size: 0.12"><span class="data">1200</span></td>
-<td style="--start: 0.15; --size: 0.15"><span class="data">1500</span></td>
+<td style="--start: 0.05; --size: 0.05"></td>
+<td style="--start: 0.12; --size: 0.12"></td>
+<td style="--start: 0.15; --size: 0.15"></td>
 </tr>
 <tr>
 <th scope="row">Q2</th>
-<td style="--start: 0.05; --size: 0.15"><span class="data">1500</span></td>
-<td style="--start: 0.12; --size: 0.3"><span class="data">3000</span></td>
-<td style="--start: 0.15; --size: 0.4"><span class="data">4000</span></td>
+<td style="--start: 0.05; --size: 0.15"></td>
+<td style="--start: 0.12; --size: 0.3"></td>
+<td style="--start: 0.15; --size: 0.4"></td>
 </tr>
 <tr>
 <th scope="row">Q3</th>
-<td style="--start: 0.15; --size: 0.3"><span class="data">3000</span></td>
-<td style="--start: 0.3; --size: 0.55"><span class="data">5500</span></td>
-<td style="--start: 0.4; --size: 0.65"><span class="data">6500</span></td>
+<td style="--start: 0.15; --size: 0.3"></td>
+<td style="--start: 0.3; --size: 0.55"></td>
+<td style="--start: 0.4; --size: 0.65"></td>
 </tr>
 <tr>
 <th scope="row">Q4</th>
-<td style="--start: 0.3; --size: 0.6"><span class="data">6000</span></td>
-<td style="--start: 0.55; --size: 0.9"><span class="data">9000</span></td>
-<td style="--start: 0.65; --size: 1"><span class="data">10000</span></td>
+<td style="--start: 0.3; --size: 0.6"></td>
+<td style="--start: 0.55; --size: 0.9"></td>
+<td style="--start: 0.65; --size: 1"></td>
 </tr>
 </tbody>
 </table>

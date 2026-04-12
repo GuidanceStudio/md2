@@ -1620,3 +1620,78 @@ La soluzione migliore per uso presentazione è **opzione 1** (sempre valori) com
 - [x] Commit & push
 
 **Done when:** Tutte le label dell'asse x sono leggibili e non troncate in tutti i chart.
+
+---
+
+## M56: Reduce `--labels-size` per column ✅
+
+**Why:** Nel column chart `--labels-size: 100px` riserva 100px sotto le barre per le label. Le label sono testo singolo (~20px alto) → 80px di whitespace tra fine barra e label. Risultato: le label "Core/Growth/Intelligence" sembrano staccate dalle barre (image #14), e la legend è subito sotto le label (4px, troppo poco) perché la legend margin parte dopo i 100px riservati.
+
+**Approach:** Ridurre `--labels-size` per column da 100px a 32px. Le label restano leggibili (text ~20px + padding 6px sopra/sotto), il whitespace eccessivo scompare, la legend mantiene il suo gap di 40px ma ora visivamente più vicino al chart.
+
+Per il bar chart `--labels-size: 130px` è la WIDTH (label a sinistra), va lasciato.
+Per line/area è già 24px (default Charts.css), va bene.
+
+**Tasks:**
+- [x] Cambiare `--labels-size` di `.charts-css.column` da 100px a 32px
+- [x] Verificare visualmente con Playwright (Team Allocation, Q1 Conversion)
+- [x] Test: unit — CSS contiene labels-size: 32px per column
+- [x] Commit & push
+
+**Done when:** Nelle colonne le label sono vicine alle barre (gap ≤ 16px), e la legend ha il suo spazio normale sotto le label.
+
+---
+
+## M57: Top padding per line/area chart area (anti-clipping max value) ✅
+
+**Why:** Nel line/area chart il valore massimo (`--size: 1`) ha la label posizionata al top del chart area senza margine. Il bordo superiore della label (background pill) si estende fino al limite del chart, e visivamente sembra "tagliato" dal bordo o dal title bar (image #15 "50", image #16 "25000"). Misurato: in slide-8 line "25000" ha rect.y = 9578 = chart top esatto, h = 22.
+
+**Approach:** Aggiungere `padding-block-start` alla `.charts-css.line` e `.charts-css.area` (es. 24px). Charts.css riduce automaticamente l'area dei bar per far spazio al padding, e le label dei valori massimi vengono spostate verso il basso di 24px → spazio sufficiente per il pill background.
+
+Alternativa testata mentalmente: padding sul wrapper non funziona perché Charts.css usa l'altezza fissa del table (`height: min(300px, 40vh)`), il padding del wrapper non viene mai sottratto.
+
+**Tasks:**
+- [x] Aggiungere `padding-block-start: 24px` a `.charts-css.line` e `.charts-css.area`
+- [x] Verificare con Playwright che la label max non sia clippata
+- [x] Test: unit — CSS contiene padding-block-start su line e area
+- [x] Commit & push
+
+**Done when:** Il valore massimo (--size: 1) di un line/area chart è completamente visibile, non tagliato dal top del chart.
+
+---
+
+## M58: Hide data labels per multi-line e multi-area (anti-collision) ✅
+
+**Why:** Nel line/area multi-dataset le label dei valori si sovrappongono pesantemente quando le serie convergono. Misurato in slide-10 (User Growth by Segment): `500/1200/1500` tutti a x≈552, y range 10294-10328 (34px verticali per 3 etichette + pill). I valori non sono leggibili perché sovrapposti.
+
+**Approach:** Per **line/area multi-dataset** non mostrare i `.data` span — gli utenti capiscono il trend dalle linee, e la legend identifica le serie. Per **single-line/area** mantenere le label (sono leggibili e utili come scala).
+
+Implementazione: in `transform_charts`, controllare `is_multiple` insieme al tipo. Se `chart_type in ('line', 'area') and is_multiple`, non emettere `.data` span.
+
+**Tasks:**
+- [x] Aggiungere logica `is_multiple_line_or_area` in `transform_charts`
+- [x] Sopprimere data spans quando vero
+- [x] Test: unit — line multi-dataset NON ha `<span class="data">`
+- [x] Test: unit — line single-dataset HA `<span class="data">`
+- [x] Test: unit — area multi-dataset NON ha span data
+- [x] Verificare visualmente con Playwright
+- [x] Commit & push
+
+**Done when:** Line/area multi-dataset non mostrano label dati (no overlap), single-dataset le mostrano normalmente.
+
+---
+
+## M59: Audit visivo finale di tutti i chart ✅
+
+**Why:** Dopo M56-M58 servirà un check visivo completo per assicurare che non ci siano regressioni e che tutti gli 8 chart dell'example siano davvero leggibili.
+
+**Approach:** Script Playwright che screenshotta tutti i chart, ispezione visiva uno a uno. Se emergono problemi minori (spacing, alignment) li fixiamo inline.
+
+**Tasks:**
+- [x] Script Playwright per screenshot di ogni chart dell'example
+- [x] Ispezione visiva uno a uno
+- [x] Fix minori se necessari (no nuovi milestone, solo polish)
+- [x] Commit finale con screenshot allegati nel commit message
+- [x] Push
+
+**Done when:** Tutti gli 8 chart dell'example sono visivamente puliti e leggibili.
