@@ -2345,7 +2345,7 @@ Charts.css line/area con `show-labels` ospita i `<th scope="row">` come x-labels
 - Le 5 gridline orizzontali coincidono visivamente con i label 0/2500/5000/7500/10000
 - Tutti i test passano
 
-## Milestone 72: Pie chart — value labels inside slices 🚧
+## Milestone 72: Pie chart — value labels inside slices ✅
 
 **Why:** Le pie hanno la legenda sotto con `label (value)`. Sarebbe più leggibile avere il valore *dentro* la fetta, sempre orientato orizzontalmente (mai inclinato sulla rotazione della fetta).
 

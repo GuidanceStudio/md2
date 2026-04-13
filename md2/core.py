@@ -447,13 +447,43 @@ def transform_charts(html_content):
         if is_multiple and dataset_headers:
             legend_items = "".join(f'<li>{h}</li>' for h in dataset_headers)
             legend_html = f'\n<ul class="charts-css legend legend-inline">{legend_items}</ul>'
-        # Pie chart: always generate a legend with label + value
+        # Pie chart: inline labels inside big slices; legend shows (value)
+        # only for small slices (< 6%).
         elif is_pie:
-            legend_items = "".join(
-                f'<li>{label} ({values[0].strip()})</li>'
-                for label, values in data_rows
+            pie_inline_labels = []
+            legend_items_parts = []
+            cum = 0.0
+            total_pie = sum(all_values) if sum(all_values) > 0 else 1
+            for idx, (label, values) in enumerate(data_rows):
+                val = all_values[idx]
+                proportion = val / total_pie
+                mid = cum + proportion / 2
+                cum += proportion
+                theta = 2 * math.pi * mid  # 0 = 12 o'clock, clockwise
+                r = 30  # percent from center
+                left = 50 + r * math.sin(theta)
+                top = 50 - r * math.cos(theta)
+                if proportion >= 0.06:
+                    pie_inline_labels.append(
+                        f'<span class="md2-pie-label" '
+                        f'style="left: {left:.2f}%; top: {top:.2f}%">'
+                        f'{values[0].strip()}</span>'
+                    )
+                    legend_items_parts.append(f'<li>{label}</li>')
+                else:
+                    legend_items_parts.append(
+                        f'<li>{label} ({values[0].strip()})</li>'
+                    )
+            legend_items = "".join(legend_items_parts)
+            legend_html = (
+                f'\n<ul class="charts-css legend legend-inline">'
+                f'{legend_items}</ul>'
             )
-            legend_html = f'\n<ul class="charts-css legend legend-inline">{legend_items}</ul>'
+            inline_labels_html = "".join(pie_inline_labels)
+            table_html = (
+                f'<div class="md2-pie-wrapper">{table_html}'
+                f'{inline_labels_html}</div>'
+            )
 
         result = table_html + legend_html
 

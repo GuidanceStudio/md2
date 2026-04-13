@@ -272,6 +272,22 @@ body {
 .md2-chart .charts-css.pie {
     max-width: min(50vh, 50vw); margin: 0 auto; aspect-ratio: 1;
 }
+.md2-pie-wrapper {
+    position: relative;
+    max-width: min(50vh, 50vw);
+    margin: 0 auto;
+}
+.md2-pie-wrapper .charts-css.pie { margin: 0 auto; }
+.md2-pie-label {
+    position: absolute;
+    transform: translate(-50%, -50%);
+    color: #fff;
+    font-weight: 600;
+    font-size: 0.85rem;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.6);
+    pointer-events: none;
+    white-space: nowrap;
+}
 .md2-chart .charts-css tbody tr:nth-child(8n+1) td { --color: var(--md2-color-1); }
 .md2-chart .charts-css tbody tr:nth-child(8n+2) td { --color: var(--md2-color-2); }
 .md2-chart .charts-css tbody tr:nth-child(8n+3) td { --color: var(--md2-color-3); }

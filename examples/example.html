@@ -284,6 +284,22 @@ body {
 .md2-chart .charts-css.pie {
     max-width: min(50vh, 50vw); margin: 0 auto; aspect-ratio: 1;
 }
+.md2-pie-wrapper {
+    position: relative;
+    max-width: min(50vh, 50vw);
+    margin: 0 auto;
+}
+.md2-pie-wrapper .charts-css.pie { margin: 0 auto; }
+.md2-pie-label {
+    position: absolute;
+    transform: translate(-50%, -50%);
+    color: #fff;
+    font-weight: 600;
+    font-size: 0.85rem;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.6);
+    pointer-events: none;
+    white-space: nowrap;
+}
 .md2-chart .charts-css tbody tr:nth-child(8n+1) td { --color: var(--md2-color-1); }
 .md2-chart .charts-css tbody tr:nth-child(8n+2) td { --color: var(--md2-color-2); }
 .md2-chart .charts-css tbody tr:nth-child(8n+3) td { --color: var(--md2-color-3); }
@@ -619,7 +635,7 @@ We are transforming from a single-product company into a <strong>platform ecosys
 <div class="md2-columns"><div class="md2-col"><p><strong>The Challenge:</strong><br>
 To hit our stretch targets, we must ship faster and smarter.</p>
 <p><strong>Key Evolution:</strong><br>
-We have reorganized from feature teams into <strong>3 Platform Pillars</strong> (Core, Growth, Intelligence) with shared infrastructure.</p></div><div class="md2-col"><div class="md2-chart"><div class="md2-chart-title">R&amp;D Budget Allocation</div><table class="charts-css pie show-labels">
+We have reorganized from feature teams into <strong>3 Platform Pillars</strong> (Core, Growth, Intelligence) with shared infrastructure.</p></div><div class="md2-col"><div class="md2-chart"><div class="md2-chart-title">R&amp;D Budget Allocation</div><div class="md2-pie-wrapper"><table class="charts-css pie show-labels">
 <caption>R&amp;D Budget Allocation</caption>
 <thead><tr>
 <th scope="col">Vertical</th>
@@ -639,8 +655,8 @@ We have reorganized from feature teams into <strong>3 Platform Pillars</strong> 
 <td style="--start: 0.76; --end: 1"></td>
 </tr>
 </tbody>
-</table>
-<ul class="charts-css legend legend-inline"><li>Platform (48)</li><li>Mobile (28)</li><li>AI (24)</li></ul></div></div></div></div></div>
+</table><span class="md2-pie-label" style="left: 79.94%; top: 48.12%">48</span><span class="md2-pie-label" style="left: 29.46%; top: 71.87%">28</span><span class="md2-pie-label" style="left: 29.46%; top: 28.13%">24</span></div>
+<ul class="charts-css legend legend-inline"><li>Platform</li><li>Mobile</li><li>AI</li></ul></div></div></div></div></div>
         
         <div class="slide" id="slide-1"><h2>2. Current State: Platform Metrics</h2><div class="content"><p><em>Context: The Foundation Phase (Q3 2025 - Q1 2026).</em></p>
 <p><strong>What We Built:</strong></p>
