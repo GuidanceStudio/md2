@@ -273,13 +273,14 @@ body {
    Padding-left = yaxis flex-basis (48px) + flex gap (8px). */
 .md2-chart-xlabels {
     display: flex;
+    justify-content: space-between;
     padding-left: calc(48px + 8px);
     margin-top: 6px;
     font-size: 0.75rem;
     color: var(--text-color);
     opacity: 0.7;
 }
-.md2-chart-xlabels span { flex: 1; text-align: center; }
+.md2-chart-xlabels span { flex: 0 0 auto; text-align: center; }
 /* M63 removed in M65: multi-line/area no longer have ul.legend
    (endpoint labels with "Name: Value" format serve as legend) */
 .md2-chart .charts-css.pie {
@@ -910,27 +911,23 @@ The move to event-driven architecture reduced API latency by <strong>60%</strong
 </tr></thead>
 <tbody>
 <tr>
-<th scope="row">00:00</th>
-<td style="--start: 0.15; --size: 0.15"><span class="data">12</span></td>
+<th scope="row"></th>
+<td style="--start: 0.15; --size: 0.1"><span class="data">12</span><span class="data">8</span></td>
 </tr>
 <tr>
-<th scope="row">04:00</th>
-<td style="--start: 0.15; --size: 0.1"><span class="data">8</span></td>
-</tr>
-<tr>
-<th scope="row">08:00</th>
+<th scope="row"></th>
 <td style="--start: 0.1; --size: 0.4375"><span class="data">35</span></td>
 </tr>
 <tr>
-<th scope="row">12:00</th>
+<th scope="row"></th>
 <td style="--start: 0.4375; --size: 0.625"><span class="data">50</span></td>
 </tr>
 <tr>
-<th scope="row">16:00</th>
+<th scope="row"></th>
 <td style="--start: 0.625; --size: 0.6"><span class="data">48</span></td>
 </tr>
 <tr>
-<th scope="row">20:00</th>
+<th scope="row"></th>
 <td style="--start: 0.6; --size: 0.375"><span class="data">30</span></td>
 </tr>
 </tbody>
@@ -965,19 +962,15 @@ The move to event-driven architecture reduced API latency by <strong>60%</strong
 </tr></thead>
 <tbody>
 <tr>
-<th scope="row">Q1</th>
-<td style="--start: 0.106667; --size: 0.106667"><span class="data">3200</span></td>
+<th scope="row"></th>
+<td style="--start: 0.106667; --size: 0.283333"><span class="data">3200</span><span class="data">8500</span></td>
 </tr>
 <tr>
-<th scope="row">Q2</th>
-<td style="--start: 0.106667; --size: 0.283333"><span class="data">8500</span></td>
-</tr>
-<tr>
-<th scope="row">Q3</th>
+<th scope="row"></th>
 <td style="--start: 0.283333; --size: 0.5"><span class="data">15000</span></td>
 </tr>
 <tr>
-<th scope="row">Q4</th>
+<th scope="row"></th>
 <td style="--start: 0.5; --size: 0.833333"><span class="data">25000</span></td>
 </tr>
 </tbody>
@@ -993,25 +986,19 @@ The move to event-driven architecture reduced API latency by <strong>60%</strong
 </tr></thead>
 <tbody>
 <tr>
-<th scope="row">Q1</th>
-<td style="--start: 0.05; --size: 0.05"><span class="data">500</span></td>
-<td style="--start: 0.12; --size: 0.12"><span class="data">1200</span></td>
-<td style="--start: 0.15; --size: 0.15"><span class="data">1500</span></td>
+<th scope="row"></th>
+<td style="--start: 0.05; --size: 0.15"><span class="data">500</span><span class="data">1500</span></td>
+<td style="--start: 0.12; --size: 0.3"><span class="data">1200</span><span class="data">3000</span></td>
+<td style="--start: 0.15; --size: 0.4"><span class="data">1500</span><span class="data">4000</span></td>
 </tr>
 <tr>
-<th scope="row">Q2</th>
-<td style="--start: 0.05; --size: 0.15"><span class="data">1500</span></td>
-<td style="--start: 0.12; --size: 0.3"><span class="data">3000</span></td>
-<td style="--start: 0.15; --size: 0.4"><span class="data">4000</span></td>
-</tr>
-<tr>
-<th scope="row">Q3</th>
+<th scope="row"></th>
 <td style="--start: 0.15; --size: 0.3"><span class="data">3000</span></td>
 <td style="--start: 0.3; --size: 0.55"><span class="data">5500</span></td>
 <td style="--start: 0.4; --size: 0.65"><span class="data">6500</span></td>
 </tr>
 <tr>
-<th scope="row">Q4</th>
+<th scope="row"></th>
 <td style="--start: 0.3; --size: 0.6"><span class="data">6000</span></td>
 <td style="--start: 0.55; --size: 0.9"><span class="data">9000</span></td>
 <td style="--start: 0.65; --size: 1"><span class="data">10000</span></td>

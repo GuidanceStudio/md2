@@ -389,54 +389,67 @@ def transform_charts(html_content):
         cumulative = 0.0
         total = sum(all_values) if is_pie and sum(all_values) > 0 else 1
 
-        # For connected charts: precompute normalized values per column
-        # so each column's line connects its points (single dataset only here)
-        prev_norm_by_col = {}
+        def _fmt(x):
+            return f"{x:g}" if x != int(x) else str(int(x))
 
-        for row_idx, (label, values) in enumerate(data_rows):
-            parts.append('<tr>')
-            parts.append(f'<th scope="row">{label}</th>')
-            for col_idx, v in enumerate(values):
-                num_val = parsed_values[row_idx][col_idx]
-                # For accessibility, always include .data span (Charts.css
-                # hides it when .hide-data class is on the table)
-                if show_data and num_val != 0:
-                    data_span = f'<span class="data">{v.strip()}</span>'
-                elif chart_type in ("line", "area"):
-                    # Include for a11y but hide-data class will hide visually
-                    data_span = f'<span class="data">{v.strip()}</span>'
-                else:
-                    data_span = ""
-                if is_pie:
-                    flat_idx = row_idx * len(values) + col_idx
-                    start = cumulative
-                    proportion = all_values[flat_idx] / total
-                    cumulative += proportion
-                    end = cumulative
-                    s_str = f"{start:g}"
-                    e_str = f"{end:g}"
-                    parts.append(f'<td style="--start: {s_str}; --end: {e_str}">{data_span}</td>')
-                else:
-                    if is_connected:
-                        # Offset-based normalization for line/area: value
-                        # is relative to the tick axis range [norm_min, norm_max]
-                        norm = (num_val - norm_min) / norm_range
-                        if norm < 0:
-                            norm = 0
-                    else:
-                        norm = num_val / norm_max
-                    size_str = f"{norm:g}" if norm != int(norm) else str(int(norm))
-                    if is_connected:
-                        # Line/area: --start is the previous point's value for this column
-                        prev = prev_norm_by_col.get(col_idx, norm)
-                        start_str = f"{prev:g}" if prev != int(prev) else str(int(prev))
-                        prev_norm_by_col[col_idx] = norm
-                        parts.append(
-                            f'<td style="--start: {start_str}; --size: {size_str}">{data_span}</td>'
+        def _norm_connected(num):
+            n = (num - norm_min) / norm_range
+            return 0 if n < 0 else n
+
+        if is_connected:
+            # M74: segment model. N data points → N-1 <tr> segments.
+            # Each segment[i] draws the line from point[i] to point[i+1].
+            for seg_idx in range(len(data_rows) - 1):
+                parts.append('<tr>')
+                parts.append('<th scope="row"></th>')
+                for col_idx in range(len(data_rows[seg_idx][1])):
+                    v0 = parsed_values[seg_idx][col_idx]
+                    v1 = parsed_values[seg_idx + 1][col_idx]
+                    start = _norm_connected(v0)
+                    size = _norm_connected(v1)
+                    # A11y: segment[0] carries both endpoint values; later
+                    # segments carry only the end value (start = previous
+                    # segment's end, already emitted).
+                    v0_str = data_rows[seg_idx][1][col_idx].strip()
+                    v1_str = data_rows[seg_idx + 1][1][col_idx].strip()
+                    if seg_idx == 0:
+                        data_span = (
+                            f'<span class="data">{v0_str}</span>'
+                            f'<span class="data">{v1_str}</span>'
                         )
                     else:
-                        parts.append(f'<td style="--size: {size_str}">{data_span}</td>')
-            parts.append('</tr>')
+                        data_span = f'<span class="data">{v1_str}</span>'
+                    parts.append(
+                        f'<td style="--start: {_fmt(start)}; '
+                        f'--size: {_fmt(size)}">{data_span}</td>'
+                    )
+                parts.append('</tr>')
+        else:
+            for row_idx, (label, values) in enumerate(data_rows):
+                parts.append('<tr>')
+                parts.append(f'<th scope="row">{label}</th>')
+                for col_idx, v in enumerate(values):
+                    num_val = parsed_values[row_idx][col_idx]
+                    if show_data and num_val != 0:
+                        data_span = f'<span class="data">{v.strip()}</span>'
+                    else:
+                        data_span = ""
+                    if is_pie:
+                        flat_idx = row_idx * len(values) + col_idx
+                        start = cumulative
+                        proportion = all_values[flat_idx] / total
+                        cumulative += proportion
+                        end = cumulative
+                        parts.append(
+                            f'<td style="--start: {_fmt(start)}; '
+                            f'--end: {_fmt(end)}">{data_span}</td>'
+                        )
+                    else:
+                        norm = num_val / norm_max
+                        parts.append(
+                            f'<td style="--size: {_fmt(norm)}">{data_span}</td>'
+                        )
+                parts.append('</tr>')
         parts.append('</tbody>')
         parts.append('</table>')
 

@@ -2392,3 +2392,64 @@ Renderizzare ogni etichetta come `<span class="md2-pie-label" style="left:..%; t
 **Done when:**
 - Tutti i chart hanno un bordo simile a quello delle tabelle
 - Test passano
+
+## Milestone 74: Line/area — segment model (N-1 tds for N data points) ✅
+
+**Why:** Attualmente il primo td di una line/area disegna una linea piatta dal bordo sinistro al centro del proprio td (artefatto di `--start = --size` introdotto in M69). Visivamente sembra che il valore fosse "costante prima di Q1", cosa falsa. Stesso problema simmetrico al bordo destro per l'ultimo punto: la linea va oltre il centro dell'ultimo td fino al bordo destro.
+
+**Approach:** spostare i punti del primo e ultimo td al centro del td via `padding-left: 50%` sul primo td e `padding-right: 50%` sull'ultimo. Charts.css disegna la linea solo nel content-box del td → la linea del primo td occupa solo la metà destra (da Q1 verso Q2), e l'ultimo solo la metà sinistra (da Qn-1 verso Qn). Niente segmenti fantasma.
+
+I td centrali si spartiscono lo spazio rimanente uniformemente — le x-label restano centrate sui punti dati grazie al flex della `.md2-chart-xlabels`.
+
+**Tasks:**
+- [ ] `style.css`: `.md2-chart .charts-css.line tbody tr td:first-child, .md2-chart .charts-css.area tbody tr td:first-child { padding-left: 50%; box-sizing: border-box; }` e simmetrico `:last-child { padding-right: 50% }`
+- [ ] Verificare con la struttura HTML reale: ogni `<tr>` contiene un singolo `<td>` (single dataset) o multipli (multi dataset). Per multi-dataset, il selettore `:first-child` / `:last-child` agisce per `tr`, quindi tutte le serie del primo td sono shiftate insieme. ✓ Corretto.
+- [ ] Test unit: HTML line/area generato non è cambiato (nessun test sul markup); il fix è puramente CSS
+- [ ] Test CSS: la regola `.charts-css.line tbody tr td:first-child` esiste con `padding-left: 50%`
+- [ ] Test CSS: simmetrico per `:last-child`
+- [ ] Test visuale Playwright: misurare che la x del primo punto disegnato (estratto dall'`::before` clip-path o simile) coincide con il centro del primo td. Difficile da automatizzare → screenshot e verifica manuale
+- [ ] Rigenerare example, screenshot di tutti i line/area
+- [ ] Commit & push
+
+**Done when:**
+- Nei chart "User Growth by Segment", "Projected User Growth" e "Event Pipeline Throughput" non c'è più segmento piatto sotto Q1/00:00
+- L'ultimo punto non sfora oltre il centro del suo td
+- I punti restano allineati alle x-label
+- Tutti i test passano
+
+## Milestone 75: Unify area into `line filled` modifier 🚧
+
+**Why:** Area chart è oggi un tipo separato (`:::chart area`) ma condivide quasi 100% del codepath con line — ogni fix M67-M73 ha dovuto essere applicato a entrambi. Unificarli riduce la superficie API, dimezza i test di line/area, e semplifica la documentazione. Area resta utile ma come *variante visiva* di line, attivata da un modifier `filled`.
+
+**Approach:** estendere il parser di `:::chart` per accettare un secondo token come modifier. Sintassi:
+```
+:::chart line filled
+| ... |
+:::
+```
+Internamente:
+- Il modifier `filled` viene catturato e mappato a una classe CSS aggiuntiva sul `<table>`, es. `md2-line-filled`.
+- CSS: `.md2-chart .charts-css.line.md2-line-filled td::before { background: var(--color, currentColor); /* riempi sotto la linea */ }` — riprende lo stile di `.charts-css.area`.
+- `:::chart area` resta come alias deprecato che mappa internamente a `line + filled`. Print a stderr una volta per build se viene usato.
+- Aggiornare `examples/example.md`: convertire `:::chart area` esistenti in `:::chart line filled`.
+
+**Tasks:**
+- [ ] `core.py`: parsing del modifier dopo `chart_type` nel `:::chart` directive
+- [ ] `core.py`: se `chart_type == "area"`, normalizzare a `line + filled` e stampare deprecation warning
+- [ ] `core.py`: emettere classe `md2-line-filled` sul `<table>` quando filled è attivo
+- [ ] `style.css`: regola `.md2-chart .charts-css.line.md2-line-filled` che riproduce il fill di area (clip-path / gradient sotto la linea)
+- [ ] Aggiornare `examples/example.md`: `:::chart area` → `:::chart line filled`
+- [ ] Test unit: `:::chart line filled` produce table con classi `charts-css line md2-line-filled`
+- [ ] Test unit: `:::chart area` continua a funzionare (alias) e produce lo stesso markup di `:::chart line filled`
+- [ ] Test unit: `:::chart line` (no filled) NON ha la classe `md2-line-filled`
+- [ ] Test unit: deprecation warning emesso quando si usa `:::chart area`
+- [ ] Test visuale Playwright: screenshot di `:::chart line filled` ha lo stesso look del vecchio `:::chart area`
+- [ ] README: aggiornare la sintassi documentata
+- [ ] Commit & push
+
+**Done when:**
+- `:::chart line filled` produce un line chart con riempimento sotto la curva, identico visivamente al vecchio area
+- `:::chart area` continua a funzionare con deprecation warning
+- Una sola lista di test/regole CSS gestisce entrambi
+- README aggiornato
+- Tutti i test passano

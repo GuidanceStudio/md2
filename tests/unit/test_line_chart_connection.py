@@ -23,11 +23,10 @@ def test_line_chart_has_start_end():
     assert "--size" in html or "--end" in html
 
 
-def test_line_chart_first_point_start_equals_end():
-    """M69: First line cell --start = own normalized value.
-
-    _nice_ticks(50, 100): 50 > 50 is false → NOT clustered → axis_start=0
-    → ticks [0, 25, 50, 75, 100]. Value 50 → (50-0)/100 = 0.5.
+def test_line_chart_first_segment_uses_two_endpoints():
+    """M74: segment model. First segment --start = norm(value[0]),
+    --size = norm(value[1]). For [50, 100]: ticks [0,25,50,75,100],
+    so start=0.5 and size=1.
     """
     md = (
         ":::chart line\n"
@@ -39,16 +38,13 @@ def test_line_chart_first_point_start_equals_end():
     )
     html, _ = process_markdown(md)
     tds = re.findall(r'<td style="([^"]+)">', html)
-    assert len(tds) >= 2
+    assert len(tds) == 1
     assert "--start: 0.5" in tds[0]
+    assert "--size: 1" in tds[0]
 
 
-def test_line_chart_connects_points():
-    """M69: line cells --start = prev normalized value.
-
-    _nice_ticks(25, 100): not clustered → ticks [0,25,50,75,100].
-    Values 50→0.5, 100→1, 25→0.25.
-    """
+def test_line_chart_segment_model_n_minus_1_tds():
+    """M74: N points → N-1 segment tds."""
     md = (
         ":::chart line\n"
         "| Q | V |\n"
@@ -60,11 +56,13 @@ def test_line_chart_connects_points():
     )
     html, _ = process_markdown(md)
     tds = re.findall(r'<td style="([^"]+)">', html)
-    assert len(tds) == 3
-    # Td 1: --start = prev = 0.5
-    assert "--start: 0.5" in tds[1]
-    # Td 2: --start = prev = 1 (100 at norm_max)
-    assert "--start: 1" in tds[2]
+    assert len(tds) == 2
+    # Segment 0: 50→100, start=0.5, size=1
+    assert "--start: 0.5" in tds[0]
+    assert "--size: 1" in tds[0]
+    # Segment 1: 100→25, start=1, size=0.25
+    assert "--start: 1" in tds[1]
+    assert "--size: 0.25" in tds[1]
 
 
 def test_area_chart_has_start_end():

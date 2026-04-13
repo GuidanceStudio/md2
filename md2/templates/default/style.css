@@ -261,13 +261,14 @@ body {
    Padding-left = yaxis flex-basis (48px) + flex gap (8px). */
 .md2-chart-xlabels {
     display: flex;
+    justify-content: space-between;
     padding-left: calc(48px + 8px);
     margin-top: 6px;
     font-size: 0.75rem;
     color: var(--text-color);
     opacity: 0.7;
 }
-.md2-chart-xlabels span { flex: 1; text-align: center; }
+.md2-chart-xlabels span { flex: 0 0 auto; text-align: center; }
 /* M63 removed in M65: multi-line/area no longer have ul.legend
    (endpoint labels with "Name: Value" format serve as legend) */
 .md2-chart .charts-css.pie {
