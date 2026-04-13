@@ -2376,7 +2376,7 @@ Renderizzare ogni etichetta come `<span class="md2-pie-label" style="left:..%; t
 - Pie chart con fette piccole continua a usare la legenda esterna
 - Tutti i test passano
 
-## Milestone 73: Border around chart wrapper 🚧
+## Milestone 73: Border around chart wrapper ✅
 
 **Why:** Le tabelle hanno un bordo visibile (vedi `.slide table`); le chart hanno solo `box-shadow`. L'utente vuole anche una border line per coerenza visiva con le tabelle.
 
