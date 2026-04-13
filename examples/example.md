@@ -189,7 +189,7 @@ services:
     *   **Anomaly detection:** Real-time alerting on usage patterns.
     *   **Smart recommendations:** Content and feature suggestions based on behavior.
     *   **Natural language queries:** AI-powered search across documentation and data.
-:::chart area
+:::chart line filled
 ### Event Pipeline Throughput (K events/sec)
 | Hour  | Throughput |
 |-------|------------|

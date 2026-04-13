@@ -2417,7 +2417,7 @@ I td centrali si spartiscono lo spazio rimanente uniformemente — le x-label re
 - I punti restano allineati alle x-label
 - Tutti i test passano
 
-## Milestone 75: Unify area into `line filled` modifier 🚧
+## Milestone 75: Unify area into `line filled` modifier ✅
 
 **Why:** Area chart è oggi un tipo separato (`:::chart area`) ma condivide quasi 100% del codepath con line — ogni fix M67-M73 ha dovuto essere applicato a entrambi. Unificarli riduce la superficie API, dimezza i test di line/area, e semplifica la documentazione. Area resta utile ma come *variante visiva* di line, attivata da un modifier `filled`.
 

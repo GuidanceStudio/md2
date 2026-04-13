@@ -331,8 +331,10 @@ La prima colonna è sempre l'etichetta (asse delle categorie). Le colonne succes
 | `bar`    | Barre orizzontali — ideale per confronti             |
 | `column` | Barre verticali — ideale per serie temporali         |
 | `line`   | Grafico a linea — trend e andamenti                  |
-| `area`   | Grafico ad area — come line ma con riempimento       |
+| `line filled` | Linea con riempimento sotto la curva (era `area`) |
 | `pie`    | Grafico a torta — proporzioni (solo singola serie)   |
+
+> `:::chart area` resta supportato come alias di `:::chart line filled` per retro-compatibilità.
 
 #### Opzioni
 

@@ -194,8 +194,12 @@ def preprocess_chart_directives(markdown_text):
     def _replace_chart(match):
         nonlocal has_charts
         chart_type = match.group(1).strip().lower()
-        # Old options are silently ignored (backward compat)
+        options = match.group(2).strip().lower().split()
         content = match.group(3)
+
+        # M75: `:::chart line filled` is a friendlier alias for `:::chart area`
+        if chart_type == "line" and "filled" in options:
+            chart_type = "area"
 
         if chart_type not in _VALID_CHART_TYPES:
             return content
