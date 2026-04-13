@@ -357,7 +357,7 @@ def transform_charts(html_content):
         # Line/area: use graduated Y-axis pattern (Charts.css official examples)
         if chart_type in ("line", "area"):
             classes.append("show-primary-axis")
-            classes.append("show-3-secondary-axes")
+            classes.append("show-4-secondary-axes")
             classes.append("hide-data")
         class_str = " ".join(classes)
         # Whether to show .data spans: auto per type

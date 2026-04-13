@@ -2326,3 +2326,69 @@ Charts.css line/area con `show-labels` ospita i `<th scope="row">` come x-labels
 - Playwright: `|yaxis top span center - td.top| ≤ 2px`
 - X-labels (Q1, Q2, ...) visibili sotto il chart, allineate alle colonne td
 - 372+ test unit passano
+
+## Milestone 71: Line/area gridlines aligned to Y labels — show-4-secondary-axes ✅
+
+**Why:** Con 5 tick label (es. 0, 2500, 5000, 7500, 10000), Charts.css `show-3-secondary-axes` disegna gridline orizzontali a 0%, 33%, 66% del tbody (3 strisce uguali), che corrispondono ai valori 0, 3333, 6667. Le label invece sono a 0%, 25%, 50%, 75%, 100% (4 gap). **Le righe non passano per i numeri.** Visivamente la "scala" sembra rotta. M68 aveva scelto show-3 per errore.
+
+**Approach:** usare `show-4-secondary-axes` (4 strisce ⇒ gridline a 0%, 25%, 50%, 75%) + `show-primary-axis` (linea a 100%) = 5 linee orizzontali, una per ogni label.
+
+**Tasks:**
+- [ ] `core.py`: cambiare `show-3-secondary-axes` → `show-4-secondary-axes` per line/area
+- [ ] Aggiornare i test M67/M68 che asseriscono `show-3-secondary-axes` / `show-4-secondary-axes not in`
+- [ ] Test nuovo: `test_line_uses_4_secondary_axes`, `test_area_uses_4_secondary_axes`
+- [ ] Test visuale Playwright: per il chart "User Growth by Segment", misurare le y delle 5 label dello yaxis e confrontarle con le y delle gridline reali (estratte dal background-image del tr o calcolate come `td.top + i*td.height/4`); ogni gridline deve coincidere (±2px) con il center del label corrispondente
+- [ ] Rigenerare example, screenshot, ispezionare
+- [ ] Commit & push
+
+**Done when:**
+- Le 5 gridline orizzontali coincidono visivamente con i label 0/2500/5000/7500/10000
+- Tutti i test passano
+
+## Milestone 72: Pie chart — value labels inside slices 🚧
+
+**Why:** Le pie hanno la legenda sotto con `label (value)`. Sarebbe più leggibile avere il valore *dentro* la fetta, sempre orientato orizzontalmente (mai inclinato sulla rotazione della fetta).
+
+**Approach:** in `transform_charts()` per pie, calcolare per ogni fetta:
+- angolo medio in radianti: `theta_i = 2π * (cumulative_i + size_i/2) / total`
+- posizione radiale in percentuale dal centro: `r = 30%` (compromesso tra centro e bordo per leggibilità)
+- coordinate: `left = 50% + r·sin(theta)`, `top = 50% - r·cos(theta)` (CSS y cresce verso il basso, partenza a ore 12 = nord)
+
+Renderizzare ogni etichetta come `<span class="md2-pie-label" style="left:..%; top:..%">value</span>` dentro un wrapper `position: relative` che ricopre la pie. Testo *non ruotato*, sempre orizzontale.
+
+**Fallback:** per fette troppo piccole (size < 6% del totale) il testo non ci sta e si sovrappone al vicino. In quel caso: nascondere il label inline e mantenerlo nella legenda esistente (che resta sotto la pie). Per le altre fette, rimuovere il valore dalla legenda (lasciando solo il nome).
+
+**Tasks:**
+- [ ] `core.py`: per pie generare `<div class="md2-pie-wrapper">` con la table dentro + `<span class="md2-pie-label">` per ogni fetta con size ≥ 6%
+- [ ] Calcolo trigonometrico in Python (math.sin/cos) per posizione
+- [ ] Per fette < 6%: skip label inline, mantieni `(value)` nella legenda solo per quelle
+- [ ] Per fette ≥ 6%: legenda mostra solo il nome (no parentesi)
+- [ ] CSS: `.md2-pie-wrapper { position: relative }`, `.md2-pie-label { position: absolute; transform: translate(-50%, -50%); color: #fff; font-weight: 600; text-shadow: 0 1px 2px rgba(0,0,0,0.5); pointer-events: none; font-size: 0.85rem }`
+- [ ] Test unit: HTML pie con 4 fette ~equilibrate ha 4 `md2-pie-label`
+- [ ] Test unit: pie con una fetta da 3% non emette label inline per quella fetta, ma la legenda ha ancora il `(value)` per essa
+- [ ] Test unit: posizioni left/top calcolate correttamente per fette singolari (es. 100%, 50%/50%, 25/25/25/25)
+- [ ] Test visuale Playwright: screenshot di un chart pie con label visibili dentro le fette
+- [ ] Rigenerare example, ispezionare
+- [ ] Commit & push
+
+**Done when:**
+- Pie chart con fette ≥ 6% mostra il valore dentro la fetta, testo orizzontale
+- Pie chart con fette piccole continua a usare la legenda esterna
+- Tutti i test passano
+
+## Milestone 73: Border around chart wrapper 🚧
+
+**Why:** Le tabelle hanno un bordo visibile (vedi `.slide table`); le chart hanno solo `box-shadow`. L'utente vuole anche una border line per coerenza visiva con le tabelle.
+
+**Approach:** aggiungere `border: 1px solid var(--table-border)` a `.md2-chart`, in linea con lo stile delle tabelle.
+
+**Tasks:**
+- [ ] `style.css`: aggiungere `border: 1px solid var(--table-border)` a `.md2-chart`
+- [ ] Verificare in dark mode
+- [ ] Test CSS: `.md2-chart` regola contiene `border:`
+- [ ] Rigenerare example, screenshot
+- [ ] Commit & push
+
+**Done when:**
+- Tutti i chart hanno un bordo simile a quello delle tabelle
+- Test passano

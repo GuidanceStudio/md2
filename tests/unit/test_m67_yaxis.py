@@ -121,7 +121,7 @@ def test_line_has_axis_classes():
     )
     html, _ = process_markdown(md)
     assert "show-primary-axis" in html
-    assert "show-3-secondary-axes" in html
+    assert "show-4-secondary-axes" in html
 
 
 def test_line_hides_inline_data():

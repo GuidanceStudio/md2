@@ -78,8 +78,9 @@ def test_bar_still_uses_data_max():
 
 # --- 3 secondary axes ---
 
-def test_line_uses_3_secondary_axes():
-    """Line chart uses show-3-secondary-axes (not 4) for proper tick alignment."""
+def test_line_uses_4_secondary_axes():
+    """M71: Line uses show-4-secondary-axes → 4 secondary gridlines + primary
+    axis = 5 lines, one per Y label (0/25/50/75/100%)."""
     md = (
         ":::chart line\n"
         "| Q | V |\n"
@@ -89,12 +90,11 @@ def test_line_uses_3_secondary_axes():
         ":::"
     )
     html, _ = process_markdown(md)
-    assert "show-3-secondary-axes" in html
-    assert "show-4-secondary-axes" not in html
+    assert "show-4-secondary-axes" in html
+    assert "show-3-secondary-axes" not in html
 
 
-def test_area_uses_3_secondary_axes():
-    """Area chart also uses show-3-secondary-axes."""
+def test_area_uses_4_secondary_axes():
     md = (
         ":::chart area\n"
         "| T | V |\n"
@@ -104,5 +104,5 @@ def test_area_uses_3_secondary_axes():
         ":::"
     )
     html, _ = process_markdown(md)
-    assert "show-3-secondary-axes" in html
-    assert "show-4-secondary-axes" not in html
+    assert "show-4-secondary-axes" in html
+    assert "show-3-secondary-axes" not in html
