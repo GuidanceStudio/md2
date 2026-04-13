@@ -2277,3 +2277,52 @@ Applicare `.md2-chart-body { height: min(300px, 40vh); }` per forzare il body a 
 - Single-line "Projected User Growth" con max 25000 ha Y-axis 0-30000
 - Y labels allineati visivamente con gridline (grazie a flex body height esplicito)
 - Chart con dati clustered `[50, 55, 60]` usa tutta l'altezza del chart
+
+## Milestone 70: Baseline alignment — decouple x-labels from Charts.css tbody ✅
+
+**Why:** Dopo M67-M69 i dati line/area vengono ancora disegnati *sotto* il label "0" dello yaxis. Misure Playwright (chart "Projected User Growth"):
+- `table.height = 300px` (forzato)
+- `tbody.height = 335.56px` → tbody sfora la table di 35.56px
+- `td.height = 310.56px`, `td.bottom = table.bottom + 10.56px`
+- Yaxis "0" label center ≈ `table.bottom - 30px`
+- Chart baseline reale (td.bottom) ≈ `table.bottom + 10.56px`
+- **Disallineamento ~40px**: il punto 3200/30000 (norm 0.107) viene renderizzato 1.4px sotto il bottom del label "0" → visivamente i dati "spariscono" sotto la baseline.
+
+Charts.css line/area con `show-labels` ospita i `<th scope="row">` come x-labels *overflow* della tbody oltre la table. Il nostro yaxis è constrainato a `height = table.height = 300px` e prova a compensare con `padding-bottom: 24px`, ma il baseline reale non è a `table.bottom - 24px`: è a `table.bottom + overflow` dove `overflow` dipende da font metrics + `--labels-size` implicito. Qualsiasi fix matematico sul padding è fragile.
+
+**Approach:** disaccoppiare le x-labels dalla tabella Charts.css. La tabella gestisce solo il chart; le x-labels sono un `<div>` sibling sotto `md2-chart-body`.
+
+1. In `transform_charts()` per line/area:
+   - Continuare a emettere `<th scope="row">` nel HTML (per accessibilità) ma nasconderli via CSS.
+   - Aggiungere `<div class="md2-chart-xlabels">` come sibling dopo `.md2-chart-body`, contenente uno `<span>` per ogni riga dati, nell'ordine delle righe.
+2. In `style.css`:
+   - `.md2-chart .charts-css.line, .md2-chart .charts-css.area { --labels-size: 0; }` → tbody non sfora, `td.bottom == table.bottom`.
+   - Nascondere `th[scope="row"]` dentro line/area → zero spazio per etichette interne.
+   - `.md2-chart-xlabels { display: flex; padding-left: calc(48px + 8px); font-size: 0.75rem; opacity: 0.7; margin-top: 4px; }` allineato all'inizio del td (yaxis 48px + gap 8px).
+   - `.md2-chart-xlabels span { flex: 1; text-align: center; }` — ogni label centrato sotto il td corrispondente.
+   - Rimuovere `padding-top: 6px` e `padding-bottom: 24px` dal `.md2-chart-yaxis`. Lasciare yaxis alto come chart table (300px). Per evitare clipping del primo/ultimo label: `margin-top: -0.5em` sul primo span, `margin-bottom: -0.5em` sull'ultimo, oppure `transform: translateY(-50%)` sul primo e `translateY(50%)` sull'ultimo.
+
+**Why questa via è pulita:** elimina la dipendenza dall'overflow implicito di Charts.css e dal valore effettivo di `--labels-size`. Il chart data area diventa esattamente il table box; lo yaxis è 1:1 con quel box.
+
+**Tasks:**
+- [x] `transform_charts()`: per line/area generare `<div class="md2-chart-xlabels">` come sibling di `.md2-chart-body` dentro `.md2-chart`
+- [x] **Root cause aggiuntiva scoperta:** Charts.css imposta `aspect-ratio: 21/9` su `.line/.area tbody`, costringendo `tbody.height = width * 9/21 ≈ 335px`, che sfora la table di 300px. Override con `aspect-ratio: auto; height: 100%`.
+- [ ] `style.css`: `--labels-size: 0` su `.charts-css.line` e `.charts-css.area`
+- [ ] `style.css`: nascondere `th[scope="row"]` dentro line/area
+- [ ] `style.css`: classe `.md2-chart-xlabels` con flex + padding-left per allineamento ai td
+- [ ] `style.css`: rimuovere padding top/bottom da `.md2-chart-yaxis`; gestire clipping primo/ultimo span
+- [ ] Test unit: HTML per line/area contiene `md2-chart-xlabels` con N span = N righe dati
+- [ ] Test unit: HTML per bar/column/pie/stacked NON contiene `md2-chart-xlabels`
+- [ ] Test unit: span del xlabels in ordine originale (Q1, Q2, Q3, Q4)
+- [ ] Test visuale Playwright: `|yaxis "0" span center - td.bottom| ≤ 2px` nel chart "Projected User Growth"
+- [ ] Test visuale Playwright: `|yaxis top span center - td.top| ≤ 2px`
+- [ ] Test visuale Playwright: il punto dati più basso (Q1=3200, norm 0.107) è disegnato SOPRA la linea del label "0"
+- [ ] Rigenerare `examples/example.html` e ispezionare Event Pipeline, Projected User Growth, User Growth by Segment
+- [ ] Commit & push
+
+**Done when:**
+- Screenshot dei chart "Event Pipeline", "Projected User Growth" e "User Growth by Segment" mostrano tutte le linee/aree sopra il label "0" dello yaxis
+- Playwright: `|yaxis "0" span center - td.bottom| ≤ 2px` per tutti i line/area chart di esempio
+- Playwright: `|yaxis top span center - td.top| ≤ 2px`
+- X-labels (Q1, Q2, ...) visibili sotto il chart, allineate alle colonne td
+- 372+ test unit passano

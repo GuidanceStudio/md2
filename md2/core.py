@@ -473,7 +473,11 @@ def transform_charts(html_content):
             )
             yaxis_html = f'<div class="md2-chart-yaxis">{tick_spans}</div>'
             body_html = f'<div class="md2-chart-body">{yaxis_html}{table_html}</div>'
-            result = body_html + legend_html
+            xlabel_spans = "".join(
+                f'<span>{label}</span>' for label, _ in data_rows
+            )
+            xlabels_html = f'<div class="md2-chart-xlabels">{xlabel_spans}</div>'
+            result = body_html + xlabels_html + legend_html
 
         return f'<div class="md2-chart">{title_html}{result}</div>'
 

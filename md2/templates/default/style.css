@@ -204,17 +204,27 @@ body {
 }
 .md2-chart .charts-css.line {
     height: min(300px, 40vh); --line-size: 3px;
+    --labels-size: 0;
 }
 .md2-chart .charts-css.area {
     height: min(300px, 40vh); --line-size: 3px;
+    --labels-size: 0;
 }
-/* Line/area need extra wrapper padding for x-axis labels (overflow tbody)
-   and for the max value pill at the top */
-/* Line/area: chart body is a flex row with Y-axis on the left and the
-   chart table on the right. Explicit height matches the chart table
-   (Charts.css height: min(300px, 40vh)), so the yaxis stretches exactly
-   to the chart area and not beyond (which would cause label misalignment
-   with the tbody overflow for x-axis labels). */
+/* M70: x-labels are decoupled into a sibling .md2-chart-xlabels div.
+   Hide Charts.css internal row headers so tbody fills the table exactly
+   (no overflow), guaranteeing td.bottom == table.bottom.
+   Also override Charts.css default aspect-ratio: 21/9 on line/area tbody,
+   which forces tbody.height = width * 9/21 and overflows the fixed table
+   height. With aspect-ratio: auto, tbody respects the table height. */
+.md2-chart .charts-css.line tbody,
+.md2-chart .charts-css.area tbody {
+    aspect-ratio: auto;
+    height: 100%;
+}
+.md2-chart .charts-css.line tbody th[scope="row"],
+.md2-chart .charts-css.area tbody th[scope="row"] {
+    display: none;
+}
 .md2-chart-body {
     display: flex;
     align-items: stretch;
@@ -225,7 +235,6 @@ body {
     flex: 1;
     min-width: 0;
     margin: 0 !important;
-    align-self: flex-start;
 }
 .md2-chart-yaxis {
     box-sizing: border-box;
@@ -238,13 +247,26 @@ body {
     color: var(--text-color);
     opacity: 0.7;
     pointer-events: none;
-    /* Compensate for Charts.css --labels-size (x-axis labels area at
-       bottom of tbody). The yaxis labels should cover only the DATA area.
-       box-sizing: border-box ensures padding is included in the flex height. */
-    padding-bottom: 24px;
-    padding-top: 6px;
 }
-.md2-chart-yaxis span { line-height: 1; }
+.md2-chart-yaxis span {
+    line-height: 1;
+    display: block;
+}
+/* Center the first/last span on the top/bottom edges of the data area
+   so they align with td.top and td.bottom (the chart baseline). */
+.md2-chart-yaxis span:first-child { transform: translateY(-50%); }
+.md2-chart-yaxis span:last-child  { transform: translateY(50%); }
+/* M70: x-axis labels rendered outside Charts.css, aligned to td columns.
+   Padding-left = yaxis flex-basis (48px) + flex gap (8px). */
+.md2-chart-xlabels {
+    display: flex;
+    padding-left: calc(48px + 8px);
+    margin-top: 6px;
+    font-size: 0.75rem;
+    color: var(--text-color);
+    opacity: 0.7;
+}
+.md2-chart-xlabels span { flex: 1; text-align: center; }
 /* M63 removed in M65: multi-line/area no longer have ul.legend
    (endpoint labels with "Name: Value" format serve as legend) */
 .md2-chart .charts-css.pie {
