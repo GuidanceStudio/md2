@@ -446,7 +446,7 @@ Tag HTML sicuri vengono preservati: `<iframe>` per embed video/mappe, `<img>` co
 - **Barra di progresso** — linea blu in cima alla pagina
 - **Scroll-snap** — ogni slide occupa l'intero viewport
 - **Fade-in** — il contenuto delle slide appare con animazione
-- **Print** — `Ctrl+P` produce un layout pulito senza UI, una slide per pagina. I grafici mantengono i colori e non vengono spezzati tra pagine
+- **Print** — `Ctrl+P` produce un layout pulito senza UI, una slide per pagina, con margini uniformi (15mm) tra browser. I grafici mantengono i colori e non vengono spezzati tra pagine; le tabelle conservano l'header colorato
 - **Meta tag Open Graph** — titolo e descrizione per la condivisione
 - **Favicon inline** — nessun 404 nel browser
 - **Responsive** — breakpoint a 1024px (tablet) e 768px (mobile) con menu hamburger

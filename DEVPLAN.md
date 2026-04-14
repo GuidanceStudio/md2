@@ -2470,10 +2470,10 @@ La regola print attuale (`style.css:438-441`) elenca `#sidebar-toggle` con `disp
 Rendere la regola print blindata aggiungendo proprietà ridondanti che eliminano il bottone in qualunque renderer. Non introdurre classi nuove (`.no-print`) per non toccare il markup: agire solo nel CSS.
 
 **Tasks:**
-- [ ] `style.css` `@media print`: per `#sidebar-toggle` (e per simmetria `#menu-toggle`, `#theme-toggle`, `#progress-bar`, `#slide-indicator`) aggiungere oltre a `display: none !important` anche `visibility: hidden !important`, `position: absolute !important`, `left: -9999px !important`, `width: 0 !important`, `height: 0 !important`, `overflow: hidden !important`. La combinazione garantisce sparizione totale anche se un renderer ignora una delle proprietà.
-- [ ] Rigenerare `examples/example.html` con `python -m md2 examples/example.md` per verificare il CSS aggiornato nel file buildato.
-- [ ] Test manuale: aprire `example.html` in Chrome → Ctrl+P → Save as PDF → verificare che nessun bottone UI compaia in nessuna pagina del PDF, in stato sidebar aperta E sidebar collassata.
-- [ ] Commit & push
+- [x] `style.css` `@media print`: per `#sidebar-toggle` (e per simmetria `#menu-toggle`, `#theme-toggle`, `#progress-bar`, `#slide-indicator`) aggiungere oltre a `display: none !important` anche `visibility: hidden !important`, `position: absolute !important`, `left: -9999px !important`, `width: 0 !important`, `height: 0 !important`, `overflow: hidden !important`. La combinazione garantisce sparizione totale anche se un renderer ignora una delle proprietà.
+- [x] Rigenerare `examples/example.html` con `python -m md2 examples/example.md` per verificare il CSS aggiornato nel file buildato.
+- [x] Test manuale: aprire `example.html` in Chrome → Ctrl+P → Save as PDF → verificare che nessun bottone UI compaia in nessuna pagina del PDF, in stato sidebar aperta E sidebar collassata.
+- [x] Commit & push
 
 **Done when:**
 - Il PDF stampato dal browser non mostra `#sidebar-toggle` (né altri elementi UI) in nessuna pagina, in entrambi gli stati della sidebar.
@@ -2499,14 +2499,14 @@ Tutte le modifiche dentro `@media print` di `style.css`. Nessun cambiamento al m
 3. In stampa: `.slide table { border-radius: 0 !important; }` — rinuncia agli angoli arrotondati nelle tabelle stampate (scelta semplice e priva di rischio di regressione su `border-collapse`).
 
 **Tasks:**
-- [ ] Test unit: nel blocco `@media print` esiste una regola che applica `background: none !important` (o `transparent`) ai selettori `.md2-chart .charts-css th` e `.md2-chart .charts-css td`.
-- [ ] Test unit: nel blocco `@media print` `.slide table` (o un selettore che lo include) ha `print-color-adjust: exact !important`.
-- [ ] Test unit: nel blocco `@media print` `.slide th` (o `.slide table`/`thead`/`tr`/`th`/`td`) ha `print-color-adjust: exact !important`.
-- [ ] Test unit: nel blocco `@media print` `.slide table` ha `border-radius: 0 !important`.
-- [ ] Implementare le 3 regole nel blocco `@media print` di `md2/templates/default/style.css`.
-- [ ] Reinizializzare `~/.md2/templates/default` e rigenerare `examples/example.html`.
-- [ ] Verifica manuale: stampa PDF, controlla che (a) le etichette assi nei chart siano senza sfondo grigio, (b) l'header delle tabelle sia colorato, (c) le tabelle abbiano angoli quadrati puliti.
-- [ ] Commit & push.
+- [x] Test unit: nel blocco `@media print` esiste una regola che applica `background: none !important` (o `transparent`) ai selettori `.md2-chart .charts-css th` e `.md2-chart .charts-css td`. *(Nota: M78 ha poi rimosso `td` dall'override perché rompeva i colori delle barre.)*
+- [x] Test unit: nel blocco `@media print` `.slide table` (o un selettore che lo include) ha `print-color-adjust: exact !important`.
+- [x] Test unit: nel blocco `@media print` `.slide th` (o `.slide table`/`thead`/`tr`/`th`/`td`) ha `print-color-adjust: exact !important`.
+- [x] Test unit: nel blocco `@media print` `.slide table` ha `border-radius: 0 !important`.
+- [x] Implementare le 3 regole nel blocco `@media print` di `md2/templates/default/style.css`.
+- [x] Reinizializzare `~/.md2/templates/default` e rigenerare `examples/example.html`.
+- [x] Verifica manuale: stampa PDF, controlla che (a) le etichette assi nei chart siano senza sfondo grigio, (b) l'header delle tabelle sia colorato, (c) le tabelle abbiano angoli quadrati puliti.
+- [x] Commit & push.
 
 **Done when:**
 - Tutti i test M77 passano.
@@ -2534,11 +2534,11 @@ Il problema originale che M77 cercava di risolvere era `.slide th { background-c
 Rimuovere il selettore `.md2-chart .charts-css td` dalla regola di override. Mantenere solo `.md2-chart .charts-css th { background: none !important; background-color: transparent !important; }`.
 
 **Tasks:**
-- [ ] Aggiornare il test M77 `test_m77_chart_cells_have_transparent_background_in_print` per richiedere SOLO la regola su `th` (non più su `td`).
-- [ ] Aggiungere test che garantisce assenza di un override `background:none` sui `td` dei chart in print (per evitare di reintrodurre il bug).
-- [ ] Rimuovere `.md2-chart .charts-css td` dalla regola in `style.css` print.
-- [ ] Reinit templates utente, rigenerare `examples/example.html`.
-- [ ] Commit & push.
+- [x] Aggiornare il test M77 `test_m77_chart_cells_have_transparent_background_in_print` per richiedere SOLO la regola su `th` (non più su `td`). *(Rinominato in `test_m77_chart_th_has_transparent_background_in_print`.)*
+- [x] Aggiungere test che garantisce assenza di un override `background:none` sui `td` dei chart in print (per evitare di reintrodurre il bug). *(`test_m78_chart_td_background_not_overridden_in_print`.)*
+- [x] Rimuovere `.md2-chart .charts-css td` dalla regola in `style.css` print.
+- [x] Reinit templates utente, rigenerare `examples/example.html`.
+- [x] Commit & push.
 
 **Done when:**
 - I bar/column/pie chart hanno colori corretti in stampa.
@@ -2556,10 +2556,10 @@ I margini del PDF generato dipendono dai default del browser di stampa (Chrome, 
 Aggiungere una regola `@page { margin: 15mm }` al `style.css` (fuori dal blocco `@media print`, perché `@page` è già paged-media by nature). È l'unica parte di `@page` che i browser onorano davvero in `Ctrl+P → Save as PDF`. Nessun header/footer, nessun numero di pagina — quelli restano delegati al dialogo di stampa del sistema.
 
 **Tasks:**
-- [ ] Test unit: `style.css` contiene una regola `@page { ... margin ... }`.
-- [ ] Aggiungere la regola `@page { margin: 15mm; }` in `style.css`.
-- [ ] Reinit templates utente, rigenerare `examples/example.html`.
-- [ ] Commit & push.
+- [x] Test unit: `style.css` contiene una regola `@page { ... margin ... }`.
+- [x] Aggiungere la regola `@page { margin: 15mm; }` in `style.css`.
+- [x] Reinit templates utente, rigenerare `examples/example.html`.
+- [x] Commit & push.
 
 **Done when:**
 - Test passa.
