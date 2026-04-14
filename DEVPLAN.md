@@ -2453,3 +2453,28 @@ Internamente:
 - Una sola lista di test/regole CSS gestisce entrambi
 - README aggiornato
 - Tutti i test passano
+
+---
+
+## Milestone 76: Fix — sidebar-toggle visibile in stampa PDF ✅
+
+**Problema:**
+Stampando in PDF dal browser, il bottone `#sidebar-toggle` (chevron `«`/`»`) resta visibile in alto a sinistra in ogni pagina del PDF, nonostante la regola `@media print` lo includa già nell'elenco `display: none !important`.
+
+**Ipotesi sulla causa:**
+La regola print attuale (`style.css:438-441`) elenca `#sidebar-toggle` con `display: none !important`. In teoria dovrebbe bastare. Possibili cause concrete del fallimento:
+1. Il bottone è `position: fixed` con `z-index: 1002`: alcuni motori di stampa renderizzano gli elementi `position: fixed` ripetendoli su ogni pagina o non rispettano `display:none` su elementi fixed con z-index alto.
+2. La regola `#sidebar.collapsed ~ #sidebar-toggle { left: 0; }` (selettore sibling) potrebbe interagire stranamente quando `#sidebar` ha `display:none` (l'elemento esce dal flow ma il selettore continua a matchare). Improbabile ma da escludere.
+
+**Approccio:**
+Rendere la regola print blindata aggiungendo proprietà ridondanti che eliminano il bottone in qualunque renderer. Non introdurre classi nuove (`.no-print`) per non toccare il markup: agire solo nel CSS.
+
+**Tasks:**
+- [ ] `style.css` `@media print`: per `#sidebar-toggle` (e per simmetria `#menu-toggle`, `#theme-toggle`, `#progress-bar`, `#slide-indicator`) aggiungere oltre a `display: none !important` anche `visibility: hidden !important`, `position: absolute !important`, `left: -9999px !important`, `width: 0 !important`, `height: 0 !important`, `overflow: hidden !important`. La combinazione garantisce sparizione totale anche se un renderer ignora una delle proprietà.
+- [ ] Rigenerare `examples/example.html` con `python -m md2 examples/example.md` per verificare il CSS aggiornato nel file buildato.
+- [ ] Test manuale: aprire `example.html` in Chrome → Ctrl+P → Save as PDF → verificare che nessun bottone UI compaia in nessuna pagina del PDF, in stato sidebar aperta E sidebar collassata.
+- [ ] Commit & push
+
+**Done when:**
+- Il PDF stampato dal browser non mostra `#sidebar-toggle` (né altri elementi UI) in nessuna pagina, in entrambi gli stati della sidebar.
+- Nessuna regressione visiva sull'HTML in modalità schermo.

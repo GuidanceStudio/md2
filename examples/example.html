@@ -448,9 +448,20 @@ body.dark-mode .md2-chart .charts-css { color: var(--text-color); }
 
 /* Print stylesheet */
 @media print {
-    /* Hide UI elements */
+    /* Hide UI elements — bulletproof combo so no print renderer can leak them */
     #sidebar, #theme-toggle, #menu-toggle, #progress-bar,
-    #slide-indicator, #sidebar-toggle { display: none !important; }
+    #slide-indicator, #sidebar-toggle {
+        display: none !important;
+        visibility: hidden !important;
+        position: absolute !important;
+        left: -9999px !important;
+        top: -9999px !important;
+        width: 0 !important;
+        height: 0 !important;
+        overflow: hidden !important;
+        opacity: 0 !important;
+        pointer-events: none !important;
+    }
     body { display: block; height: auto; overflow: visible; }
     #main {
         overflow: visible; padding: 0;
