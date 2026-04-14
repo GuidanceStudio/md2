@@ -499,10 +499,10 @@ body.dark-mode .md2-chart .charts-css { color: var(--text-color); }
        perimeter cell borders punch through the rounded corners and look ugly. */
     .slide table { border-radius: 0 !important; }
 
-    /* Chart axis labels are <th>/<td> inside .slide, so the .slide th
-       gray background above leaks onto them. Force transparent. */
-    .md2-chart .charts-css th,
-    .md2-chart .charts-css td {
+    /* Chart axis labels are <th> inside .slide, so the .slide th gray
+       background above leaks onto them. Force transparent on <th> only —
+       NEVER on <td>, which charts-css uses to render bar/column/pie colors. */
+    .md2-chart .charts-css th {
         background: none !important;
         background-color: transparent !important;
     }

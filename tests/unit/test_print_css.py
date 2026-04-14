@@ -118,20 +118,34 @@ def test_m76_ui_controls_have_bulletproof_hiding():
 # --- M77: chart axis labels, table header, table border-radius in print ---
 
 
-def test_m77_chart_cells_have_transparent_background_in_print():
-    """Chart inner th/td must have transparent background in print so the
-    `.slide th { background: #f0f0f0 !important }` rule doesn't bleed onto
-    chart axis labels.
+def test_m77_chart_th_has_transparent_background_in_print():
+    """Chart inner <th> (axis labels) must have transparent background in print
+    so the `.slide th { background: #f0f0f0 !important }` rule doesn't bleed
+    onto chart axis labels.
+
+    NOTE: only <th>, NOT <td>. charts-css uses `td { background: var(--color-N) }`
+    to render bar/column/pie colors, so overriding td would kill all chart colors
+    (M78 regression fix).
     """
     print_css = _get_print_block()
     cleaned = re.sub(r'/\*.*?\*/', '', print_css, flags=re.DOTALL)
     th_blocks = _rule_blocks_for_selector(cleaned, ".md2-chart .charts-css th")
-    td_blocks = _rule_blocks_for_selector(cleaned, ".md2-chart .charts-css td")
     assert th_blocks, "Missing print rule for `.md2-chart .charts-css th`"
-    assert td_blocks, "Missing print rule for `.md2-chart .charts-css td`"
-    combined = "\n".join(th_blocks + td_blocks)
+    combined = "\n".join(th_blocks)
     assert re.search(r'background\s*:\s*(none|transparent)[^;]*!important', combined), \
-        "Chart cells must have `background: none|transparent !important` in print"
+        "Chart <th> must have `background: none|transparent !important` in print"
+
+
+def test_m78_chart_td_background_not_overridden_in_print():
+    """Chart <td> background must NOT be forced to none/transparent in print —
+    charts-css uses td background for bar colors. Regression guard for M77 bug.
+    """
+    print_css = _get_print_block()
+    cleaned = re.sub(r'/\*.*?\*/', '', print_css, flags=re.DOTALL)
+    td_blocks = _rule_blocks_for_selector(cleaned, ".md2-chart .charts-css td")
+    for body in td_blocks:
+        assert not re.search(r'background(-color)?\s*:\s*(none|transparent)', body), \
+            "Chart <td> must NOT have background:none/transparent in print (kills bar colors)"
 
 
 def test_m77_table_has_print_color_adjust_exact():

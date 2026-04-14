@@ -2512,3 +2512,35 @@ Tutte le modifiche dentro `@media print` di `style.css`. Nessun cambiamento al m
 - Tutti i test M77 passano.
 - Stampando in PDF: chart axis labels senza sfondo grigio, table header colorato, tabelle con angoli quadrati netti.
 - Nessuna regressione a schermo.
+
+---
+
+## Milestone 78: Fix regression M77 — chart bar colors killed in print ✅
+
+**Problema:**
+M77 ha aggiunto in `@media print` la regola:
+```
+.md2-chart .charts-css th, .md2-chart .charts-css td {
+    background: none !important;
+    background-color: transparent !important;
+}
+```
+Però `charts.min.css` usa `td { background: var(--color-N) }` per disegnare le barre dei bar/column chart (e analogo per torta). Forzando `background: none` sui `<td>` ho ucciso tutti i colori dei grafici in stampa.
+
+**Causa radice:**
+Il problema originale che M77 cercava di risolvere era `.slide th { background-color: #f0f0f0 !important }` che colorava i `<th>` interni ai chart. Quella regola colpisce SOLO i `<th>`, non i `<td>`. Quindi l'override deve essere solo su `<th>`. I `<td>` non vanno toccati.
+
+**Approccio:**
+Rimuovere il selettore `.md2-chart .charts-css td` dalla regola di override. Mantenere solo `.md2-chart .charts-css th { background: none !important; background-color: transparent !important; }`.
+
+**Tasks:**
+- [ ] Aggiornare il test M77 `test_m77_chart_cells_have_transparent_background_in_print` per richiedere SOLO la regola su `th` (non più su `td`).
+- [ ] Aggiungere test che garantisce assenza di un override `background:none` sui `td` dei chart in print (per evitare di reintrodurre il bug).
+- [ ] Rimuovere `.md2-chart .charts-css td` dalla regola in `style.css` print.
+- [ ] Reinit templates utente, rigenerare `examples/example.html`.
+- [ ] Commit & push.
+
+**Done when:**
+- I bar/column/pie chart hanno colori corretti in stampa.
+- Le etichette assi (`<th>`) non hanno sfondo grigio.
+- Tutti i test passano.
