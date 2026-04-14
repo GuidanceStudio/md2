@@ -2544,3 +2544,24 @@ Rimuovere il selettore `.md2-chart .charts-css td` dalla regola di override. Man
 - I bar/column/pie chart hanno colori corretti in stampa.
 - Le etichette assi (`<th>`) non hanno sfondo grigio.
 - Tutti i test passano.
+
+---
+
+## Milestone 79: Print — consistent page margins via `@page` ✅
+
+**Problema:**
+I margini del PDF generato dipendono dai default del browser di stampa (Chrome, Firefox, Safari hanno default diversi). Risultato inconsistente tra utenti.
+
+**Approccio:**
+Aggiungere una regola `@page { margin: 15mm }` al `style.css` (fuori dal blocco `@media print`, perché `@page` è già paged-media by nature). È l'unica parte di `@page` che i browser onorano davvero in `Ctrl+P → Save as PDF`. Nessun header/footer, nessun numero di pagina — quelli restano delegati al dialogo di stampa del sistema.
+
+**Tasks:**
+- [ ] Test unit: `style.css` contiene una regola `@page { ... margin ... }`.
+- [ ] Aggiungere la regola `@page { margin: 15mm; }` in `style.css`.
+- [ ] Reinit templates utente, rigenerare `examples/example.html`.
+- [ ] Commit & push.
+
+**Done when:**
+- Test passa.
+- PDF generato ha margini 15mm uniformi.
+- Nessuna regressione a schermo.

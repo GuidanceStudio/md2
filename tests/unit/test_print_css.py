@@ -136,6 +136,19 @@ def test_m77_chart_th_has_transparent_background_in_print():
         "Chart <th> must have `background: none|transparent !important` in print"
 
 
+def test_m79_page_rule_sets_margin():
+    """style.css must contain an `@page { margin: ... }` rule so browser
+    print output has consistent page margins across browsers."""
+    css = _get_style_css()
+    # Strip CSS comments so the `@page { margin }` inside our explanatory
+    # comment doesn't shadow the real rule.
+    cleaned = re.sub(r'/\*.*?\*/', '', css, flags=re.DOTALL)
+    match = re.search(r'@page\s*\{([^}]*)\}', cleaned)
+    assert match, "No @page rule found in style.css"
+    body = match.group(1)
+    assert re.search(r'margin\s*:\s*\S+', body), "@page rule must set `margin`"
+
+
 def test_m78_chart_td_background_not_overridden_in_print():
     """Chart <td> background must NOT be forced to none/transparent in print —
     charts-css uses td background for bar colors. Regression guard for M77 bug.

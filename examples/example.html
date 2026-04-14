@@ -447,6 +447,10 @@ body.dark-mode .md2-chart .charts-css { color: var(--text-color); }
 }
 
 /* Print stylesheet */
+/* Consistent PDF page margins across browsers (Chrome/Firefox/Safari all
+   honor @page { margin }; other @page features are ignored in browser print). */
+@page { margin: 15mm; }
+
 @media print {
     /* Hide UI elements — bulletproof combo so no print renderer can leak them */
     #sidebar, #theme-toggle, #menu-toggle, #progress-bar,
