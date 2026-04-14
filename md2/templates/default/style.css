@@ -475,6 +475,26 @@ body.dark-mode .md2-chart .charts-css { color: var(--text-color); }
     }
     .slide th { background-color: #f0f0f0 !important; }
 
+    /* Force the browser to actually print table backgrounds (otherwise Chrome
+       strips the th color even with !important). */
+    .slide table, .slide thead, .slide tbody, .slide tr,
+    .slide th, .slide td {
+        print-color-adjust: exact !important;
+        -webkit-print-color-adjust: exact !important;
+    }
+
+    /* Drop table border-radius in print: with border-collapse: collapse the
+       perimeter cell borders punch through the rounded corners and look ugly. */
+    .slide table { border-radius: 0 !important; }
+
+    /* Chart axis labels are <th>/<td> inside .slide, so the .slide th
+       gray background above leaks onto them. Force transparent. */
+    .md2-chart .charts-css th,
+    .md2-chart .charts-css td {
+        background: none !important;
+        background-color: transparent !important;
+    }
+
     /* Charts: preserve colors for printing */
     .md2-chart, .md2-chart * {
         print-color-adjust: exact !important;

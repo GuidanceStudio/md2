@@ -2478,3 +2478,37 @@ Rendere la regola print blindata aggiungendo proprietà ridondanti che eliminano
 **Done when:**
 - Il PDF stampato dal browser non mostra `#sidebar-toggle` (né altri elementi UI) in nessuna pagina, in entrambi gli stati della sidebar.
 - Nessuna regressione visiva sull'HTML in modalità schermo.
+
+---
+
+## Milestone 77: Fix print — chart axis labels, table headers, table border-radius ✅
+
+**Problemi (3 bug separati nel print CSS):**
+
+1. **Etichette degli assi dei chart con sfondo grigio in stampa.** La regola print `.slide th { background-color: #f0f0f0 !important }` colpisce anche i `<th>` interni a `.md2-chart .charts-css` (etichette asse Y per bar chart, asse X per column chart). A schermo è invisibile grazie a `.md2-chart .charts-css th { background: none }`, ma `!important` + `print-color-adjust: exact` sui chart fa stampare il grigio.
+
+2. **Header delle tabelle non colorato in stampa.** `.slide th { background-color: #f0f0f0 !important }` esiste nel blocco print, ma `.slide table`/celle non hanno `print-color-adjust: exact`, quindi Chrome rimuove i background colorati delle tabelle in stampa.
+
+3. **Border-radius delle tabelle non visibile in stampa.** `.slide table` usa `border-radius: 8px; overflow: hidden`, ma con `border-collapse: collapse` e bordi sulle celle perimetrali, in stampa l'angolo non viene clippato e appare quadrato.
+
+**Approccio:**
+Tutte le modifiche dentro `@media print` di `style.css`. Nessun cambiamento al markup né allo schermo.
+
+1. Aggiungere regola che forza `background: none !important` + `background-color: transparent !important` sui `<th>`/`<td>` interni a `.md2-chart .charts-css`, vincendo per specificità (`.md2-chart .charts-css th`) sulla regola `.slide th`.
+2. Aggiungere `print-color-adjust: exact !important` (e variante `-webkit-`) su `.slide table, .slide thead, .slide tr, .slide th, .slide td` per garantire che il background dell'header venga stampato.
+3. In stampa: `.slide table { border-radius: 0 !important; }` — rinuncia agli angoli arrotondati nelle tabelle stampate (scelta semplice e priva di rischio di regressione su `border-collapse`).
+
+**Tasks:**
+- [ ] Test unit: nel blocco `@media print` esiste una regola che applica `background: none !important` (o `transparent`) ai selettori `.md2-chart .charts-css th` e `.md2-chart .charts-css td`.
+- [ ] Test unit: nel blocco `@media print` `.slide table` (o un selettore che lo include) ha `print-color-adjust: exact !important`.
+- [ ] Test unit: nel blocco `@media print` `.slide th` (o `.slide table`/`thead`/`tr`/`th`/`td`) ha `print-color-adjust: exact !important`.
+- [ ] Test unit: nel blocco `@media print` `.slide table` ha `border-radius: 0 !important`.
+- [ ] Implementare le 3 regole nel blocco `@media print` di `md2/templates/default/style.css`.
+- [ ] Reinizializzare `~/.md2/templates/default` e rigenerare `examples/example.html`.
+- [ ] Verifica manuale: stampa PDF, controlla che (a) le etichette assi nei chart siano senza sfondo grigio, (b) l'header delle tabelle sia colorato, (c) le tabelle abbiano angoli quadrati puliti.
+- [ ] Commit & push.
+
+**Done when:**
+- Tutti i test M77 passano.
+- Stampando in PDF: chart axis labels senza sfondo grigio, table header colorato, tabelle con angoli quadrati netti.
+- Nessuna regressione a schermo.

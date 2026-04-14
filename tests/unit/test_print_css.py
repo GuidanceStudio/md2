@@ -113,3 +113,49 @@ def test_m76_ui_controls_have_bulletproof_hiding():
             assert re.search(pattern, combined), (
                 f"{selector} missing `{prop}: {value} !important` in print block"
             )
+
+
+# --- M77: chart axis labels, table header, table border-radius in print ---
+
+
+def test_m77_chart_cells_have_transparent_background_in_print():
+    """Chart inner th/td must have transparent background in print so the
+    `.slide th { background: #f0f0f0 !important }` rule doesn't bleed onto
+    chart axis labels.
+    """
+    print_css = _get_print_block()
+    cleaned = re.sub(r'/\*.*?\*/', '', print_css, flags=re.DOTALL)
+    th_blocks = _rule_blocks_for_selector(cleaned, ".md2-chart .charts-css th")
+    td_blocks = _rule_blocks_for_selector(cleaned, ".md2-chart .charts-css td")
+    assert th_blocks, "Missing print rule for `.md2-chart .charts-css th`"
+    assert td_blocks, "Missing print rule for `.md2-chart .charts-css td`"
+    combined = "\n".join(th_blocks + td_blocks)
+    assert re.search(r'background\s*:\s*(none|transparent)[^;]*!important', combined), \
+        "Chart cells must have `background: none|transparent !important` in print"
+
+
+def test_m77_table_has_print_color_adjust_exact():
+    """Tables must use print-color-adjust: exact so the th background prints."""
+    print_css = _get_print_block()
+    cleaned = re.sub(r'/\*.*?\*/', '', print_css, flags=re.DOTALL)
+    # Find any rule that targets .slide table (alone or in a list) and sets print-color-adjust
+    found = False
+    for match in re.finditer(r'([^{}]+)\{([^{}]*)\}', cleaned):
+        sels = [s.strip() for s in match.group(1).split(',')]
+        if ".slide table" in sels or ".slide th" in sels or ".slide td" in sels:
+            body = match.group(2)
+            if re.search(r'print-color-adjust\s*:\s*exact[^;]*!important', body):
+                found = True
+                break
+    assert found, "No print rule sets `print-color-adjust: exact !important` on .slide table/th/td"
+
+
+def test_m77_table_border_radius_zero_in_print():
+    """Table border-radius must be reset to 0 in print to avoid square-corner artifacts."""
+    print_css = _get_print_block()
+    cleaned = re.sub(r'/\*.*?\*/', '', print_css, flags=re.DOTALL)
+    blocks = _rule_blocks_for_selector(cleaned, ".slide table")
+    assert blocks, "No print rule found for `.slide table`"
+    combined = "\n".join(blocks)
+    assert re.search(r'border-radius\s*:\s*0[^;]*!important', combined), \
+        ".slide table must have `border-radius: 0 !important` in print"
