@@ -2565,3 +2565,116 @@ Aggiungere una regola `@page { margin: 15mm }` al `style.css` (fuori dal blocco 
 - Test passa.
 - PDF generato ha margini 15mm uniformi.
 - Nessuna regressione a schermo.
+
+---
+
+## Milestone 80: Graduated Y-axis per column/bar charts ✅
+
+**Problema:**
+I column e bar chart non hanno asse Y. Le barre sono normalizzate contro `max(positive_values)` e renderizzate con `--size: value/max`. Tre conseguenze:
+1. Valori negativi producono `--size` negativo che Charts.css ignora — barre invisibili (osservato il 06/05/2026 su un cashflow Maggio-Luglio dove tre valori erano negativi).
+2. Senza asse Y il lettore non ha riferimento di scala, e tantomeno una baseline a zero quando la serie attraversa lo zero.
+3. Per dataset all-negative, `max_val=1` (filtrato sui positivi) → `--size: -10`, `--size: -30`, eccetera, completamente fuori dal range Charts.css.
+
+L'asse Y graduato esiste già per line/area dopo M67-M69. Portarlo a column/bar è la fondazione su cui poggiano i milestones successivi.
+
+**Approccio:**
+Estendere la branch graduated-Y-axis di `transform_charts` in `core.py` per includere column/bar. Riutilizzare:
+- `_nice_ticks(data_min, data_max)` per calcolare i tick;
+- il wrapper `<div class="md2-chart-body">` con `md2-chart-yaxis` a sinistra + `md2-chart-xlabels` sotto;
+- le regole CSS già scritte per line/area in `.md2-chart-yaxis`, allargandole con un selettore generico (rimuovere eventuali `:not(.column)` se presenti).
+
+`data_min` e `data_max` per column/bar devono **includere sempre 0** nel dominio: `data_min = min(min(all_values), 0)`, `data_max = max(max(all_values), 0)`. Questo garantisce che la baseline sia visibile come tick e che M81 abbia un range coerente per il floating-bar.
+
+**Tasks:**
+- [x] Test TDD: chart column con `[10, -5, 8]` → output HTML contiene `<div class="md2-chart-yaxis">` con tick che includono 0, valori negativi e positivi.
+- [x] Test TDD: chart column all-positive `[100, 200, 50]` → Y-axis con tick coerenti, NESSUNA regressione visiva sulla disposizione delle barre rispetto a M79 (snapshot dell'output `--size`).
+- [x] Test TDD: chart column all-negative `[-10, -20, -30]` → Y-axis con tick negativi + 0 in alto, `data_max = 0`.
+- [x] Test TDD: chart bar (orizzontale) con mix → Y-axis posizionato correttamente (asse delle quantità, ortogonale a column).
+- [x] Implementare in `core.py`: separare `is_connected` da `has_yaxis`; estendere `has_yaxis` a column/bar; calcolo dominio inclusivo dello zero per chart non-line.
+- [x] CSS: estendere selettori `.md2-chart-yaxis` per applicarsi a column/bar (esistente già generico, nessuna modifica necessaria).
+- [x] Verificare dark mode: i tick e il bordo dell'asse usano `var(--text)` e `var(--md-border)` (già definiti).
+- [x] Verificare print mode (M77-M79): nessuna regressione (49/49 live test passati, 371/371 unit test inclusi M77-M79).
+
+**Done when:**
+- Tutti i test passano. ✅ (371 unit + 49 live)
+- Column e bar chart mostrano asse Y graduato uguale a line/area. ✅
+- Dataset all-positive renderizza identico a prima (regression test). ✅ (`test_column_all_positive_size_values_unchanged`)
+- Dark mode + print mode preservati. ✅
+
+**Deviazioni:**
+- Test obsoleto in `test_m67_yaxis.py::test_bar_chart_no_yaxis_div` aggiornato a `test_bar_chart_gets_yaxis_div` per riflettere il nuovo comportamento M80.
+- Le barre dei valori negativi ancora invisibili dopo M80: questo è atteso e sarà risolto in M81 (floating-bar pattern). Il Y-axis di M80 mostra correttamente i tick negativi pur in assenza di barre.
+
+---
+
+## Milestone 81: Column/bar — floating-bar rendering per valori negativi e zero ⬜
+
+**Problema:**
+Anche con M80 (asse Y), serve cambiare il modo in cui ogni `<td>` posiziona la propria barra. Oggi `--size: value/max` non sa cosa farsene di un valore negativo o zero. Il fix è il pattern *floating bar* (`--start` + `--size`) di Charts.css, già usato da line/area, dove la barra parte da una posizione arbitraria e si estende per la sua dimensione.
+
+**Approccio:**
+Definire `zero_frac = -data_min / (data_max - data_min)` (frazione 0-1 dove cade lo zero nel dominio calcolato in M80). Per ogni valore `v`:
+- `v >= 0`: `--start: zero_frac; --size: v/range` (barra che parte dalla baseline e va verso l'alto).
+- `v < 0`: `--start: zero_frac + v/range; --size: -v/range` (barra che parte sotto la baseline e arriva fino alla baseline).
+- `v == 0`: `--size: 0` ma il `<th>` della categoria deve restare visibile (gestito in M82, ma il rendering qui non deve emettere `<td>` malformati).
+
+Inoltre rimuovere il guard `if num_val != 0` che oggi sopprime il `<span class="data">` per gli zeri — l'utente che scrive "0" nella tabella sorgente deve poterlo vedere come label sul chart.
+
+**Tasks:**
+- [ ] Test TDD: `[10, -5, 0, 8]` → 4 `<td>` con `--start` e `--size` calcolati come da formula; verifica che le barre ≥0 abbiano `--start = zero_frac` e quelle <0 abbiano `--start < zero_frac`.
+- [ ] Test TDD: all-negative `[-10, -20, -30]` con `data_min=-30, data_max=0` → `zero_frac=1`, barre con `--start: 1 + v/30` e `--size: -v/30`.
+- [ ] Test TDD: all-positive legacy → `zero_frac=0`, comportamento equivalente a `--size: v/max` (dimostrato algebricamente, verificato per snapshot).
+- [ ] Test TDD: zero category `[10, 0, 5]` → tre `<td>` ben formati; quello a zero ha `--size: 0` ma il `<span class="data">0</span>` è presente.
+- [ ] Implementare in `core.py`: rimuovere il branch column/bar che usa solo `--size`, sostituire con il floating-bar; rimuovere il guard `num_val != 0` dal data span.
+- [ ] CSS: assicurarsi che `--start` venga onorato anche per column/bar (Charts.css lo supporta nativamente, ma verificare che non ci siano regole `style.css` che lo sovrascrivono).
+- [ ] Aggiornare `examples/example.html` rigenerandolo per coerenza visiva.
+
+**Done when:**
+- Tutti i test passano.
+- Mix di positivi/negativi/zeri renderizzato correttamente (smoke test su un esempio cashflow).
+- Backward compat: snapshot dei chart all-positive identico a M79.
+
+---
+
+## Milestone 82: Stacked column/bar con valori negativi — degrade graceful ⬜
+
+**Problema:**
+Stacked column/bar con valori negativi è semanticamente ambiguo (cosa significa "impilare" un -5 sopra un +10?). Charts.css non lo supporta. Oggi md2 emette HTML che produce rendering rotto silenziosamente.
+
+**Approccio:**
+Detect early in `transform_charts`: se il chart è `stacked-column` o `stacked-bar` e `any(v < 0 for v in all_values)`, emettere un warning su `stderr` e disattivare lo stacking (rimuovere la classe `stacked` dall'output). L'utente vede comunque un grafico leggibile (grouped) e un avviso esplicativo.
+
+**Tasks:**
+- [ ] Test TDD: `:::chart stacked-column` con `[10, -5, 8]` → output non contiene la classe `stacked` sulla `<table>`; warning emesso su stderr.
+- [ ] Test TDD: `:::chart stacked-column` con tutti positivi → comportamento legacy invariato (classe `stacked` presente, nessun warning).
+- [ ] Implementare detection + warning in `core.py`.
+- [ ] Documentare il comportamento in `README.md` sotto la sezione chart.
+
+**Done when:**
+- Test passano.
+- Stacked + negativi non produce mai HTML rotto silenziosamente.
+
+---
+
+## Milestone 83: Audit `.md2-chart` card padding post-Y-axis ⬜
+
+**Problema:**
+Dopo M80 (Y-axis introdotto a column/bar), la card `.md2-chart` ha tre nuovi elementi al proprio interno: tick Y a sinistra, baseline e label X sotto. Senza un audit del padding, alcuni di questi elementi possono finire fuori dal bordo della card (osservato il 06/05/2026 su un chart aging dove le label X erano sotto il bordo della card).
+
+**Approccio:**
+Audit chirurgico delle regole CSS:
+- `.md2-chart` deve avere `box-sizing: border-box` e padding tale da contenere `--labels-size` (32px standard) sotto il chart body.
+- Quando il chart è column/bar con asse Y (post-M80), il padding sinistro deve accomodare la larghezza dell'asse Y.
+- Print mode (M77-M79) non deve regredire — verificare `@media print` separatamente.
+
+**Tasks:**
+- [ ] Test TDD (snapshot CSS): `.md2-chart` ha `box-sizing: border-box` e `padding-bottom >= 32px` quando contiene un column/bar chart.
+- [ ] Test TDD (snapshot HTML rendering): coordinate computed dei `<span>` di `md2-chart-xlabels` sempre `< chart_card.bottom`.
+- [ ] Audit visivo manuale: rigenerare `examples/example.html` e verificare a schermo + in stampa che tutti gli elementi siano contenuti nella card.
+- [ ] Fix CSS minimale: solo le regole necessarie a contenere gli elementi, niente over-engineering.
+
+**Done when:**
+- Test snapshot passano.
+- Visual check su `examples/example.html` mostra tutti gli elementi dei chart dentro le rispettive card, sia a schermo sia in print preview.
+- Nessuna regressione sul layout dei chart all-positive (M79).

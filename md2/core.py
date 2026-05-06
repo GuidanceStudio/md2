@@ -101,12 +101,24 @@ def _fmt_tick(v):
 def _nice_ticks(data_min, data_max):
     """Return 5 'nice' Y-axis tick values covering [data_min, data_max].
 
-    - If data_min > data_max/2 (clustered data), start from nice floor
-      below data_min with a small padding.
-    - Otherwise (data spans a wide range, or includes 0), start from 0.
+    Three regimes:
+    - All non-positive (data_max <= 0): ticks span [data_min, 0].
+    - Clustered above zero (data_min > data_max/2): nice floor below
+      data_min with a small padding.
+    - Otherwise (spans zero, or all-positive starting at 0): start at
+      data_min (typically 0) and step up to data_max.
     """
+    # All non-positive: mirror the all-positive case around zero.
     if data_max <= 0:
-        return [0, 1, 2, 3, 4]
+        if data_min >= 0:
+            return [0, 1, 2, 3, 4]
+        step = _nice_step(-data_min / 4)
+        # Top tick at 0, step downward
+        ticks = [_fmt_tick(0 - step * (4 - i)) for i in range(5)]
+        # Ensure first tick <= data_min
+        while ticks[0] > data_min:
+            ticks = [_fmt_tick(t - step) for t in ticks]
+        return ticks
 
     # Clustering detection: if the min is close to the max, don't start at 0
     clustered = data_min > 0 and data_min > data_max * 0.5
@@ -119,6 +131,12 @@ def _nice_ticks(data_min, data_max):
         step = _nice_step(raw_step)
         # axis start = nice floor of (data_min - padding)
         axis_start = math.floor((data_min - padding) / step) * step
+    elif data_min < 0:
+        # Mixed range spanning zero: domain [data_min, data_max] with 0 inside.
+        total_range = data_max - data_min
+        step = _nice_step(total_range / 4)
+        # axis start = nice floor of data_min
+        axis_start = math.floor(data_min / step) * step
     else:
         axis_start = 0
         step = _nice_step(data_max / 4)
@@ -328,10 +346,11 @@ def transform_charts(html_content):
         all_values = [v for row in parsed_values for v in row]
         max_val = max(all_values) if all_values and max(all_values) > 0 else 1
 
-        # For line/area: compute nice ticks spanning [data_min, data_max],
-        # possibly starting above 0 for clustered data. Normalize values
-        # against the tick range so Charts.css --size/--end align with Y-axis.
+        # Graduated Y-axis is shown for line/area (M67-M69) and, since M80,
+        # also for column/bar. Segment-style rendering (`is_connected`) stays
+        # exclusive to line/area.
         is_connected = chart_type in ("line", "area")
+        has_yaxis = chart_type in ("line", "area", "column", "bar")
         if is_connected:
             positive_values = [v for v in all_values if v > 0]
             data_min = min(positive_values) if positive_values else 0
@@ -339,6 +358,17 @@ def transform_charts(html_content):
             norm_min = ticks[0]
             norm_max = ticks[-1]
             norm_range = norm_max - norm_min if norm_max > norm_min else 1
+        elif has_yaxis:
+            # Column/bar: domain always includes zero so the baseline tick is
+            # visible. Bar rendering itself stays on the legacy `--size`
+            # formula in M80 — M81 introduces the floating-bar pattern that
+            # makes negative values render below the baseline.
+            data_min = min(min(all_values), 0) if all_values else 0
+            data_max = max(max(all_values), 0) if all_values else 0
+            ticks = _nice_ticks(data_min, data_max)
+            norm_min = 0
+            norm_max = max_val
+            norm_range = max_val
         else:
             ticks = None
             norm_min = 0
@@ -509,22 +539,25 @@ def transform_charts(html_content):
         if chart_title:
             title_html = f'<div class="md2-chart-title">{chart_title}</div>'
 
-        # Generate Y-axis for line/area charts (graduated scale).
-        # Wrap ONLY the chart table (not the legend) in a flex row with the
-        # Y-axis on the left so that the yaxis height matches the chart
-        # table height exactly (flex stretch), and x-axis labels area is
-        # compensated via padding-bottom.
-        if is_connected and ticks:
+        # Generate graduated Y-axis (M67-M69 for line/area, M80 for
+        # column/bar). Wrap the chart table (not the legend) in a flex row
+        # with the Y-axis on the left.
+        if has_yaxis and ticks:
             tick_spans = "".join(
                 f'<span>{t}</span>' for t in reversed(ticks)
             )
             yaxis_html = f'<div class="md2-chart-yaxis">{tick_spans}</div>'
             body_html = f'<div class="md2-chart-body">{yaxis_html}{table_html}</div>'
-            xlabel_spans = "".join(
-                f'<span>{label}</span>' for label, _ in data_rows
-            )
-            xlabels_html = f'<div class="md2-chart-xlabels">{xlabel_spans}</div>'
-            result = body_html + xlabels_html + legend_html
+            if is_connected:
+                # Line/area emit X labels via a sibling div (M70 decoupling).
+                xlabel_spans = "".join(
+                    f'<span>{label}</span>' for label, _ in data_rows
+                )
+                xlabels_html = f'<div class="md2-chart-xlabels">{xlabel_spans}</div>'
+                result = body_html + xlabels_html + legend_html
+            else:
+                # Column/bar keep their X labels inside Charts.css `<th>`s.
+                result = body_html + legend_html
 
         return f'<div class="md2-chart">{title_html}{result}</div>'
 

@@ -94,8 +94,12 @@ def test_area_chart_has_yaxis_div():
     assert 'class="md2-chart-yaxis"' in html
 
 
-def test_bar_chart_no_yaxis_div():
-    """Bar chart does NOT get Y-axis (it has built-in labels on bars)."""
+def test_bar_chart_gets_yaxis_div():
+    """Bar chart DOES get a graduated Y-axis since M80.
+
+    (M67 originally limited the Y-axis to line/area; M80 extended it to
+    column/bar as the foundation for negative-value rendering.)
+    """
     md = (
         ":::chart bar\n"
         "| M | V |\n"
@@ -104,7 +108,7 @@ def test_bar_chart_no_yaxis_div():
         ":::"
     )
     html, _ = process_markdown(md)
-    assert 'md2-chart-yaxis' not in html
+    assert 'md2-chart-yaxis' in html
 
 
 # --- Charts.css axis classes applied ---
