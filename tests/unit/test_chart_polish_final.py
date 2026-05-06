@@ -42,25 +42,22 @@ def test_bar_label_vertical_centered():
 
 # --- M48: Title padding fix ---
 
-def test_title_margin_bottom_minimal():
-    """Chart title has minimal or zero margin-bottom to avoid double space."""
+def test_title_margin_bottom_breathes():
+    """M97: chart title has comfortable breathing room before the chart
+    body (tight 8px gap looked cramped — 16-32px is more readable)."""
     css = _get_style_css()
     idx = css.index(".md2-chart-title")
     block = css[idx:css.index("}", idx) + 1]
-    # Find margin value — either no margin-bottom or <=8px
     match = re.search(r'margin[^:]*:\s*([^;]+)', block)
     assert match
-    margin_value = match.group(1)
-    # margin: -8px -20px 0 (0 bottom) or similar
-    # Should not end with a large positive bottom value
-    parts = margin_value.split()
+    parts = match.group(1).split()
     if len(parts) >= 3:
-        # 3-value margin: top right/left bottom
         bottom = parts[2]
-        # If it's 0, 0px, or small like 4px
         if bottom.endswith("px"):
             val = int(bottom.replace("px", ""))
-            assert val <= 8, f"Title margin-bottom should be <= 8px, got {val}"
+            assert 12 <= val <= 40, (
+                f"Title margin-bottom should be in [12, 40]px, got {val}"
+            )
 
 
 # --- M49: Legend spacing and bullet colors ---

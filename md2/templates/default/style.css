@@ -168,7 +168,10 @@ body {
 .md2-chart-title {
     font-weight: bold; padding: 10px 16px; text-align: left;
     background-color: var(--table-header-bg);
-    margin: -8px -20px 8px; font-size: 1rem;
+    /* M97: more breathing room between the title bar and the Y-axis
+       top tick (the previous 8px felt cramped). */
+    margin: -8px -20px 24px;
+    font-size: 1rem;
     border-bottom: 1px solid var(--table-border);
     border-radius: 8px 8px 0 0;
 }
@@ -270,10 +273,13 @@ body {
     gap: 8px;
     height: min(260px, 36vh);
     /* M88: visual baseline. For all-positive charts the baseline is
-       at body-bottom (chart floor). M95: when --zero-frac > 0, an
-       absolutely-positioned pseudo-element draws the X-axis line at
-       the zero baseline (between positive and negative bars). */
+       at body-bottom (chart floor). M95: when --zero-frac > 0, a
+       pseudo-element draws the X-axis line at the zero baseline.
+       M98: `isolation: isolate` creates a stacking context so the
+       baseline pseudo-element (z-index: -1) stays BEHIND the bars
+       instead of painting over them. */
     position: relative;
+    isolation: isolate;
 }
 .md2-chart-body::after {
     content: "";
@@ -284,6 +290,7 @@ body {
     height: 1px;
     background: var(--table-border);
     pointer-events: none;
+    z-index: -1;
 }
 .md2-chart-body > .charts-css {
     flex: 1;
