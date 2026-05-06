@@ -242,6 +242,20 @@ body {
 .md2-chart .charts-css.column tbody tr {
     padding-inline: 12px;
 }
+/* M99 floating-bar: Charts.css ignores `--start` for column charts — its
+   bars always sit at body-bottom with height = --size*100%. To support
+   negatives (M81 floating-bar pattern) we need the bar to start at
+   `--start` from the bottom and grow up by `--size`. We move each td
+   UP by `--start * row-height` via position+top. The td is align-items:
+   flex-end inside its row, so its bottom is normally at body-bottom;
+   `top: calc(var(--start) * -100%)` lifts it so the td's bottom lands
+   at `--start * body-height` from body-bottom — the floating-bar
+   position. Bar charts don't need this (they grow horizontally and
+   Charts.css uses `--start` differently). */
+.md2-chart .charts-css.column tbody tr td {
+    position: relative;
+    top: calc(var(--start, 0) * -100%);
+}
 .md2-chart .charts-css.line {
     height: min(260px, 36vh); --line-size: 3px;
     --labels-size: 0;
