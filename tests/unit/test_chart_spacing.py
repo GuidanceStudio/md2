@@ -6,14 +6,18 @@ def _get_style_css():
     return (BUNDLED_TEMPLATES_DIR / "style.css").read_text(encoding="utf-8")
 
 
-def test_bar_label_gap_increased():
-    """Bar chart labels have enough gap from bars (>= 110px)."""
+def test_bar_chart_uses_decoupled_xlabels():
+    """M85: bar chart x-labels are now in a sibling `.md2-chart-xlabels`
+    div, so the table's internal `--labels-size` is 0. The previous
+    `>= 110px` requirement is obsolete — the gap from bars is provided
+    by the sibling div's margin-top instead."""
     import re
     css = _get_style_css()
-    # Find the .bar --labels-size rule
-    match = re.search(r'\.charts-css\.bar[^{]*\{[^}]*--labels-size:\s*(\d+)', css)
-    assert match, "Bar chart should have --labels-size"
-    assert int(match.group(1)) >= 110
+    match = re.search(
+        r'\.md2-chart \.charts-css\.bar\s*\{([^}]+)\}', css, re.DOTALL,
+    )
+    assert match, "expected .md2-chart .charts-css.bar rule"
+    assert "--labels-size: 0" in match.group(1)
 
 
 def test_chart_data_spacing_set():

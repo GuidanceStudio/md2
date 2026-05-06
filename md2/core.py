@@ -483,9 +483,15 @@ def transform_charts(html_content):
                     )
                 parts.append('</tr>')
         else:
+            # M85: column/bar xlabels are decoupled to a sibling div, so the
+            # row header text is emptied (kept structurally for a11y).
+            xlabels_decoupled = has_yaxis and not is_pie
             for row_idx, (label, values) in enumerate(data_rows):
                 parts.append('<tr>')
-                parts.append(f'<th scope="row">{label}</th>')
+                if xlabels_decoupled:
+                    parts.append('<th scope="row"></th>')
+                else:
+                    parts.append(f'<th scope="row">{label}</th>')
                 for col_idx, v in enumerate(values):
                     num_val = parsed_values[row_idx][col_idx]
                     if show_data:
@@ -578,23 +584,20 @@ def transform_charts(html_content):
 
         # Generate graduated Y-axis (M67-M69 for line/area, M80 for
         # column/bar). Wrap the chart table (not the legend) in a flex row
-        # with the Y-axis on the left.
+        # with the Y-axis on the left. M85: all chart types with a Y-axis
+        # also emit X labels in a sibling div (decoupled from Charts.css
+        # internal `<th>` row headers).
         if has_yaxis and ticks:
             tick_spans = "".join(
                 f'<span>{t}</span>' for t in reversed(ticks)
             )
             yaxis_html = f'<div class="md2-chart-yaxis">{tick_spans}</div>'
             body_html = f'<div class="md2-chart-body">{yaxis_html}{table_html}</div>'
-            if is_connected:
-                # Line/area emit X labels via a sibling div (M70 decoupling).
-                xlabel_spans = "".join(
-                    f'<span>{label}</span>' for label, _ in data_rows
-                )
-                xlabels_html = f'<div class="md2-chart-xlabels">{xlabel_spans}</div>'
-                result = body_html + xlabels_html + legend_html
-            else:
-                # Column/bar keep their X labels inside Charts.css `<th>`s.
-                result = body_html + legend_html
+            xlabel_spans = "".join(
+                f'<span>{label}</span>' for label, _ in data_rows
+            )
+            xlabels_html = f'<div class="md2-chart-xlabels">{xlabel_spans}</div>'
+            result = body_html + xlabels_html + legend_html
 
         return f'<div class="md2-chart">{title_html}{result}</div>'
 

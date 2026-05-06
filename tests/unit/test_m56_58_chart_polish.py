@@ -11,23 +11,25 @@ def _get_style_css():
 
 # --- M56: Column labels-size reduced ---
 
-def test_column_labels_size_reduced():
-    """Column chart --labels-size is small (close to text height, not 100px)."""
+def test_column_labels_size_zero_after_decoupling():
+    """M85: column chart `--labels-size` is `0` because labels are now in
+    the sibling `.md2-chart-xlabels` div. The original M56 rationale
+    (small label height inside the chart) became obsolete when M85
+    moved the labels out entirely."""
     css = _get_style_css()
-    # Find .charts-css.column rule
-    match = re.search(r'\.charts-css\.column\s*\{[^}]*--labels-size:\s*(\d+)px', css)
-    assert match, "Column should have --labels-size set"
-    val = int(match.group(1))
-    assert val <= 40, f"Column --labels-size should be <= 40px, got {val}px"
+    match = re.search(r'\.charts-css\.column\s*\{([^}]+)\}', css, re.DOTALL)
+    assert match, "Column should have a CSS rule"
+    assert "--labels-size: 0" in match.group(1)
 
 
-def test_bar_labels_size_unchanged():
-    """Bar chart --labels-size stays large (it's the WIDTH for left labels)."""
+def test_bar_labels_size_zero_after_decoupling():
+    """M85: bar chart `--labels-size: 0` (decoupled). The previous M56
+    contract (>= 100px width for left labels) was specific to in-chart
+    label rendering, which M85 replaced."""
     css = _get_style_css()
-    match = re.search(r'\.charts-css\.bar\s*\{[^}]*--labels-size:\s*(\d+)px', css)
+    match = re.search(r'\.charts-css\.bar\s*\{([^}]+)\}', css, re.DOTALL)
     assert match
-    val = int(match.group(1))
-    assert val >= 100, f"Bar --labels-size should be >= 100px (label width), got {val}px"
+    assert "--labels-size: 0" in match.group(1)
 
 
 # --- M57: Line/area top padding ---

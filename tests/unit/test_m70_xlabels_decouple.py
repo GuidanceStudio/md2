@@ -37,7 +37,9 @@ def test_area_chart_emits_xlabels_div():
     assert 'class="md2-chart-xlabels"' in html
 
 
-def test_bar_chart_no_xlabels_div():
+def test_bar_chart_now_has_xlabels_div():
+    """M85: bar chart now uses the decoupled xlabels pattern (was
+    line/area only in M70). Reverses the original M70 assertion."""
     md = (
         ":::chart bar\n"
         "| L | V |\n"
@@ -46,10 +48,11 @@ def test_bar_chart_no_xlabels_div():
         ":::"
     )
     html, _ = process_markdown(md)
-    assert "md2-chart-xlabels" not in html
+    assert "md2-chart-xlabels" in html
 
 
-def test_column_chart_no_xlabels_div():
+def test_column_chart_now_has_xlabels_div():
+    """M85: column chart also adopts decoupled xlabels."""
     md = (
         ":::chart column\n"
         "| L | V |\n"
@@ -58,7 +61,7 @@ def test_column_chart_no_xlabels_div():
         ":::"
     )
     html, _ = process_markdown(md)
-    assert "md2-chart-xlabels" not in html
+    assert "md2-chart-xlabels" in html
 
 
 def test_xlabels_span_count_matches_rows():

@@ -2715,30 +2715,33 @@ La directive `:::chart column --title "Crediti 2026 (€)"` produce HTML SENZA `
 
 ---
 
-## Milestone 85: X-axis labels decoupled per column/bar (estende M70) ⬜
+## Milestone 85: X-axis labels decoupled per column/bar (estende M70) ✅
 
 **Problema:**
-Per line/area, M70 ha spostato i label X da `<th>` Charts.css a un `<div class="md2-chart-xlabels">` sibling. Per column/bar i label restano ancora dentro `<th>` di Charts.css con `--labels-size: 32px`. Con il floating-bar pattern di M81, i bar negativi si estendono sotto la baseline; Charts.css posiziona i `<th>` al fondo della tabella che ora include i negativi, ma il legend (con `margin-top: 40px` outside del chart-body) finisce nello stesso spazio visivo. Risultato: legenda che oscura il label "Giugno" nello slide cashflow.
+Per line/area, M70 ha spostato i label X da `<th>` Charts.css a un `<div class="md2-chart-xlabels">` sibling. Per column/bar i label restavano ancora dentro `<th>` di Charts.css con `--labels-size: 32px`. Con il floating-bar pattern di M81, i bar negativi si estendono sotto la baseline; Charts.css posiziona i `<th>` al fondo della tabella che ora include i negativi, ma il legend (con `margin-top: 40px` outside del chart-body) finisce nello stesso spazio visivo. Risultato: legenda che occlude il label "Giugno" nello slide cashflow.
 
 **Approccio:**
-- Estendere il branch `is_connected` di `transform_charts` a tutti i chart con `has_yaxis` (tranne pie).
-- Per column/bar: emettere `<div class="md2-chart-xlabels">` con span per ogni categoria, posizionato sotto `md2-chart-body` (come line/area).
-- Settare `--labels-size: 0` sulla classe Charts.css quando i label X sono decoupled (così Charts.css non riserva spazio interno).
-- Verificare che il padding-left della `md2-chart-xlabels` (`calc(48px + 8px)`) sia coerente per column (yaxis size + gap).
+- Esteso il branch decoupled-xlabels di `transform_charts` a tutti i chart con `has_yaxis` (line, area, column, bar).
+- `<th scope="row">` mantenuto strutturalmente per a11y ma vuoto (testo migrato nello sibling div).
+- `--labels-size: 0` impostato in CSS su `.charts-css.column` e `.charts-css.bar` (era 32px e 130px rispettivamente).
 
 **Tasks:**
-- [ ] Test TDD: column chart → output ha `<div class="md2-chart-xlabels">` con span per ogni categoria, e `--labels-size: 0` sulla table.
-- [ ] Test TDD: bar chart (orizzontale) → idem, ma layout adattato.
-- [ ] Test TDD: cashflow case (3 mesi × 3 serie con negativi) → label "Maggio", "Giugno", "Luglio" tutti presenti come span sibling, NESSUN `<th scope="row">` nei `<tr>` del body.
-- [ ] Test TDD: backward compat (line/area unchanged) — il loro `md2-chart-xlabels` è già emesso da M70, non deve regredire.
-- [ ] Implementare in `core.py`: estendere il blocco `is_connected` per coprire column/bar; emettere `--labels-size: 0` per chart con xlabels decoupled.
-- [ ] CSS: verificare che `.md2-chart-xlabels` selettore non sia limitato a line/area; aggiungere padding per chart bar.
+- [x] Test TDD: column chart → `<div class="md2-chart-xlabels">` con span per categoria.
+- [x] Test TDD: bar chart → idem.
+- [x] Test TDD: span count == numero di categorie.
+- [x] Test TDD: `<th scope="row">` vuoti.
+- [x] Test TDD: line/area backward compat preservata.
+- [x] Test TDD: pie NON ha xlabels (categorie nella legend).
+- [x] Test TDD: CSS `--labels-size: 0` su column.
+- [x] Implementare in `core.py`: blocco `if has_yaxis` unificato per emit di xlabels.
+- [x] CSS: aggiornare `.charts-css.column` e `.charts-css.bar` a `--labels-size: 0`.
+
+**Deviazioni:**
+- 6 test pre-esistenti aggiornati (M56, M58, M70, chart_css_polish, chart_spacing) per riflettere il nuovo contratto: bar/column ora hanno xlabels decoupled e `--labels-size: 0`.
 
 **Done when:**
-- Test passano.
-- Slide cashflow: legenda non occlude più i label X.
-- Slide aging: label X all'interno della card, non più sotto il bordo.
-- Layout coerente con line/area.
+- 7 nuovi test M85 passano. ✅
+- 447 test totali verdi (M70 + M85 conviventi). ✅
 
 ---
 

@@ -188,7 +188,8 @@ body {
 }
 .md2-chart .charts-css { --data-spacing: 12px; }
 .md2-chart .charts-css.bar {
-    --labels-size: 130px; --data-spacing: 6px;
+    /* M85: x-labels decoupled to .md2-chart-xlabels — no internal reserved space. */
+    --labels-size: 0; --data-spacing: 6px;
     min-height: 40px;
 }
 .md2-chart .charts-css.bar tbody tr { min-height: 40px; padding: 6px 0; }
@@ -197,7 +198,8 @@ body {
     align-items: center; vertical-align: middle;
 }
 .md2-chart .charts-css.column {
-    --labels-size: 32px; --data-spacing: 16px;
+    /* M85: x-labels decoupled to .md2-chart-xlabels — no internal reserved space. */
+    --labels-size: 0; --data-spacing: 16px;
     height: min(300px, 40vh);
     max-width: 800px; margin-left: auto; margin-right: auto;
 }

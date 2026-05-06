@@ -20,13 +20,15 @@ def test_line_has_line_size():
     assert "--line-size" in css
 
 
-def test_labels_size_adequate():
-    """Labels have enough space (>= 100px) for longer text."""
+def test_xlabels_decoupled_div_styled():
+    """M85 made x-labels decoupled to a sibling `.md2-chart-xlabels` div
+    instead of relying on Charts.css internal `--labels-size`. The CSS
+    must define rules for that div so labels remain readable."""
     css = _get_style_css()
-    # Find --labels-size values
-    sizes = re.findall(r'--labels-size:\s*(\d+)px', css)
-    assert any(int(s) >= 100 for s in sizes), \
-        f"--labels-size should be >= 100px, found {sizes}"
+    assert ".md2-chart-xlabels" in css, (
+        "expected .md2-chart-xlabels CSS rules — labels are now in a "
+        "sibling div (M70 for line/area, M85 for column/bar)"
+    )
 
 
 def test_data_spacing_set():
