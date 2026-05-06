@@ -52,10 +52,10 @@ def test_single_dataset_normalization_unchanged():
     assert sizes == [0.5, 1.0]
 
 
-def test_zero_value_renders_data_span():
-    """M81 enabled the zero data span; M87 added the `zero` class so the
-    label renders as muted ghost text. The span is present either way —
-    accept both class forms for backward compat."""
+def test_zero_value_emits_empty_td():
+    """M91: a zero-value cell emits a `<td>` with `--size: 0` but no
+    inner data span (Charts.css can't position the span when the cell
+    has 0 height; the X-axis label already conveys the category)."""
     md = (
         ":::chart column --labels --legend\n"
         "| Pillar       | Engineers | ML Specialists |\n"
@@ -65,13 +65,15 @@ def test_zero_value_renders_data_span():
         ":::"
     )
     html, _ = process_markdown(md)
-    # Accept either `data` or `data zero` (M87) class on the zero label
-    assert (
-        '<span class="data">0</span>' in html
-        or '<span class="data zero">0</span>' in html
-    )
-    # The td with --size: 0 still exists for chart structure
+    # The zero cell exists in the chart structure
     assert "--size: 0" in html
+    # No `<span class="data">0</span>` (or any span) in the zero cell
+    import re
+    zero_match = re.search(
+        r'<td style="--start: 0; --size: 0">(.*?)</td>', html, re.DOTALL,
+    )
+    assert zero_match
+    assert zero_match.group(1).strip() == ""
 
 
 def test_zero_value_still_has_td():

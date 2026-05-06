@@ -496,10 +496,12 @@ def transform_charts(html_content):
                     num_val = parsed_values[row_idx][col_idx]
                     if show_data:
                         if num_val == 0 and has_yaxis and not is_pie:
-                            # M87: zero-value bars get a `data zero` class
-                            # so the value renders as muted ghost text on
-                            # the baseline (no white-on-white pill).
-                            data_span = f'<span class="data zero">{v.strip()}</span>'
+                            # M91: with `--size: 0` Charts.css can't
+                            # position the span — it leaks outside the
+                            # chart area. The X-axis category label
+                            # already communicates the empty category;
+                            # skip the span entirely.
+                            data_span = ""
                         else:
                             data_span = f'<span class="data">{v.strip()}</span>'
                     else:

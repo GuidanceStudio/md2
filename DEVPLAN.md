@@ -2864,3 +2864,51 @@ Il chart con title + body 300px + xlabels + legend ora supera l'altezza utile di
 - Test passano.
 - Deck Guidance non eccede 10 pagine.
 - Y-axis rimane leggibile.
+
+---
+
+## Milestone 91: `--size: 0` cells — niente data span (zero label hidden) ✅
+
+**Problema:**
+Per categorie con valore 0, M81 ha rimosso il guard `if num_val != 0` e M87 ha aggiunto la classe `.data.zero`. Ma con `--size: 0` Charts.css non sa dove posizionare lo span (cella collassa a 0px) e lo span finisce in posizioni casuali (sotto il chart, fuori dal card). Esempio reale: slide 5 aging, fascia 31-60 gg con valore 0 → `0` ghost appare in fondo al card lontano dalla cella.
+
+**Approccio:**
+Per chart con Y-axis (`has_yaxis=True`) e `num_val == 0`, NON emettere il `<span class="data zero">` proprio. La categoria è comunque visibile attraverso il label X (la fascia "31-60 gg" è ancora nell'asse). Il bar invisibile + label X bastano per comunicare "questa categoria a zero".
+
+**Tasks:**
+- [ ] Test TDD: chart `[10, 0, 5]` → `<td>` per il valore 0 ha `--size: 0` ma NESSUN `<span class="data">` interno.
+- [ ] Test TDD: chart `[10, 5, 8]` (no zero) → tutti i `<td>` hanno il loro `<span class="data">`.
+- [ ] Test TDD: chart pie `[30, 0, 70]` → comportamento di Charts.css preservato (pie ha logica diversa).
+- [ ] Implementare in `core.py`: nel branch `if show_data`, escludere il caso `num_val == 0 and has_yaxis and not is_pie`.
+
+**Done when:**
+- Test passano.
+- Slide 5 aging: niente più "0" ghost in posizione strana.
+
+---
+
+## Milestone 92: install.sh — sync template utente dopo reinstall binario ⬜
+
+**Problema:**
+`install.sh` di md2 esegue `uv tool install . --force --reinstall` che reinstalla il binario `md2` nel `~/.local/bin/`. **Non sincronizza** i template utente in `~/.md2/templates/`. md2 al primo avvio copia i template dalla source, ma in upgrade successivi i template restano la versione vecchia. Risultato: modifiche CSS in `md2/templates/` NON arrivano al rendering reale.
+
+Bug confermato il 06/05/2026: due ore spese a "patchare" CSS che non si applicava al deck Guidance perché i template utente erano in cache.
+
+**Approccio:**
+Aggiungere alla fine di `install.sh` uno step che sincronizza `~/.md2/templates/` con la source:
+
+```bash
+if [ -d "$HOME/.md2/templates" ]; then
+    cp -r ./md2/templates/* "$HOME/.md2/templates/"
+    echo "Template utente sincronizzati."
+fi
+```
+
+**Tasks:**
+- [ ] Test TDD: dopo `bash install.sh`, `~/.md2/templates/default/style.css` ha contenuto identico a `md2/md2/templates/default/style.css`.
+- [ ] Implementare lo step di sync in `install.sh`.
+- [ ] Documentare in `README.md` che l'install sincronizza anche i template.
+
+**Done when:**
+- Test passa.
+- Modifiche CSS future arrivano automaticamente al rendering reale dopo `bash install.sh`.

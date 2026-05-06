@@ -128,10 +128,10 @@ def test_column_zero_value_keeps_category_label():
     assert ">Gamma<" in html
 
 
-def test_column_zero_value_renders_data_label():
-    """A category with value 0 emits a data span so the label is visible.
-    M81 removed the `if num_val != 0` guard; M87 added the `zero` class —
-    accept either form."""
+def test_column_zero_value_no_data_label():
+    """M91 superseded M87: a zero-value cell no longer emits a data
+    span at all (the span couldn't be positioned by Charts.css with
+    `--size: 0`). The category remains visible via the X-axis label."""
     md = (
         ":::chart column\n"
         "| C | V |\n"
@@ -141,9 +141,10 @@ def test_column_zero_value_renders_data_label():
         ":::"
     )
     html, _ = process_markdown(md)
-    # Accept either class form (`data` or `data zero` post-M87)
     data_spans = re.findall(r'<span class="data[^"]*">([^<]*)</span>', html)
-    assert "0" in data_spans, f"expected '0' in data spans, got {data_spans}"
+    # "10" is still rendered; "0" is not
+    assert "10" in data_spans
+    assert "0" not in data_spans
 
 
 # --- Bar (horizontal) chart: same treatment ---

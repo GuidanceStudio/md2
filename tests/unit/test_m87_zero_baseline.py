@@ -14,8 +14,10 @@ def _get_style_css():
     return (BUNDLED_TEMPLATES_DIR / "style.css").read_text(encoding="utf-8")
 
 
-def test_zero_value_gets_zero_class():
-    """A `0` value emits `<span class="data zero">0</span>`."""
+def test_zero_value_no_span_after_m91():
+    """M87 introduced a `data zero` class for zero values; M91 then
+    removed the span entirely (Charts.css couldn't position it).
+    This test now asserts the M91 contract: zero produces no span."""
     md = (
         ":::chart column\n"
         "| C | V |\n"
@@ -29,10 +31,9 @@ def test_zero_value_gets_zero_class():
         r'<span class="(data[^"]*)">([^<]+)</span>', html
     )
     classes_by_value = {v: c for c, v in spans}
-    assert classes_by_value.get("0") == "data zero", (
-        f"zero-value span should have class 'data zero', got "
-        f"{classes_by_value!r}"
-    )
+    # Only "10" present; "0" not in the spans dict
+    assert classes_by_value.get("10") == "data"
+    assert "0" not in classes_by_value
 
 
 def test_nonzero_no_zero_class():
