@@ -242,19 +242,23 @@ body {
 .md2-chart .charts-css.column tbody tr {
     padding-inline: 12px;
 }
-/* M99 floating-bar: Charts.css ignores `--start` for column charts — its
-   bars always sit at body-bottom with height = --size*100%. To support
-   negatives (M81 floating-bar pattern) we need the bar to start at
-   `--start` from the bottom and grow up by `--size`. We move each td
-   UP by `--start * row-height` via position+top. The td is align-items:
-   flex-end inside its row, so its bottom is normally at body-bottom;
-   `top: calc(var(--start) * -100%)` lifts it so the td's bottom lands
-   at `--start * body-height` from body-bottom — the floating-bar
-   position. Bar charts don't need this (they grow horizontally and
-   Charts.css uses `--start` differently). */
+/* M99 floating-bar: Charts.css ignores `--start` for column/bar charts
+   — its bars always pin to one edge with size = --size*100%. To
+   support negatives (M81 floating-bar pattern) we shift each td via
+   position+offset so it starts at `--start` from that edge and grows
+   by `--size`.
+   - Column (vertical): row is align-items: flex-end → td pins at
+     bottom. `top: calc(var(--start) * -100%)` lifts the td up so its
+     bottom lands at `--start * body-height` from body-bottom.
+   - Bar (horizontal): bars pin at the row's left edge → set `left`
+     to `var(--start) * 100%` so the bar starts at the right offset. */
 .md2-chart .charts-css.column tbody tr td {
     position: relative;
     top: calc(var(--start, 0) * -100%);
+}
+.md2-chart .charts-css.bar tbody tr td {
+    position: relative;
+    left: calc(var(--start, 0) * 100%);
 }
 .md2-chart .charts-css.line {
     height: min(260px, 36vh); --line-size: 3px;
@@ -358,7 +362,10 @@ body {
 /* M63 removed in M65: multi-line/area no longer have ul.legend
    (endpoint labels with "Name: Value" format serve as legend) */
 .md2-chart .charts-css.pie {
-    max-width: min(50vh, 50vw); margin: 0 auto; aspect-ratio: 1;
+    /* M100: reduced from min(50vh, 50vw) to a more conservative size so
+       a pie + legend + title + H2 fits within a single A4 landscape
+       page (was overflowing onto a second page in print). */
+    max-width: min(38vh, 40vw); margin: 0 auto; aspect-ratio: 1;
 }
 .md2-pie-wrapper {
     position: relative;
@@ -376,14 +383,16 @@ body {
     pointer-events: none;
     white-space: nowrap;
 }
-.md2-chart .charts-css tbody tr:nth-child(8n+1) td { --color: var(--md2-color-1); }
-.md2-chart .charts-css tbody tr:nth-child(8n+2) td { --color: var(--md2-color-2); }
-.md2-chart .charts-css tbody tr:nth-child(8n+3) td { --color: var(--md2-color-3); }
-.md2-chart .charts-css tbody tr:nth-child(8n+4) td { --color: var(--md2-color-4); }
-.md2-chart .charts-css tbody tr:nth-child(8n+5) td { --color: var(--md2-color-5); }
-.md2-chart .charts-css tbody tr:nth-child(8n+6) td { --color: var(--md2-color-6); }
-.md2-chart .charts-css tbody tr:nth-child(8n+7) td { --color: var(--md2-color-7); }
-.md2-chart .charts-css tbody tr:nth-child(8n) td { --color: var(--md2-color-8); }
+.md2-chart .charts-css tbody tr:nth-child(10n+1) td { --color: var(--md2-color-1); }
+.md2-chart .charts-css tbody tr:nth-child(10n+2) td { --color: var(--md2-color-2); }
+.md2-chart .charts-css tbody tr:nth-child(10n+3) td { --color: var(--md2-color-3); }
+.md2-chart .charts-css tbody tr:nth-child(10n+4) td { --color: var(--md2-color-4); }
+.md2-chart .charts-css tbody tr:nth-child(10n+5) td { --color: var(--md2-color-5); }
+.md2-chart .charts-css tbody tr:nth-child(10n+6) td { --color: var(--md2-color-6); }
+.md2-chart .charts-css tbody tr:nth-child(10n+7) td { --color: var(--md2-color-7); }
+.md2-chart .charts-css tbody tr:nth-child(10n+8) td { --color: var(--md2-color-8); }
+.md2-chart .charts-css tbody tr:nth-child(10n+9) td { --color: var(--md2-color-9); }
+.md2-chart .charts-css tbody tr:nth-child(10n) td { --color: var(--md2-color-10); }
 .md2-chart .charts-css.multiple tbody td:nth-child(2) { --color: var(--md2-color-1); }
 .md2-chart .charts-css.multiple tbody td:nth-child(3) { --color: var(--md2-color-2); }
 .md2-chart .charts-css.multiple tbody td:nth-child(4) { --color: var(--md2-color-3); }
@@ -392,6 +401,8 @@ body {
 .md2-chart .charts-css.multiple tbody td:nth-child(7) { --color: var(--md2-color-6); }
 .md2-chart .charts-css.multiple tbody td:nth-child(8) { --color: var(--md2-color-7); }
 .md2-chart .charts-css.multiple tbody td:nth-child(9) { --color: var(--md2-color-8); }
+.md2-chart .charts-css.multiple tbody td:nth-child(10) { --color: var(--md2-color-9); }
+.md2-chart .charts-css.multiple tbody td:nth-child(11) { --color: var(--md2-color-10); }
 .md2-chart ul.legend {
     display: flex; gap: 20px; justify-content: center;
     margin-top: 40px; font-size: 0.85rem; list-style: none;
@@ -416,6 +427,8 @@ body {
 .md2-chart ul.legend li:nth-child(6)::before { background: var(--md2-color-6); }
 .md2-chart ul.legend li:nth-child(7)::before { background: var(--md2-color-7); }
 .md2-chart ul.legend li:nth-child(8)::before { background: var(--md2-color-8); }
+.md2-chart ul.legend li:nth-child(9)::before { background: var(--md2-color-9); }
+.md2-chart ul.legend li:nth-child(10)::before { background: var(--md2-color-10); }
 body.dark-mode .md2-chart .charts-css { color: var(--text-color); }
 
 /* Columns layout */
