@@ -32,9 +32,10 @@ def test_large_negative_bar_label_above():
     )
 
 
-def test_small_negative_bar_label_no_above():
-    """A negative bar with `--size <= 0.50` keeps the label below
-    (just `data outside`, no `above`)."""
+def test_small_negative_bar_also_uses_above():
+    """M93 superseded M89's size>0.50 threshold: ALL outside labels are
+    now top-anchored to avoid bottom-of-cell placement that collides
+    with xlabels."""
     md = (
         ":::chart column\n"
         "| C | V |\n"
@@ -49,11 +50,13 @@ def test_small_negative_bar_label_no_above():
     )
     classes_by_value = {v: c for c, v in spans}
     assert "outside" in classes_by_value.get("-5", "")
-    assert "above" not in classes_by_value.get("-5", "")
+    assert "above" in classes_by_value.get("-5", "")
 
 
-def test_positive_bar_never_above():
-    """Positive bars (small or large) never get the `above` class."""
+def test_small_positive_bar_also_uses_above():
+    """M93: small positive bars also get `above` so the label sits at
+    the top of the td (just above the colored fill) instead of at td
+    bottom (which is at the zero baseline, near xlabels)."""
     md = (
         ":::chart column\n"
         "| C | V |\n"
@@ -67,10 +70,11 @@ def test_positive_bar_never_above():
         r'<span class="(data[^"]*)">([^<]+)</span>', html
     )
     classes_by_value = {v: c for c, v in spans}
-    for v, c in classes_by_value.items():
-        assert "above" not in c, (
-            f"positive bar {v} should not carry 'above', got class={c!r}"
-        )
+    # Small positive (5) gets outside + above
+    assert "outside" in classes_by_value.get("5", "")
+    assert "above" in classes_by_value.get("5", "")
+    # Large positive (100) keeps the plain inside-bar 'data' class
+    assert classes_by_value.get("100") == "data"
 
 
 def test_above_css_positions_label_at_top():

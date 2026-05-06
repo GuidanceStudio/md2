@@ -525,22 +525,21 @@ def transform_charts(html_content):
                         else:
                             size = -num_val / domain_range
                             start = zero_frac - size
-                        # M86: small or negative bars carry a `data outside`
-                        # class so the value label renders in default text
-                        # color (no white-on-white). Zeros are handled by
-                        # M87's `data zero` class — keep them out of here.
-                        # M89: large negative bars (size > 0.50) get an
-                        # additional `above` class so their label is placed
-                        # near the zero baseline rather than at the bar tip
-                        # (which would collide with xlabels).
+                        # M86: small or negative bars float their label
+                        # outside the colored fill (default text color).
+                        # M93: ALL outside labels use `above` placement
+                        # — anchored to the top of the td, never to the
+                        # bottom. For negatives that means the label sits
+                        # at the zero baseline; for small positives it
+                        # sits just above the bar top. Either way: well
+                        # away from the body-bottom where xlabels live,
+                        # so no collision.
                         is_small = 0 < size < 0.20
                         is_negative = num_val < 0
                         if show_data and (is_small or is_negative):
-                            classes = "data outside"
-                            if is_negative and size > 0.50:
-                                classes += " above"
                             cell_data = (
-                                f'<span class="{classes}">{v.strip()}</span>'
+                                f'<span class="data outside above">'
+                                f'{v.strip()}</span>'
                             )
                         else:
                             cell_data = data_span
