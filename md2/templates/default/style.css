@@ -154,7 +154,12 @@ body {
 
 /* Charts — override table styles inside chart wrappers */
 .md2-chart {
-    margin: 30px auto; max-width: 100%; padding: 8px 20px 24px;
+    margin: 30px auto;
+    /* Match the chart's own max-width (800px on column) so the card
+       doesn't extend wider than the chart inside, which would create
+       awkward empty space on the right. */
+    max-width: 840px;
+    padding: 8px 20px 24px;
     box-sizing: border-box;
     box-shadow: 0 2px 15px rgba(0,0,0,0.05);
     border-radius: 8px;
@@ -249,7 +254,9 @@ body {
    which forces tbody.height = width * 9/21 and overflows the fixed table
    height. With aspect-ratio: auto, tbody respects the table height. */
 .md2-chart .charts-css.line tbody,
-.md2-chart .charts-css.area tbody {
+.md2-chart .charts-css.area tbody,
+.md2-chart .charts-css.column tbody,
+.md2-chart .charts-css.bar tbody {
     aspect-ratio: auto;
     height: 100%;
 }
@@ -272,14 +279,15 @@ body {
 }
 .md2-chart-yaxis {
     box-sizing: border-box;
-    flex: 0 0 48px;
+    flex: 0 0 56px;
+    padding-right: 8px;
     display: flex;
     flex-direction: column;
     justify-content: space-between;
     text-align: right;
-    font-size: 0.75rem;
+    font-size: 0.8rem;
     color: var(--text-color);
-    opacity: 0.7;
+    opacity: 0.75;
     pointer-events: none;
 }
 .md2-chart-yaxis span {
@@ -291,18 +299,25 @@ body {
 .md2-chart-yaxis span:first-child { transform: translateY(-50%); }
 .md2-chart-yaxis span:last-child  { transform: translateY(50%); }
 /* M70: x-axis labels rendered outside Charts.css, aligned to td columns.
-   Padding-left = yaxis flex-basis (48px) + flex gap (8px). */
+   Padding-left = yaxis flex-basis (56px) + flex gap (8px). M94: each
+   label gets `flex: 1 1 0` so all N labels distribute across the
+   chart-body width — under their bar centers, not bunched at the edges. */
 .md2-chart-xlabels {
     display: flex;
-    justify-content: space-between;
-    padding-left: calc(48px + 8px);
-    /* M88: more breathing room from the chart baseline */
-    margin-top: 16px;
-    font-size: 0.75rem;
+    padding-left: calc(56px + 8px);
+    margin-top: 12px;
+    font-size: 0.85rem;
     color: var(--text-color);
-    opacity: 0.7;
+    opacity: 1;
+    font-weight: 500;
 }
-.md2-chart-xlabels span { flex: 0 0 auto; text-align: center; }
+.md2-chart-xlabels span {
+    flex: 1 1 0;
+    min-width: 0;
+    text-align: center;
+    overflow: visible;
+    white-space: nowrap;
+}
 /* M63 removed in M65: multi-line/area no longer have ul.legend
    (endpoint labels with "Name: Value" format serve as legend) */
 .md2-chart .charts-css.pie {
