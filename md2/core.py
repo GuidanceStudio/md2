@@ -517,9 +517,21 @@ def transform_charts(html_content):
                         else:
                             size = -num_val / domain_range
                             start = zero_frac - size
+                        # M86: small or negative bars carry a `data outside`
+                        # class so the value label renders in default text
+                        # color (no white-on-white). Zeros are handled by
+                        # M87's `data zero` class — keep them out of here.
+                        is_small = 0 < size < 0.20
+                        is_negative = num_val < 0
+                        if show_data and (is_small or is_negative):
+                            cell_data = (
+                                f'<span class="data outside">{v.strip()}</span>'
+                            )
+                        else:
+                            cell_data = data_span
                         parts.append(
                             f'<td style="--start: {_fmt(start)}; '
-                            f'--size: {_fmt(size)}">{data_span}</td>'
+                            f'--size: {_fmt(size)}">{cell_data}</td>'
                         )
                     else:
                         norm = num_val / norm_max

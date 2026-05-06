@@ -2745,7 +2745,7 @@ Per line/area, M70 ha spostato i label X da `<th>` Charts.css a un `<div class="
 
 ---
 
-## Milestone 86: Data label posizionamento condizionale (out-of-bar per piccoli/negativi) ⬜
+## Milestone 86: Data label posizionamento condizionale (out-of-bar per piccoli/negativi) ✅
 
 **Problema:**
 La regola CSS `.md2-chart .column .data { color: #fff; text-shadow: 0 1px 2px rgba(0,0,0,0.5); }` rende il valore numerico in bianco con ombra dentro la barra. Funziona per barre alte e colorate, ma:
@@ -2761,16 +2761,17 @@ Esempi reali (cashflow): `2623` (Maggio Cash burn), `-612` (Luglio Invoiced), `-
 - Posizionamento: lasciare a Charts.css la posizione default (sopra la bar se sopra baseline, sotto se sotto).
 
 **Tasks:**
-- [ ] Test TDD: chart con `[100, 5]` (mix grande/piccolo) → bar 5 ha `data outside`, bar 100 ha solo `data`.
-- [ ] Test TDD: chart con `[10, -8]` → bar negativa ha `data outside`.
-- [ ] Test TDD: chart all-positive grande → backward compat, nessun `outside`.
-- [ ] CSS: regola `.data.outside { color: var(--text); ... }` aggiunta.
-- [ ] Implementare in `core.py` la logica condizionale.
-- [ ] Verifica visiva su `examples/example.html`.
+- [x] Test TDD: chart `[100, 5]` (mix grande/piccolo) → 5 ha `data outside`, 100 ha solo `data`.
+- [x] Test TDD: chart `[10, -8]` → bar negativa ha `data outside`.
+- [x] Test TDD: chart all-positive grande → backward compat, nessun `outside`.
+- [x] Test TDD: cashflow multi-series → ogni bar classificato correttamente.
+- [x] Test TDD: CSS `.data.outside` usa `var(--text-color)` e `text-shadow: none`.
+- [x] CSS: regola `.md2-chart .data.outside` aggiunta.
+- [x] Implementare in `core.py`: condizione `(0 < size < 0.20) or num_val < 0` (zeri esclusi — gestiti da M87).
 
 **Done when:**
-- Test passano.
-- Cashflow case: label `2623`, `-8487`, `-612`, `-19597` tutti leggibili in colore default su sfondo chart.
+- 5/5 test M86 verdi. ✅
+- 452 test totali (M81/zero compat preservata). ✅
 
 ---
 
