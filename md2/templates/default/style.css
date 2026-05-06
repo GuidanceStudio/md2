@@ -269,8 +269,21 @@ body {
     align-items: stretch;
     gap: 8px;
     height: min(260px, 36vh);
-    /* M88: visual baseline separating bars from x-axis labels */
-    border-bottom: 1px solid var(--table-border);
+    /* M88: visual baseline. For all-positive charts the baseline is
+       at body-bottom (chart floor). M95: when --zero-frac > 0, an
+       absolutely-positioned pseudo-element draws the X-axis line at
+       the zero baseline (between positive and negative bars). */
+    position: relative;
+}
+.md2-chart-body::after {
+    content: "";
+    position: absolute;
+    left: calc(56px + 8px);
+    right: 0;
+    bottom: calc(var(--zero-frac, 0) * 100%);
+    height: 1px;
+    background: var(--table-border);
+    pointer-events: none;
 }
 .md2-chart-body > .charts-css {
     flex: 1;
@@ -301,7 +314,10 @@ body {
 /* M70: x-axis labels rendered outside Charts.css, aligned to td columns.
    Padding-left = yaxis flex-basis (56px) + flex gap (8px). M94: each
    label gets `flex: 1 1 0` so all N labels distribute across the
-   chart-body width — under their bar centers, not bunched at the edges. */
+   chart-body width — under their bar centers, not bunched at the edges.
+   X-labels stay at body-bottom (below all bars including negatives) —
+   the visible zero "axis" is the M88 baseline border, which M95 moves
+   to the zero line for mixed-sign charts. */
 .md2-chart-xlabels {
     display: flex;
     padding-left: calc(56px + 8px);

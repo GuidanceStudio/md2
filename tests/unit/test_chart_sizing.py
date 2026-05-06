@@ -64,15 +64,17 @@ def test_area_has_height():
 
 
 def test_bar_no_fixed_height():
-    """Bar charts do NOT have a fixed height — they grow with data rows.
-
-    min-height is allowed (for row visibility), but not a fixed height.
-    """
+    """The top-level `.charts-css.bar` rule does NOT have a fixed height.
+    Tbody inner rules may set `height: 100%` (M70/M85 aspect-ratio
+    override) — that's a child constraint, not a fixed bar-chart height."""
     css = _get_style_css()
-    bar_matches = [m.start() for m in re.finditer(r'\.charts-css\.bar\b', css)]
+    # Find rules that target ONLY .charts-css.bar at the top level (not
+    # `.charts-css.bar tbody` or `.charts-css.bar tr`).
+    bar_matches = [
+        m.start() for m in re.finditer(r'\.md2-chart \.charts-css\.bar\s*\{', css)
+    ]
     for start in bar_matches:
         block = css[start:css.index("}", start) + 1]
-        # Match standalone "height:" but not "min-height:" or "--line-size"
         height_matches = re.findall(r'(?<!-)(?<!min-)\bheight\s*:', block)
         assert len(height_matches) == 0, f"Bar chart should not have fixed height: {block}"
 

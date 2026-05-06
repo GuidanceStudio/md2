@@ -135,9 +135,16 @@ def test_xlabels_span_count_matches_data_points_not_segments():
 
 # --- CSS: xlabels use space-between so first/last align to chart edges ---
 
-def test_css_xlabels_justify_space_between():
+def test_css_xlabels_use_flex_distribution():
+    """M94: xlabels switched from `justify-content: space-between` (which
+    bunched labels at the edges, away from the centered bars) to
+    per-span `flex: 1` distribution — each label gets an equal-width
+    slot centered on its bar."""
     css = _css()
     m = re.search(r"\.md2-chart-xlabels\s*\{([^}]*)\}", css)
     assert m
     block = m.group(1)
-    assert "justify-content: space-between" in block
+    assert "display: flex" in block
+    span_m = re.search(r"\.md2-chart-xlabels span\s*\{([^}]*)\}", css)
+    assert span_m
+    assert "flex: 1" in span_m.group(1)

@@ -613,6 +613,7 @@ def transform_charts(html_content):
         # with the Y-axis on the left. M85: all chart types with a Y-axis
         # also emit X labels in a sibling div (decoupled from Charts.css
         # internal `<th>` row headers).
+        chart_inline_style = ""
         if has_yaxis and ticks:
             tick_spans = "".join(
                 f'<span>{t}</span>' for t in reversed(ticks)
@@ -624,8 +625,15 @@ def transform_charts(html_content):
             )
             xlabels_html = f'<div class="md2-chart-xlabels">{xlabel_spans}</div>'
             result = body_html + xlabels_html + legend_html
+            # M95: expose --zero-frac so the xlabels can sit on the zero
+            # baseline (between positive and negative bars) for charts
+            # with negatives — not at the body-bottom (which would be the
+            # most-negative tick line). For all-positive charts zero_frac
+            # is 0, so the xlabels stay below the body as before.
+            if zero_frac is not None and zero_frac > 0:
+                chart_inline_style = f' style="--zero-frac: {_fmt(zero_frac)}"'
 
-        return f'<div class="md2-chart">{title_html}{result}</div>'
+        return f'<div class="md2-chart"{chart_inline_style}>{title_html}{result}</div>'
 
     return _CHART_DIV_RE.sub(_transform_chart, html_content)
 
