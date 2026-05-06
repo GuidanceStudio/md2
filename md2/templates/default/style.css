@@ -188,6 +188,13 @@ body {
     opacity: 0.9;
     padding-right: 0;
 }
+/* M89: large negative bars place the label near the zero baseline (top
+   of the negative td) instead of at the bar tip (which collides with
+   xlabels). */
+.md2-chart .data.outside.above {
+    vertical-align: top;
+    align-self: flex-start;
+}
 /* M87: zero-value bars render their `0` as muted ghost text at the
    baseline (no pill, no shadow). */
 .md2-chart .data.zero {

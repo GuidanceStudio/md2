@@ -2821,7 +2821,7 @@ Dopo M85 i label X di column/bar sono in un `<div class="md2-chart-xlabels">` si
 
 ---
 
-## Milestone 89: Data labels — collision avoidance con xlabels ⬜
+## Milestone 89: Data labels — collision avoidance con xlabels ✅
 
 **Problema:**
 Le data label `outside` (M86) per bar negative sono posizionate da Charts.css sotto la barra. Quando la barra negativa arriva fino al body-bottom (es. -19597 vicinissimo a -20000 tick), il label "outside" finisce ALLA STESSA Y dei label X (xlabels div sotto body), causando collision visiva. Esempio cashflow: `-2623` (Maggio Cash burn) si sovrappone al label "Maggio".
