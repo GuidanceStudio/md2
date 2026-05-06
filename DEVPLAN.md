@@ -2844,7 +2844,7 @@ Le data label `outside` (M86) per bar negative sono posizionate da Charts.css so
 
 ---
 
-## Milestone 90: Compact chart per fit in single A4 landscape page ⬜
+## Milestone 90: Compact chart per fit in single A4 landscape page ✅
 
 **Problema:**
 Il chart con title + body 300px + xlabels + legend ora supera l'altezza utile di una slide A4 landscape, causando overflow su pagina nuova (osservato il 06/05/2026: nota italica del cashflow finita su slide 8 vuota).

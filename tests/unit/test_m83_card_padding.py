@@ -86,23 +86,26 @@ def test_aging_chart_with_zero_category_renders_cleanly():
 
 
 def test_column_chart_body_height_matches_table_height():
-    """The `md2-chart-body` and the inner column table use the same
-    `min(300px, 40vh)` height — required so the flex stretch doesn't
-    create overflow."""
+    """The `md2-chart-body` and the inner column table must use the SAME
+    `height: min(...)` value — required so the flex stretch doesn't
+    create overflow. The exact value evolves (M90 compacted to 260px);
+    this test enforces the consistency invariant, not the literal value."""
     css = _get_style_css()
-    # md2-chart-body height
     body_match = re.search(
         r'\.md2-chart-body\s*\{([^}]+)\}', css, re.DOTALL,
     )
     assert body_match
-    assert "min(300px, 40vh)" in body_match.group(1), (
-        ".md2-chart-body must use min(300px, 40vh) height"
-    )
-    # Column chart has the same height
+    body_h = re.search(r'height:\s*(min\([^)]+\))', body_match.group(1))
+    assert body_h, "chart-body must declare height: min(...)"
+
     col_match = re.search(
         r'\.md2-chart \.charts-css\.column\s*\{([^}]+)\}', css, re.DOTALL,
     )
     assert col_match
-    assert "min(300px, 40vh)" in col_match.group(1), (
-        "column chart must use the same min(300px, 40vh) height as body"
+    col_h = re.search(r'height:\s*(min\([^)]+\))', col_match.group(1))
+    assert col_h, "column chart must declare height: min(...)"
+
+    assert body_h.group(1) == col_h.group(1), (
+        f"chart-body height {body_h.group(1)!r} must match column chart "
+        f"height {col_h.group(1)!r} for flex consistency"
     )

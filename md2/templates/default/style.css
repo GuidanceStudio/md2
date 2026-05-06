@@ -228,18 +228,18 @@ body {
 .md2-chart .charts-css.column {
     /* M85: x-labels decoupled to .md2-chart-xlabels — no internal reserved space. */
     --labels-size: 0; --data-spacing: 16px;
-    height: min(300px, 40vh);
+    height: min(260px, 36vh);
     max-width: 800px; margin-left: auto; margin-right: auto;
 }
 .md2-chart .charts-css.column tbody tr {
     padding-inline: 12px;
 }
 .md2-chart .charts-css.line {
-    height: min(300px, 40vh); --line-size: 3px;
+    height: min(260px, 36vh); --line-size: 3px;
     --labels-size: 0;
 }
 .md2-chart .charts-css.area {
-    height: min(300px, 40vh); --line-size: 3px;
+    height: min(260px, 36vh); --line-size: 3px;
     --labels-size: 0;
 }
 /* M70: x-labels are decoupled into a sibling .md2-chart-xlabels div.
@@ -261,7 +261,7 @@ body {
     display: flex;
     align-items: stretch;
     gap: 8px;
-    height: min(300px, 40vh);
+    height: min(260px, 36vh);
     /* M88: visual baseline separating bars from x-axis labels */
     border-bottom: 1px solid var(--table-border);
 }
