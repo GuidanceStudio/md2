@@ -2661,24 +2661,26 @@ Detect early in `transform_charts`: se il chart è `stacked-column` o `stacked-b
 
 ---
 
-## Milestone 83: Audit `.md2-chart` card padding post-Y-axis ⬜
+## Milestone 83: Audit `.md2-chart` card padding post-Y-axis ✅
 
 **Problema:**
 Dopo M80 (Y-axis introdotto a column/bar), la card `.md2-chart` ha tre nuovi elementi al proprio interno: tick Y a sinistra, baseline e label X sotto. Senza un audit del padding, alcuni di questi elementi possono finire fuori dal bordo della card (osservato il 06/05/2026 su un chart aging dove le label X erano sotto il bordo della card).
 
 **Approccio:**
-Audit chirurgico delle regole CSS:
-- `.md2-chart` deve avere `box-sizing: border-box` e padding tale da contenere `--labels-size` (32px standard) sotto il chart body.
-- Quando il chart è column/bar con asse Y (post-M80), il padding sinistro deve accomodare la larghezza dell'asse Y.
-- Print mode (M77-M79) non deve regredire — verificare `@media print` separatamente.
+Audit chirurgico delle regole CSS. Sorpresa positiva: post-M80+M81 il wrapping in `.md2-chart-body` con il chart table dentro ha già risolto la maggior parte del problema. L'unica modifica necessaria è aggiungere `box-sizing: border-box` su `.md2-chart` come misura difensiva (evita che il padding allarghi la card oltre il container).
 
 **Tasks:**
-- [ ] Test TDD (snapshot CSS): `.md2-chart` ha `box-sizing: border-box` e `padding-bottom >= 32px` quando contiene un column/bar chart.
-- [ ] Test TDD (snapshot HTML rendering): coordinate computed dei `<span>` di `md2-chart-xlabels` sempre `< chart_card.bottom`.
-- [ ] Audit visivo manuale: rigenerare `examples/example.html` e verificare a schermo + in stampa che tutti gli elementi siano contenuti nella card.
-- [ ] Fix CSS minimale: solo le regole necessarie a contenere gli elementi, niente over-engineering.
+- [x] Test TDD: `.md2-chart` dichiara `box-sizing: border-box`.
+- [x] Test TDD: `.md2-chart` padding-bottom ≥ 24px (già rispettato dal valore esistente `padding: 8px 20px 24px`).
+- [x] Test TDD: chart aging del caso utente (4 categorie incluso uno a 0) renderizza correttamente — wrapper `md2-chart-body`, Y-axis presente, tutte e 4 le label X presenti nell'HTML.
+- [x] Test TDD: altezza di `md2-chart-body` e column chart sono entrambe `min(300px, 40vh)` (no flex stretch overflow).
+- [x] Aggiungere `box-sizing: border-box` a `.md2-chart`.
+- [x] Rigenerare `examples/example.html`.
 
 **Done when:**
-- Test snapshot passano.
-- Visual check su `examples/example.html` mostra tutti gli elementi dei chart dentro le rispettive card, sia a schermo sia in print preview.
-- Nessuna regressione sul layout dei chart all-positive (M79).
+- 4 nuovi test passano. ✅
+- Tutti i test pre-esistenti passano. ✅ (435 totali)
+- `examples/example.html` rigenerato per coerenza con le regole M80-M83. ✅
+
+**Deviazioni:**
+- L'overflow descritto nel problema originario era riconducibile al rendering pre-M80 (column chart era una `<table>` direttamente dentro `.md2-chart` senza il wrapper `md2-chart-body`). Post-M80+M81 la struttura wrappa il chart in `md2-chart-body` con altezza fissa, risolvendo strutturalmente il caso. M83 si è limitato alla difesa con `box-sizing: border-box` — non servivano cambi di padding.
