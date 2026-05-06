@@ -2887,7 +2887,7 @@ Per chart con Y-axis (`has_yaxis=True`) e `num_val == 0`, NON emettere il `<span
 
 ---
 
-## Milestone 92: install.sh — sync template utente dopo reinstall binario ⬜
+## Milestone 92: install.sh — sync template utente dopo reinstall binario ✅
 
 **Problema:**
 `install.sh` di md2 esegue `uv tool install . --force --reinstall` che reinstalla il binario `md2` nel `~/.local/bin/`. **Non sincronizza** i template utente in `~/.md2/templates/`. md2 al primo avvio copia i template dalla source, ma in upgrade successivi i template restano la versione vecchia. Risultato: modifiche CSS in `md2/templates/` NON arrivano al rendering reale.

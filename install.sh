@@ -35,6 +35,16 @@ fi
 
 uv tool install . --force --reinstall
 
+# M92: sync the bundled templates to the user dir so CSS edits in
+# md2/templates/ reach the renderer (md2 reads from ~/.md2/templates/
+# at render time and never re-copies after the first run).
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+USER_TEMPLATES="$HOME/.md2/templates"
+if [ -d "$USER_TEMPLATES" ]; then
+    cp -r "$SCRIPT_DIR/md2/templates/." "$USER_TEMPLATES/"
+    echo "Template utente sincronizzati in $USER_TEMPLATES."
+fi
+
 if [ $? -eq 0 ]; then
     echo "$ACTION completato! Ora puoi usare il comando 'md2'."
     echo ""
