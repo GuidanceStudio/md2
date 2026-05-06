@@ -213,11 +213,17 @@ def preprocess_chart_directives(markdown_text):
     def _replace_chart(match):
         nonlocal has_charts
         chart_type = match.group(1).strip().lower()
-        options = match.group(2).strip().lower().split()
+        options_str = match.group(2).strip()
         content = match.group(3)
 
-        # M75: `:::chart line filled` is a friendlier alias for `:::chart area`
-        if chart_type == "line" and "filled" in options:
+        # M84: parse options and `--title "..."` directive properly. The
+        # parser preserves the title's original casing and unicode chars.
+        options, directive_title = _parse_chart_options(options_str)
+
+        # M75: `:::chart line filled` is a friendlier alias for `:::chart area`.
+        # The `filled` keyword has no leading `--`, so check the raw tokens too.
+        raw_tokens = options_str.lower().split()
+        if chart_type == "line" and ("filled" in options or "filled" in raw_tokens):
             chart_type = "area"
 
         if chart_type not in _VALID_CHART_TYPES:
@@ -225,12 +231,15 @@ def preprocess_chart_directives(markdown_text):
 
         has_charts = True
 
-        # Extract optional heading as title
-        title = ""
+        # Title resolution: `--title "..."` directive wins over `# heading`
+        # inside the block (M84 — explicit beats implicit).
+        title = directive_title
         title_match = _CHART_TITLE_RE.search(content)
         if title_match:
-            title = title_match.group(1).strip()
+            heading_title = title_match.group(1).strip()
             content = _CHART_TITLE_RE.sub('', content, count=1)
+            if not title:
+                title = heading_title
 
         title_attr = f' data-chart-title="{html.escape(title)}"' if title else ""
 

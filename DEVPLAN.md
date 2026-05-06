@@ -2684,3 +2684,108 @@ Audit chirurgico delle regole CSS. Sorpresa positiva: post-M80+M81 il wrapping i
 
 **Deviazioni:**
 - L'overflow descritto nel problema originario era riconducibile al rendering pre-M80 (column chart era una `<table>` direttamente dentro `.md2-chart` senza il wrapper `md2-chart-body`). Post-M80+M81 la struttura wrappa il chart in `md2-chart-body` con altezza fissa, risolvendo strutturalmente il caso. M83 si è limitato alla difesa con `box-sizing: border-box` — non servivano cambi di padding.
+
+---
+
+## Milestone 84: Fix `--title "..."` directive parsing for charts ✅
+
+**Problema:**
+La directive `:::chart column --title "Crediti 2026 (€)"` produce HTML SENZA `<div class="md2-chart-title">`. La funzione `_parse_chart_options` (definita in `core.py:176`) non veniva mai chiamata; `_replace_chart` faceva solo `options = match.group(2).strip().lower().split()` ignorando completamente `--title`. L'unica via supportata era un `# heading` dentro il blocco chart.
+
+**Approccio:**
+- `_replace_chart` ora chiama `_parse_chart_options(options_str)` per estrarre titolo e flag.
+- Backward compat: se non c'è `--title`, si usa il `# heading` interno come prima.
+- Se entrambi presenti, `--title` vince (più esplicito).
+- Casing/unicode preservato: niente più `.lower()` distruttivo sul titolo.
+
+**Tasks:**
+- [x] Test TDD: `:::chart column --title "Hello (€)"` → output contiene `<div class="md2-chart-title">Hello (€)</div>`.
+- [x] Test TDD: heading interno backward compat.
+- [x] Test TDD: directive vince su heading.
+- [x] Test TDD: unicode preservato (`€`, `—`).
+- [x] Test TDD: nessun titolo → nessun `chart-title` div.
+- [x] Implementare in `core.py`.
+
+**Deviazioni:**
+- M75 (`line filled` alias) usava `match.group(2).split()` per cercare il token `filled`. Dopo la rifattorizzazione `_parse_chart_options` lo strippava. Aggiunto un `raw_tokens` esplicito per preservare il check su `filled`.
+
+**Done when:**
+- 5/5 test M84 passano. ✅
+- 440 test totali verdi (incluso M75 mantenuto). ✅
+
+---
+
+## Milestone 85: X-axis labels decoupled per column/bar (estende M70) ⬜
+
+**Problema:**
+Per line/area, M70 ha spostato i label X da `<th>` Charts.css a un `<div class="md2-chart-xlabels">` sibling. Per column/bar i label restano ancora dentro `<th>` di Charts.css con `--labels-size: 32px`. Con il floating-bar pattern di M81, i bar negativi si estendono sotto la baseline; Charts.css posiziona i `<th>` al fondo della tabella che ora include i negativi, ma il legend (con `margin-top: 40px` outside del chart-body) finisce nello stesso spazio visivo. Risultato: legenda che oscura il label "Giugno" nello slide cashflow.
+
+**Approccio:**
+- Estendere il branch `is_connected` di `transform_charts` a tutti i chart con `has_yaxis` (tranne pie).
+- Per column/bar: emettere `<div class="md2-chart-xlabels">` con span per ogni categoria, posizionato sotto `md2-chart-body` (come line/area).
+- Settare `--labels-size: 0` sulla classe Charts.css quando i label X sono decoupled (così Charts.css non riserva spazio interno).
+- Verificare che il padding-left della `md2-chart-xlabels` (`calc(48px + 8px)`) sia coerente per column (yaxis size + gap).
+
+**Tasks:**
+- [ ] Test TDD: column chart → output ha `<div class="md2-chart-xlabels">` con span per ogni categoria, e `--labels-size: 0` sulla table.
+- [ ] Test TDD: bar chart (orizzontale) → idem, ma layout adattato.
+- [ ] Test TDD: cashflow case (3 mesi × 3 serie con negativi) → label "Maggio", "Giugno", "Luglio" tutti presenti come span sibling, NESSUN `<th scope="row">` nei `<tr>` del body.
+- [ ] Test TDD: backward compat (line/area unchanged) — il loro `md2-chart-xlabels` è già emesso da M70, non deve regredire.
+- [ ] Implementare in `core.py`: estendere il blocco `is_connected` per coprire column/bar; emettere `--labels-size: 0` per chart con xlabels decoupled.
+- [ ] CSS: verificare che `.md2-chart-xlabels` selettore non sia limitato a line/area; aggiungere padding per chart bar.
+
+**Done when:**
+- Test passano.
+- Slide cashflow: legenda non occlude più i label X.
+- Slide aging: label X all'interno della card, non più sotto il bordo.
+- Layout coerente con line/area.
+
+---
+
+## Milestone 86: Data label posizionamento condizionale (out-of-bar per piccoli/negativi) ⬜
+
+**Problema:**
+La regola CSS `.md2-chart .column .data { color: #fff; text-shadow: 0 1px 2px rgba(0,0,0,0.5); }` rende il valore numerico in bianco con ombra dentro la barra. Funziona per barre alte e colorate, ma:
+- Per barre piccole (`--size < 0.20`) il label scivola fuori dalla bar e diventa illeggibile (bianco su bianco).
+- Per barre negative, il label spesso viene posizionato sopra/sotto la bar invece che dentro, idem illeggibile.
+
+Esempi reali (cashflow): `2623` (Maggio Cash burn), `-612` (Luglio Invoiced), `-8487`.
+
+**Approccio:**
+- In `core.py`, durante l'emit del `<td>`, calcolare se la barra è "piccola" (`--size < 0.20`) o "negativa" (`num_val < 0`).
+- Se sì, emettere `<span class="data outside">{value}</span>` invece di `<span class="data">`.
+- CSS: `.md2-chart .data.outside { color: var(--text); text-shadow: none; opacity: 0.85; font-size: 0.8rem; }`.
+- Posizionamento: lasciare a Charts.css la posizione default (sopra la bar se sopra baseline, sotto se sotto).
+
+**Tasks:**
+- [ ] Test TDD: chart con `[100, 5]` (mix grande/piccolo) → bar 5 ha `data outside`, bar 100 ha solo `data`.
+- [ ] Test TDD: chart con `[10, -8]` → bar negativa ha `data outside`.
+- [ ] Test TDD: chart all-positive grande → backward compat, nessun `outside`.
+- [ ] CSS: regola `.data.outside { color: var(--text); ... }` aggiunta.
+- [ ] Implementare in `core.py` la logica condizionale.
+- [ ] Verifica visiva su `examples/example.html`.
+
+**Done when:**
+- Test passano.
+- Cashflow case: label `2623`, `-8487`, `-612`, `-19597` tutti leggibili in colore default su sfondo chart.
+
+---
+
+## Milestone 87: Zero-value bar — clean baseline rendering ⬜
+
+**Problema:**
+M81 ha rimosso il guard `if num_val != 0` per emettere il `<span class="data">0</span>` anche per valori zero. Ma lo span eredita lo styling normale (`color: #fff; text-shadow: 0 1px 2px rgba(0,0,0,0.5); padding-right: 6px`), che su uno sfondo senza bar visibile produce una "pillola" minuscola, esteticamente bruttina.
+
+**Approccio:**
+- Quando `num_val == 0`, emettere `<span class="data zero">0</span>`.
+- CSS: `.md2-chart .data.zero { color: var(--text); opacity: 0.5; text-shadow: none; padding: 0; font-size: 0.75rem; }` — testo grigio neutrale, baseline-positioned, nessuna decorazione.
+
+**Tasks:**
+- [ ] Test TDD: chart con `[10, 0, 5]` → secondo `<td>` ha `<span class="data zero">0</span>`, gli altri solo `data`.
+- [ ] CSS: regola `.data.zero` aggiunta.
+- [ ] Implementare in `core.py`.
+- [ ] Verifica visiva: aging case (slide 5) — la "0" sulla fascia 31-60 gg è ghost text neutrale, non più pillola.
+
+**Done when:**
+- Test passano.
+- Aging chart con fascia a zero: il "0" appare come ghost text neutro, non come pillola.
