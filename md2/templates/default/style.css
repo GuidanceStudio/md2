@@ -188,6 +188,16 @@ body {
     opacity: 0.9;
     padding-right: 0;
 }
+/* M87: zero-value bars render their `0` as muted ghost text at the
+   baseline (no pill, no shadow). */
+.md2-chart .data.zero {
+    color: var(--text-color);
+    text-shadow: none;
+    font-weight: 500;
+    font-size: 0.75rem;
+    opacity: 0.5;
+    padding: 0;
+}
 /* Line/area use .hide-data class → Charts.css hides .data inline values.
    The graduated Y-axis (.md2-chart-yaxis) shows scale instead. */
 .md2-chart table.charts-css {

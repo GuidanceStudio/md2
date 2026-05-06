@@ -53,10 +53,9 @@ def test_single_dataset_normalization_unchanged():
 
 
 def test_zero_value_renders_data_span():
-    """M81: zero values DO emit <span class='data'>0</span>. The previous
-    behavior (suppressing the span to avoid a 'floating 0') hid useful
-    information; M81 lets the user-supplied label through and relies on
-    the chart layout to position it correctly."""
+    """M81 enabled the zero data span; M87 added the `zero` class so the
+    label renders as muted ghost text. The span is present either way —
+    accept both class forms for backward compat."""
     md = (
         ":::chart column --labels --legend\n"
         "| Pillar       | Engineers | ML Specialists |\n"
@@ -66,7 +65,11 @@ def test_zero_value_renders_data_span():
         ":::"
     )
     html, _ = process_markdown(md)
-    assert '<span class="data">0</span>' in html
+    # Accept either `data` or `data zero` (M87) class on the zero label
+    assert (
+        '<span class="data">0</span>' in html
+        or '<span class="data zero">0</span>' in html
+    )
     # The td with --size: 0 still exists for chart structure
     assert "--size: 0" in html
 

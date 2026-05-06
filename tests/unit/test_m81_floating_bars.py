@@ -129,9 +129,9 @@ def test_column_zero_value_keeps_category_label():
 
 
 def test_column_zero_value_renders_data_label():
-    """A category with value 0 emits `<span class="data">0</span>` so that
-    the user-supplied label "0" is visible (M81 removes the
-    `if num_val != 0` guard that previously suppressed it)."""
+    """A category with value 0 emits a data span so the label is visible.
+    M81 removed the `if num_val != 0` guard; M87 added the `zero` class —
+    accept either form."""
     md = (
         ":::chart column\n"
         "| C | V |\n"
@@ -141,8 +141,8 @@ def test_column_zero_value_renders_data_label():
         ":::"
     )
     html, _ = process_markdown(md)
-    # The "0" data label must be present in a `<span class="data">`
-    data_spans = re.findall(r'<span class="data">([^<]*)</span>', html)
+    # Accept either class form (`data` or `data zero` post-M87)
+    data_spans = re.findall(r'<span class="data[^"]*">([^<]*)</span>', html)
     assert "0" in data_spans, f"expected '0' in data spans, got {data_spans}"
 
 

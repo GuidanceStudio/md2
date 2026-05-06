@@ -495,7 +495,13 @@ def transform_charts(html_content):
                 for col_idx, v in enumerate(values):
                     num_val = parsed_values[row_idx][col_idx]
                     if show_data:
-                        data_span = f'<span class="data">{v.strip()}</span>'
+                        if num_val == 0 and has_yaxis and not is_pie:
+                            # M87: zero-value bars get a `data zero` class
+                            # so the value renders as muted ghost text on
+                            # the baseline (no white-on-white pill).
+                            data_span = f'<span class="data zero">{v.strip()}</span>'
+                        else:
+                            data_span = f'<span class="data">{v.strip()}</span>'
                     else:
                         data_span = ""
                     if is_pie:

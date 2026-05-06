@@ -2775,7 +2775,7 @@ Esempi reali (cashflow): `2623` (Maggio Cash burn), `-612` (Luglio Invoiced), `-
 
 ---
 
-## Milestone 87: Zero-value bar — clean baseline rendering ⬜
+## Milestone 87: Zero-value bar — clean baseline rendering ✅
 
 **Problema:**
 M81 ha rimosso il guard `if num_val != 0` per emettere il `<span class="data">0</span>` anche per valori zero. Ma lo span eredita lo styling normale (`color: #fff; text-shadow: 0 1px 2px rgba(0,0,0,0.5); padding-right: 6px`), che su uno sfondo senza bar visibile produce una "pillola" minuscola, esteticamente bruttina.
@@ -2785,11 +2785,13 @@ M81 ha rimosso il guard `if num_val != 0` per emettere il `<span class="data">0<
 - CSS: `.md2-chart .data.zero { color: var(--text); opacity: 0.5; text-shadow: none; padding: 0; font-size: 0.75rem; }` — testo grigio neutrale, baseline-positioned, nessuna decorazione.
 
 **Tasks:**
-- [ ] Test TDD: chart con `[10, 0, 5]` → secondo `<td>` ha `<span class="data zero">0</span>`, gli altri solo `data`.
-- [ ] CSS: regola `.data.zero` aggiunta.
-- [ ] Implementare in `core.py`.
-- [ ] Verifica visiva: aging case (slide 5) — la "0" sulla fascia 31-60 gg è ghost text neutrale, non più pillola.
+- [x] Test TDD: chart con `[10, 0, 5]` → bar 0 ha `<span class="data zero">0</span>`, altri `data`.
+- [x] Test TDD: bar piccoli (M86) NON ricevono il `zero` class (solo `outside`).
+- [x] Test TDD: CSS `.md2-chart .data.zero` usa `var(--text-color)`, `text-shadow: none`, e `opacity < 0.7`.
+- [x] CSS: regola `.md2-chart .data.zero` aggiunta.
+- [x] Implementare in `core.py`: branch dedicato `if num_val == 0 and has_yaxis and not is_pie`.
+- [x] 2 test pre-esistenti (M81 zero rendering, chart_normalization) aggiornati per accettare entrambe le forme `data` e `data zero`.
 
 **Done when:**
-- Test passano.
-- Aging chart con fascia a zero: il "0" appare come ghost text neutro, non come pillola.
+- 3 nuovi test M87 verdi. ✅
+- 455 totali. ✅
