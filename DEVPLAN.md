@@ -2795,3 +2795,72 @@ M81 ha rimosso il guard `if num_val != 0` per emettere il `<span class="data">0<
 **Done when:**
 - 3 nuovi test M87 verdi. ✅
 - 455 totali. ✅
+
+---
+
+## Milestone 88: X-labels separazione visiva netta dal chart-body ✅
+
+**Problema:**
+Dopo M85 i label X di column/bar sono in un `<div class="md2-chart-xlabels">` sibling con `margin-top: 6px`. Quando i bar si estendono fino al body-bottom (caso negativi: dominio `[-20000, 60000]` per il cashflow Guidance), i label X "toccano" visivamente la base delle barre. Senza un separatore, sembrano in sovrapposizione (osservato il 06/05/2026 sullo slide cashflow: "Maggio" e il data label `-2623` finiscono alla stessa Y).
+
+**Approccio:**
+- Aumentare `margin-top` di `.md2-chart-xlabels` da 6px a 16px (più respiro tra fine bar e label).
+- Aggiungere un bordo inferiore al `.md2-chart-body` (baseline visiva) per delimitare chiaramente la fine del chart area, usando `border-bottom: 1px solid var(--md-border)` o equivalente coerente con il tema.
+- Print mode (M77-M79): verificare che il bordo non sparisca o si mostri male in stampa.
+
+**Tasks:**
+- [ ] Test TDD (CSS): `.md2-chart-xlabels` ha `margin-top` ≥ 14px.
+- [ ] Test TDD (CSS): `.md2-chart-body` ha `border-bottom` definito (non `none`).
+- [ ] Test TDD (CSS): print rule `@media print` non azzera/altera il border-bottom in modo problematico.
+- [ ] Implementare modifiche in `style.css`.
+- [ ] Verifica visiva: rigenerare `examples/example.html` e controllare slide cashflow Guidance.
+
+**Done when:**
+- Test passano.
+- Slide cashflow: label X chiaramente separati dal chart con baseline visibile.
+
+---
+
+## Milestone 89: Data labels — collision avoidance con xlabels ⬜
+
+**Problema:**
+Le data label `outside` (M86) per bar negative sono posizionate da Charts.css sotto la barra. Quando la barra negativa arriva fino al body-bottom (es. -19597 vicinissimo a -20000 tick), il label "outside" finisce ALLA STESSA Y dei label X (xlabels div sotto body), causando collision visiva. Esempio cashflow: `-2623` (Maggio Cash burn) si sovrappone al label "Maggio".
+
+**Approccio:**
+- Quando una bar è negativa con `--size > 0.50` (estende per oltre metà del range), posizionare il data label SOPRA la bar (sopra il valore, vicino al zero baseline) invece che sotto.
+- Implementazione lato `core.py`: emit `<span class="data outside above">` per bar negative grandi; CSS `data.outside.above { top: 0; ... }` posiziona sopra.
+- Per bar negative piccole (< 0.50), il label resta sotto (l'esistente outside).
+
+**Tasks:**
+- [ ] Test TDD: bar negativa con `--size > 0.5` → span `data outside above`.
+- [ ] Test TDD: bar negativa con `--size < 0.5` → span `data outside` (no above).
+- [ ] Test TDD: CSS `.data.outside.above` posiziona il label sopra la bar.
+- [ ] Implementare in `core.py` la condizione.
+- [ ] Aggiungere CSS rule.
+
+**Done when:**
+- Test passano.
+- Cashflow: `-19597` mostrato sopra la base della barra invece che sotto, niente collision con "Luglio".
+
+---
+
+## Milestone 90: Compact chart per fit in single A4 landscape page ⬜
+
+**Problema:**
+Il chart con title + body 300px + xlabels + legend ora supera l'altezza utile di una slide A4 landscape, causando overflow su pagina nuova (osservato il 06/05/2026: nota italica del cashflow finita su slide 8 vuota).
+
+**Approccio:**
+- Ridurre l'altezza del chart-body da `min(300px, 40vh)` a `min(260px, 36vh)` (≈13% più compatto).
+- Verificare che la riduzione non comprometta la leggibilità del Y-axis (5 tick devono restare distinti).
+- Print mode: verificare che la nuova altezza valga anche in stampa (non solo a schermo).
+
+**Tasks:**
+- [ ] Test TDD (CSS): `.md2-chart .charts-css.column` ha height `min(260px, ...)`.
+- [ ] Test TDD (CSS): `.md2-chart-body` ha la stessa height per coerenza flex.
+- [ ] Verifica visiva: deck Guidance rigenerato → 10 pagine (non 11).
+- [ ] Implementare modifiche `style.css`.
+
+**Done when:**
+- Test passano.
+- Deck Guidance non eccede 10 pagine.
+- Y-axis rimane leggibile.
