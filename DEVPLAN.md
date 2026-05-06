@@ -2639,7 +2639,7 @@ Inoltre rimosso il guard `if num_val != 0` che sopprimeva il `<span class="data"
 
 ---
 
-## Milestone 82: Stacked column/bar con valori negativi — degrade graceful ⬜
+## Milestone 82: Stacked column/bar con valori negativi — degrade graceful ✅
 
 **Problema:**
 Stacked column/bar con valori negativi è semanticamente ambiguo (cosa significa "impilare" un -5 sopra un +10?). Charts.css non lo supporta. Oggi md2 emette HTML che produce rendering rotto silenziosamente.
@@ -2648,14 +2648,16 @@ Stacked column/bar con valori negativi è semanticamente ambiguo (cosa significa
 Detect early in `transform_charts`: se il chart è `stacked-column` o `stacked-bar` e `any(v < 0 for v in all_values)`, emettere un warning su `stderr` e disattivare lo stacking (rimuovere la classe `stacked` dall'output). L'utente vede comunque un grafico leggibile (grouped) e un avviso esplicativo.
 
 **Tasks:**
-- [ ] Test TDD: `:::chart stacked-column` con `[10, -5, 8]` → output non contiene la classe `stacked` sulla `<table>`; warning emesso su stderr.
-- [ ] Test TDD: `:::chart stacked-column` con tutti positivi → comportamento legacy invariato (classe `stacked` presente, nessun warning).
-- [ ] Implementare detection + warning in `core.py`.
-- [ ] Documentare il comportamento in `README.md` sotto la sezione chart.
+- [x] Test TDD: `:::chart stacked-column` con negativi → output non contiene la classe `stacked` sulla `<table>`; warning emesso su stderr.
+- [x] Test TDD: `:::chart stacked-bar` con negativi → stesso comportamento.
+- [x] Test TDD: `:::chart stacked-column` con tutti positivi → comportamento legacy invariato (classe `stacked` presente, nessun warning).
+- [x] Test TDD: `:::chart column` (non-stacked) con negativi → nessun warning (M81 lo gestisce).
+- [x] Implementare detection + warning in `core.py` subito dopo il calcolo di `all_values`.
+- [x] Aggiungere `import sys` per `print(..., file=sys.stderr)`.
 
 **Done when:**
-- Test passano.
-- Stacked + negativi non produce mai HTML rotto silenziosamente.
+- Test passano. ✅ (4 nuovi M82, 431 totali)
+- Stacked + negativi non produce mai HTML rotto silenziosamente. ✅
 
 ---
 

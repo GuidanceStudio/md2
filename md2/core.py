@@ -1,6 +1,7 @@
 import html
 import math
 import re
+import sys
 from pathlib import Path
 
 from ._compat import tomllib
@@ -345,6 +346,17 @@ def transform_charts(html_content):
         # Flat list and global max for normalization
         all_values = [v for row in parsed_values for v in row]
         max_val = max(all_values) if all_values and max(all_values) > 0 else 1
+
+        # M82: stacked column/bar with negatives is semantically ambiguous
+        # and Charts.css can't render it. Degrade to grouped + warn on stderr.
+        if is_stacked and any(v < 0 for v in all_values):
+            print(
+                f"md2 warning: chart type '{raw_type}' contains negative "
+                f"values; stacking is not supported with negatives, "
+                f"rendering as grouped (non-stacked).",
+                file=sys.stderr,
+            )
+            is_stacked = False
 
         # Graduated Y-axis is shown for line/area (M67-M69) and, since M80,
         # also for column/bar. Segment-style rendering (`is_connected`) stays
