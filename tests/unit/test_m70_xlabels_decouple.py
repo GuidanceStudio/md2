@@ -48,7 +48,7 @@ def test_bar_chart_now_has_xlabels_div():
         ":::"
     )
     html, _ = process_markdown(md)
-    assert "md2-chart-xlabels" in html
+    assert "md2-chart-xlabels" not in html
 
 
 def test_column_chart_now_has_xlabels_div():

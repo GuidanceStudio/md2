@@ -80,8 +80,10 @@ def test_column_th_scope_row_removed():
         )
 
 
-def test_bar_chart_also_decoupled():
-    """Bar chart (horizontal) gets the same xlabels decoupling."""
+def test_bar_chart_keeps_native_th_labels():
+    """M101: bar reverted from M85 — categories live in <th scope="row">
+    rendered by Charts.css on the left of each bar (not in a decoupled
+    sibling div). This matches the conventional horizontal-bar layout."""
     md = (
         ":::chart bar\n"
         "| C | V |\n"
@@ -91,7 +93,9 @@ def test_bar_chart_also_decoupled():
         ":::"
     )
     html, _ = process_markdown(md)
-    assert 'class="md2-chart-xlabels"' in html
+    assert 'class="md2-chart-xlabels"' not in html
+    assert '<th scope="row">A</th>' in html
+    assert '<th scope="row">B</th>' in html
 
 
 def test_line_area_xlabels_unchanged():

@@ -224,8 +224,11 @@ body {
 }
 .md2-chart .charts-css { --data-spacing: 12px; }
 .md2-chart .charts-css.bar {
-    /* M85: x-labels decoupled to .md2-chart-xlabels — no internal reserved space. */
-    --labels-size: 0; --data-spacing: 6px;
+    /* Bar (horizontal) keeps Charts.css native layout: category labels
+       on the LEFT via <th>, value scale (when needed) shown via the
+       legend or inline data labels. --labels-size reserves the left
+       space for those category labels. */
+    --labels-size: 130px; --data-spacing: 6px;
     min-height: 40px;
 }
 .md2-chart .charts-css.bar tbody tr { min-height: 40px; padding: 6px 0; }

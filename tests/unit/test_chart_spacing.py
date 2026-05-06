@@ -17,7 +17,7 @@ def test_bar_chart_uses_decoupled_xlabels():
         r'\.md2-chart \.charts-css\.bar\s*\{([^}]+)\}', css, re.DOTALL,
     )
     assert match, "expected .md2-chart .charts-css.bar rule"
-    assert "--labels-size: 0" in match.group(1)
+    assert "--labels-size: 130px" in match.group(1)
 
 
 def test_chart_data_spacing_set():

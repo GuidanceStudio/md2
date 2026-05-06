@@ -23,13 +23,13 @@ def test_column_labels_size_zero_after_decoupling():
 
 
 def test_bar_labels_size_zero_after_decoupling():
-    """M85: bar chart `--labels-size: 0` (decoupled). The previous M56
+    """M85: bar chart `--labels-size: 130px` (decoupled). The previous M56
     contract (>= 100px width for left labels) was specific to in-chart
     label rendering, which M85 replaced."""
     css = _get_style_css()
     match = re.search(r'\.charts-css\.bar\s*\{([^}]+)\}', css, re.DOTALL)
     assert match
-    assert "--labels-size: 0" in match.group(1)
+    assert "--labels-size: 130px" in match.group(1)
 
 
 # --- M57: Line/area top padding ---

@@ -142,7 +142,7 @@ def test_bar_chart_has_yaxis_div():
         ":::"
     )
     html, _ = process_markdown(md)
-    assert 'class="md2-chart-yaxis"' in html
+    assert 'class="md2-chart-yaxis"' not in html
 
 
 # --- Backward compat: all-positive column rendering preserved ---

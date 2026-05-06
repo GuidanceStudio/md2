@@ -373,7 +373,12 @@ def transform_charts(html_content):
         # (M81) — `--start` + `--size` to allow negative values below the
         # baseline.
         is_connected = chart_type in ("line", "area")
-        has_yaxis = chart_type in ("line", "area", "column", "bar")
+        # Bar charts (horizontal) keep the Charts.css native layout:
+        # categories on the left (<th>), bars extending right. Adding a
+        # graduated Y-axis on the left would clash with the row labels,
+        # so bar is excluded from has_yaxis. Floating-bar support for
+        # negatives is preserved via the M99 CSS `left:` shift.
+        has_yaxis = chart_type in ("line", "area", "column")
         domain_min = domain_max = domain_range = zero_frac = None
         if is_connected:
             positive_values = [v for v in all_values if v > 0]
@@ -383,13 +388,34 @@ def transform_charts(html_content):
             norm_max = ticks[-1]
             norm_range = norm_max - norm_min if norm_max > norm_min else 1
         elif has_yaxis:
-            # Column/bar: domain always includes zero so the baseline tick is
-            # visible and the floating-bar formula gives a stable zero_frac.
-            domain_min = min(min(all_values), 0) if all_values else 0
-            domain_max = max(max(all_values), 0) if all_values else 0
+            # Column: domain always includes zero so the baseline tick is
+            # visible. We normalize bars against the TICK range (after
+            # _nice_ticks rounds the extremes), not the raw data range,
+            # so a value at 42 inside ticks [0..80] renders at 52.5% of
+            # body height — aligning with the Y-axis tick at 40, not
+            # filling the body.
+            data_min = min(min(all_values), 0) if all_values else 0
+            data_max = max(max(all_values), 0) if all_values else 0
+            ticks = _nice_ticks(data_min, data_max)
+            domain_min = ticks[0]
+            domain_max = ticks[-1]
             domain_range = domain_max - domain_min if domain_max > domain_min else 1
             zero_frac = -domain_min / domain_range  # 0..1
-            ticks = _nice_ticks(domain_min, domain_max)
+            norm_min = 0
+            norm_max = max_val
+            norm_range = max_val
+        elif chart_type == "bar":
+            # Bar: same tick-aligned floating-bar normalization as column,
+            # but keeps the Charts.css native layout (category <th> on
+            # the left, no separate Y-axis div).
+            data_min = min(min(all_values), 0) if all_values else 0
+            data_max = max(max(all_values), 0) if all_values else 0
+            bar_ticks = _nice_ticks(data_min, data_max)
+            domain_min = bar_ticks[0]
+            domain_max = bar_ticks[-1]
+            domain_range = domain_max - domain_min if domain_max > domain_min else 1
+            zero_frac = -domain_min / domain_range
+            ticks = None
             norm_min = 0
             norm_max = max_val
             norm_range = max_val
@@ -516,7 +542,7 @@ def transform_charts(html_content):
                             f'<td style="--start: {_fmt(start)}; '
                             f'--end: {_fmt(end)}">{data_span}</td>'
                         )
-                    elif has_yaxis and domain_range is not None:
+                    elif domain_range is not None and chart_type in ("column", "bar"):
                         # M81 floating-bar: anchor each bar to the zero
                         # baseline within [domain_min, domain_max].
                         if num_val >= 0:

@@ -38,7 +38,11 @@ def test_column_all_positive_uses_zero_start():
 # --- Mixed positives and negatives ---
 
 def test_column_mixed_positive_negative_floating_bars():
-    """Mixed dataset: positives float above baseline, negatives hang below."""
+    """Mixed dataset: positives float above baseline, negatives hang below.
+    Bars are normalized against the TICK domain (after _nice_ticks rounds
+    the extremes), so the bar positions align with the visible Y-axis
+    ticks. For [10, -5, 8] data, ticks span [-5..10] (or wider). The
+    invariants checked here are sign-based, not exact fractions."""
     md = (
         ":::chart column\n"
         "| M | V |\n"
@@ -52,12 +56,6 @@ def test_column_mixed_positive_negative_floating_bars():
     tds = re.findall(r'<td style="([^"]+)">', html)
     assert len(tds) == 3, f"expected 3 <td>, got {tds}"
 
-    # Domain: data_min = min(all, 0) = -5, data_max = max(all, 0) = 10
-    # Range = 15. zero_frac = 5/15 ≈ 0.333.
-    # Bar 10 (positive): start = zero_frac = 0.333, size = 10/15 = 0.667
-    # Bar -5 (negative): start = zero_frac - 5/15 = 0, size = 5/15 = 0.333
-    # Bar 8 (positive): start = 0.333, size = 8/15 = 0.533
-
     def _extract(style, prop):
         match = re.search(rf'--{prop}:\s*([0-9.\-]+)', style)
         return float(match.group(1)) if match else None
@@ -69,12 +67,21 @@ def test_column_mixed_positive_negative_floating_bars():
     for s in sizes:
         assert s is not None and s >= 0, f"size must be ≥ 0, got {s}"
 
-    # Bar 0 (positive 10): start ≈ 0.333
-    assert abs(starts[0] - 1/3) < 0.01, f"bar 0 start {starts[0]} ≠ ~0.333"
-    # Bar 1 (negative -5): start ≈ 0 (hangs down to 0)
-    assert abs(starts[1]) < 0.01, f"bar 1 start {starts[1]} ≠ ~0"
-    # Bar 2 (positive 8): start ≈ 0.333 (same baseline as bar 0)
-    assert abs(starts[2] - 1/3) < 0.01, f"bar 2 start {starts[2]} ≠ ~0.333"
+    # Positive bars (10 and 8) share the same start = zero_frac, since
+    # both anchor at the zero baseline.
+    assert starts[0] == starts[2], (
+        f"both positive bars should share zero_frac as start; "
+        f"got {starts[0]} and {starts[2]}"
+    )
+    # Negative bar's start is below the zero baseline (start < zero_frac).
+    assert starts[1] < starts[0], (
+        f"negative bar start {starts[1]} should be < positive start {starts[0]}"
+    )
+    # The negative bar reaches the zero line: start + size == zero_frac.
+    assert abs((starts[1] + sizes[1]) - starts[0]) < 0.001, (
+        f"negative bar's top ({starts[1]} + {sizes[1]}) should hit the "
+        f"zero baseline ({starts[0]})"
+    )
 
 
 # --- All-negative ---
