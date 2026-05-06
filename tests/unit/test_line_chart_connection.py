@@ -80,8 +80,10 @@ def test_area_chart_has_start_end():
     assert "--start" in html
 
 
-def test_bar_chart_no_start():
-    """Bar chart does NOT have --start (uses plain --size)."""
+def test_bar_chart_uses_floating_bar_pattern():
+    """M81: bar charts use --start + --size (floating-bar pattern). For
+    all-positive data, --start: 0 is emitted (zero baseline) and --size
+    matches the legacy formula."""
     md = (
         ":::chart bar\n"
         "| A | V |\n"
@@ -91,5 +93,5 @@ def test_bar_chart_no_start():
         ":::"
     )
     html, _ = process_markdown(md)
-    # --start should NOT appear for bar chart
-    assert "--start" not in html
+    assert "--start: 0" in html
+    assert "--size: 1" in html

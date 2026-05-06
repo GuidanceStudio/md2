@@ -91,8 +91,9 @@ def test_pie_cumulative_positions():
 
 # --- Non-pie charts still use --size ---
 
-def test_bar_still_uses_size():
-    """Bar chart continues to use --size (not --start/--end)."""
+def test_bar_uses_size_and_start():
+    """M81: bar charts use both --size and --start (floating-bar pattern).
+    They never use --end (which is reserved for pie's cumulative angles)."""
     md = (
         ":::chart bar\n"
         "| A | V |\n"
@@ -102,7 +103,8 @@ def test_bar_still_uses_size():
     )
     html, _ = process_markdown(md)
     assert "--size:" in html
-    assert "--start:" not in html
+    assert "--start:" in html
+    assert "--end:" not in html
 
 
 # --- Responsive sizing ---

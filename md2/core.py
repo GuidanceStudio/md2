@@ -348,9 +348,12 @@ def transform_charts(html_content):
 
         # Graduated Y-axis is shown for line/area (M67-M69) and, since M80,
         # also for column/bar. Segment-style rendering (`is_connected`) stays
-        # exclusive to line/area.
+        # exclusive to line/area. Column/bar use the floating-bar pattern
+        # (M81) — `--start` + `--size` to allow negative values below the
+        # baseline.
         is_connected = chart_type in ("line", "area")
         has_yaxis = chart_type in ("line", "area", "column", "bar")
+        domain_min = domain_max = domain_range = zero_frac = None
         if is_connected:
             positive_values = [v for v in all_values if v > 0]
             data_min = min(positive_values) if positive_values else 0
@@ -360,12 +363,12 @@ def transform_charts(html_content):
             norm_range = norm_max - norm_min if norm_max > norm_min else 1
         elif has_yaxis:
             # Column/bar: domain always includes zero so the baseline tick is
-            # visible. Bar rendering itself stays on the legacy `--size`
-            # formula in M80 — M81 introduces the floating-bar pattern that
-            # makes negative values render below the baseline.
-            data_min = min(min(all_values), 0) if all_values else 0
-            data_max = max(max(all_values), 0) if all_values else 0
-            ticks = _nice_ticks(data_min, data_max)
+            # visible and the floating-bar formula gives a stable zero_frac.
+            domain_min = min(min(all_values), 0) if all_values else 0
+            domain_max = max(max(all_values), 0) if all_values else 0
+            domain_range = domain_max - domain_min if domain_max > domain_min else 1
+            zero_frac = -domain_min / domain_range  # 0..1
+            ticks = _nice_ticks(domain_min, domain_max)
             norm_min = 0
             norm_max = max_val
             norm_range = max_val
@@ -464,7 +467,7 @@ def transform_charts(html_content):
                 parts.append(f'<th scope="row">{label}</th>')
                 for col_idx, v in enumerate(values):
                     num_val = parsed_values[row_idx][col_idx]
-                    if show_data and num_val != 0:
+                    if show_data:
                         data_span = f'<span class="data">{v.strip()}</span>'
                     else:
                         data_span = ""
@@ -477,6 +480,19 @@ def transform_charts(html_content):
                         parts.append(
                             f'<td style="--start: {_fmt(start)}; '
                             f'--end: {_fmt(end)}">{data_span}</td>'
+                        )
+                    elif has_yaxis and domain_range is not None:
+                        # M81 floating-bar: anchor each bar to the zero
+                        # baseline within [domain_min, domain_max].
+                        if num_val >= 0:
+                            start = zero_frac
+                            size = num_val / domain_range
+                        else:
+                            size = -num_val / domain_range
+                            start = zero_frac - size
+                        parts.append(
+                            f'<td style="--start: {_fmt(start)}; '
+                            f'--size: {_fmt(size)}">{data_span}</td>'
                         )
                     else:
                         norm = num_val / norm_max

@@ -2608,32 +2608,34 @@ Estendere la branch graduated-Y-axis di `transform_charts` in `core.py` per incl
 
 ---
 
-## Milestone 81: Column/bar — floating-bar rendering per valori negativi e zero ⬜
+## Milestone 81: Column/bar — floating-bar rendering per valori negativi e zero ✅
 
 **Problema:**
 Anche con M80 (asse Y), serve cambiare il modo in cui ogni `<td>` posiziona la propria barra. Oggi `--size: value/max` non sa cosa farsene di un valore negativo o zero. Il fix è il pattern *floating bar* (`--start` + `--size`) di Charts.css, già usato da line/area, dove la barra parte da una posizione arbitraria e si estende per la sua dimensione.
 
 **Approccio:**
-Definire `zero_frac = -data_min / (data_max - data_min)` (frazione 0-1 dove cade lo zero nel dominio calcolato in M80). Per ogni valore `v`:
+Definire `zero_frac = -domain_min / (domain_max - domain_min)` (frazione 0-1 dove cade lo zero nel dominio calcolato in M80). Per ogni valore `v`:
 - `v >= 0`: `--start: zero_frac; --size: v/range` (barra che parte dalla baseline e va verso l'alto).
-- `v < 0`: `--start: zero_frac + v/range; --size: -v/range` (barra che parte sotto la baseline e arriva fino alla baseline).
-- `v == 0`: `--size: 0` ma il `<th>` della categoria deve restare visibile (gestito in M82, ma il rendering qui non deve emettere `<td>` malformati).
+- `v < 0`: `--start: zero_frac - |v|/range; --size: |v|/range` (barra che parte sotto la baseline e arriva fino alla baseline).
+- `v == 0`: `--size: 0` ma il `<th>` della categoria resta visibile.
 
-Inoltre rimuovere il guard `if num_val != 0` che oggi sopprime il `<span class="data">` per gli zeri — l'utente che scrive "0" nella tabella sorgente deve poterlo vedere come label sul chart.
+Inoltre rimosso il guard `if num_val != 0` che sopprimeva il `<span class="data">` per gli zeri — ora viene sempre emesso.
 
 **Tasks:**
-- [ ] Test TDD: `[10, -5, 0, 8]` → 4 `<td>` con `--start` e `--size` calcolati come da formula; verifica che le barre ≥0 abbiano `--start = zero_frac` e quelle <0 abbiano `--start < zero_frac`.
-- [ ] Test TDD: all-negative `[-10, -20, -30]` con `data_min=-30, data_max=0` → `zero_frac=1`, barre con `--start: 1 + v/30` e `--size: -v/30`.
-- [ ] Test TDD: all-positive legacy → `zero_frac=0`, comportamento equivalente a `--size: v/max` (dimostrato algebricamente, verificato per snapshot).
-- [ ] Test TDD: zero category `[10, 0, 5]` → tre `<td>` ben formati; quello a zero ha `--size: 0` ma il `<span class="data">0</span>` è presente.
-- [ ] Implementare in `core.py`: rimuovere il branch column/bar che usa solo `--size`, sostituire con il floating-bar; rimuovere il guard `num_val != 0` dal data span.
-- [ ] CSS: assicurarsi che `--start` venga onorato anche per column/bar (Charts.css lo supporta nativamente, ma verificare che non ci siano regole `style.css` che lo sovrascrivono).
-- [ ] Aggiornare `examples/example.html` rigenerandolo per coerenza visiva.
+- [x] Test TDD: `[10, -5, 8]` → 3 `<td>` con `--start` e `--size` calcolati come da formula; verifica che le barre ≥0 abbiano `--start = zero_frac` e quelle <0 abbiano `--start < zero_frac`.
+- [x] Test TDD: all-negative `[-10, -20, -30]` con `domain_min=-30, domain_max=0` → `zero_frac=1`, barre con `--start: 1 - |v|/30` e `--size: |v|/30`.
+- [x] Test TDD: all-positive → `zero_frac=0`, `--start: 0; --size: v/max` (equivalente al legacy).
+- [x] Test TDD: zero category `[10, 0, 5]` → tre `<td>` ben formati; quello a zero ha `--size: 0` con `<span class="data">0</span>` presente.
+- [x] Test TDD: bar (orizzontale) con negativi → stesso pattern.
+- [x] Test TDD: multi-series con negativi → ogni `<td>` indipendente, tutti `--size > 0`.
+- [x] Implementare in `core.py`: branch `has_yaxis` non-pie usa floating-bar, guard `num_val != 0` rimosso dal data span.
+- [x] CSS: nessuna modifica necessaria (Charts.css supporta nativamente `--start` + `--size` su tutti i chart type).
+- [x] 3 test pre-esistenti aggiornati per riflettere il nuovo contratto.
 
 **Done when:**
-- Tutti i test passano.
-- Mix di positivi/negativi/zeri renderizzato correttamente (smoke test su un esempio cashflow).
-- Backward compat: snapshot dei chart all-positive identico a M79.
+- Tutti i test passano. ✅ (427 totali: 7 nuovi M81 + 1 nuovo M80 ricontato + 419 pre-esistenti)
+- Mix di positivi/negativi/zeri renderizzato correttamente. ✅
+- Backward compat: chart all-positive emettono `--start: 0; --size: v/max` (algebricamente equivalente al legacy). ✅
 
 ---
 

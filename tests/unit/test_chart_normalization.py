@@ -52,8 +52,11 @@ def test_single_dataset_normalization_unchanged():
     assert sizes == [0.5, 1.0]
 
 
-def test_zero_value_no_data_span():
-    """Zero values do not generate <span class='data'> to avoid floating '0'."""
+def test_zero_value_renders_data_span():
+    """M81: zero values DO emit <span class='data'>0</span>. The previous
+    behavior (suppressing the span to avoid a 'floating 0') hid useful
+    information; M81 lets the user-supplied label through and relies on
+    the chart layout to position it correctly."""
     md = (
         ":::chart column --labels --legend\n"
         "| Pillar       | Engineers | ML Specialists |\n"
@@ -63,9 +66,8 @@ def test_zero_value_no_data_span():
         ":::"
     )
     html, _ = process_markdown(md)
-    # Should NOT have <span class="data">0</span>
-    assert '<span class="data">0</span>' not in html
-    # But should still have the td with --size: 0
+    assert '<span class="data">0</span>' in html
+    # The td with --size: 0 still exists for chart structure
     assert "--size: 0" in html
 
 
