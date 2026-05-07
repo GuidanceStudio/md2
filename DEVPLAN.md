@@ -2912,3 +2912,49 @@ fi
 **Done when:**
 - Test passa.
 - Modifiche CSS future arrivano automaticamente al rendering reale dopo `bash install.sh`.
+
+## Milestone 102: Negative bar labels stay inside + tighter Y-axis on mid-range data ✅
+
+**Problema 1 — etichette negative fuori dalle barre.**
+M86/M89 mandavano fuori dalla barra (classe `outside above`) tutte le
+etichette di valori negativi, indipendentemente dalla dimensione della
+barra. Risultato: una barra di -55k con range ±60k è alta ~92% del
+chart-body, ma la sua etichetta veniva sparata sopra la zero-line
+mescolandosi con le etichette delle barre positive. Stilisticamente
+incoerente con le barre positive (anche grandi) che invece tengono
+l'etichetta dentro.
+
+**Problema 2 — asse Y troppo largo rispetto ai dati.**
+La lista di "nice numbers" in `_nice_step` saltava da 2.5 a 5. Per un
+range dati ~107k diviso in 4 intervalli, lo step grezzo è ~26.75k →
+normalizzato ~2.7 → arrotondato a 5 → step 50k → asse di 200k. I dati
+±55k venivano schiacciati al centro di un asse [-100k, 100k].
+
+**Approccio:**
+1. **`is_small`**: solo le barre con `--size < 0.10` ricevono
+   `outside above`. Tutte le altre, positive o negative, tengono
+   l'etichetta dentro la fill colorata. Il colore bianco con
+   text-shadow scuro resta leggibile su qualsiasi colore della
+   palette.
+2. **`_nice_step` con 3**: aggiunto `3` tra `2.5` e `5` nelle nice
+   numbers. Stesso esempio: range 107k → step grezzo ~26.75k →
+   normalizzato 2.7 → ora arrotonda a 3 → step 30k → asse di 120k
+   (~10% di headroom invece del ~85% precedente).
+
+**Tasks:**
+- [x] Modificare `is_small` in `core.py`: rimuovere il branch
+      `is_negative`, lasciare solo `0 < size < 0.10`.
+- [x] Aggiungere `elif normalized <= 3: nice = 3` in `_nice_step`.
+- [x] Aggiornare i test M86/M89 che assumevano "tutte le negative
+      fuori": ora valgono solo per piccole barre (`size < 0.10`).
+- [x] Ammorbidire `test_nice_ticks_clustered_90_100` perché con step
+      3 il primo tick può cadere esattamente su 90 (non più ≤ 85).
+- [x] Re-render visivo dei due deck (Guidance + chart-test) per
+      confermare che le slide del cashflow trimestrale e del cashflow
+      mensile siano leggibili.
+
+**Done when:**
+- Tutti i test passano (423/423).
+- Etichette negative dentro le barre per `--size ≥ 0.10`.
+- Asse del cashflow trimestrale comprimibile (es. ±60k invece di
+  ±100k per dati ±55k).

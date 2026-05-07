@@ -42,8 +42,33 @@ def test_small_positive_bar_gets_outside_class():
     )
 
 
-def test_negative_bar_gets_outside_class():
-    """A negative-value bar carries a `data outside` class."""
+def test_small_negative_bar_gets_outside_class():
+    """M102 narrowed the outside threshold: only bars with --size < 0.10
+    float their label outside, regardless of sign. A small negative bar
+    (8 in a [-8, 10] range, size ≈ 8/range ≤ 10%) qualifies — but a
+    larger negative would now keep its label inside."""
+    md = (
+        ":::chart column\n"
+        "| C | V |\n"
+        "|---|---|\n"
+        "| pos | 100 |\n"
+        "| smallneg | -5 |\n"
+        ":::"
+    )
+    html, _ = process_markdown(md)
+    spans = re.findall(
+        r'<span class="(data[^"]*)">([^<]+)</span>', html
+    )
+    classes_by_value = {v: c for c, v in spans}
+    assert "outside" in classes_by_value.get("-5", ""), (
+        f"small negative bar (-5 in [-5, 100]) should have 'outside'; "
+        f"got {classes_by_value!r}"
+    )
+
+
+def test_large_negative_bar_keeps_inside_class():
+    """M102: a large negative bar (size >= 0.10) keeps the inside
+    'data' class — same treatment as a large positive bar."""
     md = (
         ":::chart column\n"
         "| C | V |\n"
@@ -57,9 +82,10 @@ def test_negative_bar_gets_outside_class():
         r'<span class="(data[^"]*)">([^<]+)</span>', html
     )
     classes_by_value = {v: c for c, v in spans}
-    assert "outside" in classes_by_value.get("-8", ""), (
-        f"negative bar (value=-8) should have 'outside' class; got "
-        f"{classes_by_value!r}"
+    # -8 in domain [-8, 10] (range ~18) → size ≈ 8/18 ≈ 0.44 → inside
+    assert classes_by_value.get("-8") == "data", (
+        f"large negative bar should keep inside 'data' class; "
+        f"got {classes_by_value!r}"
     )
 
 
@@ -111,8 +137,8 @@ def test_outside_data_css_uses_text_color():
 
 
 def test_multi_series_mixed_signs():
-    """Multi-series cashflow case: bars with mix of large/small/negative
-    each get the right class."""
+    """M102 multi-series cashflow case: only bars with --size < 0.10
+    float outside. Large bars (positive or negative) keep 'data'."""
     md = (
         ":::chart column\n"
         "| Mese | A | B | C |\n"
@@ -126,9 +152,9 @@ def test_multi_series_mixed_signs():
         r'<span class="(data[^"]*)">([^<]+)</span>', html
     )
     classes_by_value = {v: c for c, v in spans}
-    # 50000 is the max → --size=1 → plain data
+    # 50000 is the max → plain data
     assert classes_by_value.get("50000") == "data"
-    # 2000 is small (4% of range) → outside
+    # 2000 is small (~3% of range) → outside
     assert "outside" in classes_by_value.get("2000", "")
-    # -8000 is negative → outside
-    assert "outside" in classes_by_value.get("-8000", "")
+    # -8000 in [-8000, 50000] → size ≈ 0.138, no longer outside under M102
+    assert classes_by_value.get("-8000") == "data"

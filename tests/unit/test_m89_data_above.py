@@ -11,8 +11,11 @@ def _get_style_css():
     return (BUNDLED_TEMPLATES_DIR / "style.css").read_text(encoding="utf-8")
 
 
-def test_large_negative_bar_label_above():
-    """A negative bar with `--size > 0.50` carries `data outside above`."""
+def test_large_negative_bar_keeps_inside_label():
+    """M102 narrowed `outside` to bars with --size < 0.10. A large
+    negative bar (size > 0.10) keeps its label INSIDE the colored
+    fill — same treatment as a large positive bar — so styling stays
+    consistent and the white-on-color label stays readable."""
     md = (
         ":::chart column\n"
         "| C | V |\n"
@@ -26,22 +29,23 @@ def test_large_negative_bar_label_above():
         r'<span class="(data[^"]*)">([^<]+)</span>', html
     )
     classes_by_value = {v: c for c, v in spans}
-    assert "above" in classes_by_value.get("-20", ""), (
-        f"large negative bar (-20) should carry 'above' class; got "
-        f"{classes_by_value!r}"
+    # -20 in [-20, 10] (range 30) → size = 20/range ≈ 0.67, well above 0.10
+    assert classes_by_value.get("-20") == "data", (
+        f"large negative bar (-20) should keep inside 'data' class; "
+        f"got {classes_by_value!r}"
     )
 
 
 def test_small_negative_bar_also_uses_above():
-    """M93 superseded M89's size>0.50 threshold: ALL outside labels are
-    now top-anchored to avoid bottom-of-cell placement that collides
-    with xlabels."""
+    """M102: bars with --size < 0.10 still get `outside above`. With a
+    big positive of 100 and a small negative of -2, the negative size
+    is roughly 2/range ≈ 0.02 — below the 10% threshold."""
     md = (
         ":::chart column\n"
         "| C | V |\n"
         "|---|---|\n"
-        "| big_pos | 30 |\n"
-        "| small_neg | -5 |\n"
+        "| big_pos | 100 |\n"
+        "| small_neg | -2 |\n"
         ":::"
     )
     html, _ = process_markdown(md)
@@ -49,8 +53,8 @@ def test_small_negative_bar_also_uses_above():
         r'<span class="(data[^"]*)">([^<]+)</span>', html
     )
     classes_by_value = {v: c for c, v in spans}
-    assert "outside" in classes_by_value.get("-5", "")
-    assert "above" in classes_by_value.get("-5", "")
+    assert "outside" in classes_by_value.get("-2", "")
+    assert "above" in classes_by_value.get("-2", "")
 
 
 def test_small_positive_bar_also_uses_above():

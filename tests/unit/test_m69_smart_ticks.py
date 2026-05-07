@@ -45,10 +45,14 @@ def test_nice_ticks_clustered_data_not_from_zero():
 
 
 def test_nice_ticks_clustered_90_100():
-    """[90, 100] starts below 90, not from 0."""
+    """[90, 100] is clustered — axis sits up near the data, not at 0.
+
+    M102 added 3 to the nice-step list, which can produce a tighter
+    axis that starts exactly at data_min. The invariant that matters
+    is that the axis is clearly clustered (not [0..N]) and that it
+    covers the data."""
     ticks = _nice_ticks(90, 100)
-    assert ticks[0] > 0
-    assert ticks[0] < 90
+    assert ticks[0] >= 80, f"clustered axis should start near data, got {ticks[0]}"
     assert ticks[-1] >= 100
 
 

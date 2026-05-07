@@ -72,7 +72,14 @@ DEFAULT_THEME = {
 
 
 def _nice_step(raw_step):
-    """Round a raw step to a 'nice' value: 1, 2, 2.5, 5, 7.5, 10 × 10^n."""
+    """Round a raw step to a 'nice' value: 1, 2, 2.5, 3, 5, 7.5, 10 × 10^n.
+
+    M102: added 3 as an intermediate so values around 2.5-5 don't all
+    snap to 5 (which doubles the axis span). Example: range 107k / 4
+    intervals = 26.75k raw step. Without 3, this rounds to 5*10^4=50k,
+    making a 5-tick axis span 200k (≈2× the data). With 3, it picks
+    3*10^4=30k → axis spans 120k, closer to the actual data.
+    """
     if raw_step <= 0:
         return 1
     power = 10 ** math.floor(math.log10(raw_step))
@@ -83,6 +90,8 @@ def _nice_step(raw_step):
         nice = 2
     elif normalized <= 2.5:
         nice = 2.5
+    elif normalized <= 3:
+        nice = 3
     elif normalized <= 5:
         nice = 5
     elif normalized <= 7.5:
@@ -551,18 +560,13 @@ def transform_charts(html_content):
                         else:
                             size = -num_val / domain_range
                             start = zero_frac - size
-                        # M86: small or negative bars float their label
-                        # outside the colored fill (default text color).
-                        # M93: ALL outside labels use `above` placement
-                        # — anchored to the top of the td, never to the
-                        # bottom. For negatives that means the label sits
-                        # at the zero baseline; for small positives it
-                        # sits just above the bar top. Either way: well
-                        # away from the body-bottom where xlabels live,
-                        # so no collision.
-                        is_small = 0 < size < 0.20
-                        is_negative = num_val < 0
-                        if show_data and (is_small or is_negative):
+                        # M102: only very small bars (< 10% of body
+                        # height) float their label outside — there's no
+                        # room for white-in-bar text. Larger bars,
+                        # positive OR negative, keep the label inside on
+                        # the colored fill so styling stays consistent.
+                        is_small = 0 < size < 0.10
+                        if show_data and is_small:
                             cell_data = (
                                 f'<span class="data outside above">'
                                 f'{v.strip()}</span>'
