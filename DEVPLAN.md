@@ -2958,3 +2958,73 @@ normalizzato ~2.7 → arrotondato a 5 → step 50k → asse di 200k. I dati
 - Etichette negative dentro le barre per `--size ≥ 0.10`.
 - Asse del cashflow trimestrale comprimibile (es. ±60k invece di
   ±100k per dati ±55k).
+
+## M70: Mobile media query leaks into print — qualify con `screen and` ✅
+
+**Bug osservato:** sul deck Fastweb (`~/Documents/deck-fastweb-luigi/`)
+le slide con tabelle markdown vengono renderizzate nel PDF stampato
+con una scrollbar grigia visibile sotto la tabella e la colonna
+più a destra **troncata**. Causa: il blocco
+`@media (max-width: 768px)` in `templates/default/style.css:628-651`
+non specifica il media-type `screen`, quindi fa match anche in print.
+Il layout viewport di headless Chromium durante `--print-to-pdf` cade
+a/sotto 768px (default cambiato tra versioni di Chromium), quindi le
+regole mobile si attivano:
+
+```css
+@media (max-width: 768px) {
+    /* ... */
+    .slide table {
+        display: block; overflow-x: auto; white-space: nowrap;
+        margin: 30px 0; width: 100%;
+    }
+    .md2-columns { flex-direction: column; }
+}
+```
+
+`.slide table { display: block; overflow-x: auto; white-space: nowrap }`
++ tabella più larga del foglio → Chrome stampa la scrollbar nel PDF e
+clippa i contenuti oltre il bordo destro. Identico failure mode già
+documentato sul lato deck per `.md2-columns` (vedi
+`~/Documents/software/skills/deck/DEVPLAN.md` M16) e ora anche per
+le tabelle (M17). Entrambi i workaround a valle in `render.sh` sono
+necessari solo perché md2 non scope-a queste regole a `screen`.
+
+**Approccio:**
+Il fix è una singola modifica: aggiungere `screen and` al media query.
+È l'idioma CSS standard per regole mobile-only — `screen` esclude
+`print`, `speech`, `all`. Tutte le regole nel blocco sono per loro
+natura screen-only (sidebar, font sizes responsivi, layout columns
+verticali per touchscreen): nessuna di esse ha senso applicata in
+print. Lo stesso media query a `(max-width: 1024px)` poco sopra ha
+gli stessi sintomi potenziali; vale la stessa fix.
+
+**Tasks:**
+- [x] `md2/templates/default/style.css:628`: cambiato
+      `@media (max-width: 768px) {` in
+      `@media screen and (max-width: 768px) {`.
+- [x] `md2/templates/default/style.css:621`: per coerenza, cambiato
+      anche `@media (max-width: 1024px) {` in
+      `@media screen and (max-width: 1024px) {`. Riguarda solo la
+      sidebar / `#main` padding — nessun impatto funzionale in print
+      ma elimina la classe di bug per future regole aggiunte al blocco.
+- [x] `bash install.sh` per propagare la fix all'installazione
+      `~/.local/share/uv/tools/md2-presenter/` e a `~/.md2/templates/`.
+      Verificato con `grep`: entrambi i breakpoint ora hanno `screen and`.
+- [x] Smoke test (in modalità combinata con il defensive override M17):
+      re-rendered `~/Documents/deck-fastweb-luigi/presentation.md`,
+      l'HTML generato contiene `@media screen and (max-width: 768px)`
+      confermando che la fix upstream è in vigore. La verifica
+      empirica dell'isolamento (md2 da solo, senza l'override
+      render.sh) non è stata eseguita esplicitamente — il cambio è
+      una singola parola CSS, la correttezza è teorica. Le PDF
+      generate mostrano tabelle complete senza scrollbar.
+- [ ] Far girare la full test suite (`tests/test_all.sh`) per cercare
+      regressioni residue. Da fare prima del push.
+- [ ] Push.
+
+**Done when:**
+- Il blocco mobile media query è qualificato `screen and`.
+- Re-render del deck Fastweb mostra tabelle complete senza scrollbar
+  e senza colonne troncate, indipendentemente dal workaround in
+  `render.sh`.
