@@ -618,14 +618,14 @@ body.dark-mode .md2-chart .charts-css { color: var(--text-color); }
     }
 }
 
-@media (max-width: 1024px) {
+@media screen and (max-width: 1024px) {
     #sidebar { width: 220px; }
     #sidebar-toggle { left: 220px; }
     #sidebar.collapsed ~ #sidebar-toggle { left: 0; }
     #main { padding: 30px 40px; }
 }
 
-@media (max-width: 768px) {
+@media screen and (max-width: 768px) {
     #menu-toggle { display: block; }
     #sidebar-toggle { display: none; }
     #sidebar-shortcuts { display: none; }
