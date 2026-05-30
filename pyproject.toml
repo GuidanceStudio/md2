@@ -1,13 +1,36 @@
 [project]
 name = "md2-presenter"
 version = "0.2.0"
+description = "Markdown-to-HTML presentation converter with optional PDF rendering via headless Chromium."
+readme = "README.md"
 requires-python = ">=3.9"
+license = "MIT"
+authors = [{ name = "Guidance Studio" }]
+keywords = ["markdown", "presentation", "slides", "pdf", "html"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Intended Audience :: End Users/Desktop",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Office/Business :: Office Suites",
+    "Topic :: Text Processing :: Markup :: Markdown",
+]
 dependencies = [
     "markdown>=3.0",
     "bleach>=6.0",
     "tinycss2>=1.2",
     "jinja2>=3.0",
 ]
+
+[project.urls]
+Homepage = "https://github.com/guidance-studio/md2"
+Repository = "https://github.com/guidance-studio/md2"
+Issues = "https://github.com/guidance-studio/md2/issues"
 
 [project.scripts]
 md2 = "md2.cli:main"
@@ -22,11 +45,9 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
+# `packages = ["md2"]` includes everything under md2/ recursively,
+# templates/ and palettes/ included. No force-include needed.
 packages = ["md2"]
-
-[tool.hatch.build.targets.wheel.force-include]
-"md2/templates" = "md2/templates"
-"md2/palettes" = "md2/palettes"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
