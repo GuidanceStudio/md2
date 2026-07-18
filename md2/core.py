@@ -414,14 +414,19 @@ def transform_charts(html_content):
             norm_max = max_val
             norm_range = max_val
         elif chart_type == "bar":
-            # Bar: same tick-aligned floating-bar normalization as column,
-            # but keeps the Charts.css native layout (category <th> on
-            # the left, no separate Y-axis div).
-            data_min = min(min(all_values), 0) if all_values else 0
-            data_max = max(max(all_values), 0) if all_values else 0
-            bar_ticks = _nice_ticks(data_min, data_max)
-            domain_min = bar_ticks[0]
-            domain_max = bar_ticks[-1]
+            # Bar: floating-bar positioning like column, but keeps the
+            # Charts.css native layout (category <th> on the left, no
+            # separate Y-axis div). Unlike column, bar has no visible axis
+            # (has_yaxis excludes "bar"), so the domain must NOT be padded
+            # to "nice" round tick numbers — that padding is only useful
+            # to align with visible tick labels. Padding it here would
+            # silently shrink every bar (e.g. max value 4.7 rounds up to
+            # a domain of 8, so the longest bar only fills 59% of the
+            # available width with no axis to explain why). Normalize
+            # against the exact data extremes instead, so the largest
+            # bar fills the full available width.
+            domain_min = min(min(all_values), 0) if all_values else 0
+            domain_max = max(max(all_values), 0) if all_values else 0
             domain_range = domain_max - domain_min if domain_max > domain_min else 1
             zero_frac = -domain_min / domain_range
             ticks = None

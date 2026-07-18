@@ -235,6 +235,11 @@ body {
 .md2-chart .charts-css.bar tbody tr:not(:first-child) { margin-top: 14px; }
 .md2-chart .charts-css.bar tbody tr th {
     align-items: center; vertical-align: middle;
+    /* M104: Charts.css renders this as a flex row with a fixed
+       width: var(--labels-size). Without an explicit wrap, long
+       labels don't break onto a second line — they overflow sideways
+       and get covered by the adjacent bar's colored fill. */
+    white-space: normal; overflow-wrap: break-word; flex-wrap: wrap;
 }
 .md2-chart .charts-css.column {
     /* M85: x-labels decoupled to .md2-chart-xlabels — no internal reserved space. */
@@ -360,7 +365,11 @@ body {
     min-width: 0;
     text-align: center;
     overflow: visible;
-    white-space: nowrap;
+    /* M103: long labels wrap inside their own slice instead of
+       overflowing sideways into the neighboring label (nowrap +
+       overflow: visible let adjacent long labels visually collide). */
+    white-space: normal;
+    word-break: break-word;
 }
 /* M63 removed in M65: multi-line/area no longer have ul.legend
    (endpoint labels with "Name: Value" format serve as legend) */
