@@ -33,7 +33,11 @@ ALLOWED_ATTRIBUTES = {
 
 MD_EXTENSIONS = ['tables', 'sane_lists', 'nl2br', 'fenced_code', 'footnotes']
 
-_SLIDE_SPLIT_RE = re.compile(r'\n+[ \t]*---[ \t]*\n+')
+_SLIDE_SEPARATOR_RE = re.compile(r'^[ \t]*---[ \t]*$')
+# A fence opens on 3+ backticks or tildes, optionally followed by an info string.
+_FENCE_OPEN_RE = re.compile(r'^[ \t]*(`{3,}|~{3,})')
+# It closes only on a bare run of the same character — ```python opens, never closes.
+_FENCE_CLOSE_RE = re.compile(r'^[ \t]*(`{3,}|~{3,})[ \t]*$')
 _AUTOLINK_RE = re.compile(r'(?<!["\x27=])(https?://[^\s<>\x27"]+)')
 _FRONTMATTER_RE = re.compile(r'\A\s*\+\+\+\n(.*?)\n\+\+\+\n?', re.DOTALL)
 _CHART_DIRECTIVE_RE = re.compile(
@@ -748,6 +752,40 @@ def _parse_chapter(inner_text):
     return title, subtitle_md
 
 
+def _split_slides(markdown_text):
+    """Split markdown into slide segments on `---` lines.
+
+    M106: a `---` inside a fenced code block is content, not a separator —
+    otherwise showing YAML frontmatter in a code sample silently shatters the
+    slide. Fence state is tracked line by line; outside a fence the behaviour
+    matches the previous regex split, including leading indentation and the
+    absorption of blank lines around the separator.
+    """
+    segments = []
+    current = []
+    fence = None
+
+    for line in markdown_text.split('\n'):
+        if fence is None:
+            opening = _FENCE_OPEN_RE.match(line)
+            if opening:
+                fence = opening.group(1)
+            elif _SLIDE_SEPARATOR_RE.match(line):
+                segments.append('\n'.join(current).strip('\n'))
+                current = []
+                continue
+        else:
+            closing = _FENCE_CLOSE_RE.match(line)
+            if (closing
+                    and closing.group(1)[0] == fence[0]
+                    and len(closing.group(1)) >= len(fence)):
+                fence = None
+        current.append(line)
+
+    segments.append('\n'.join(current).strip('\n'))
+    return segments
+
+
 def prepare_context(markdown_text, metadata=None):
     """
     Parses markdown into a context dict for template rendering.
@@ -756,7 +794,7 @@ def prepare_context(markdown_text, metadata=None):
     if metadata is None:
         metadata = {}
 
-    raw_slides = _SLIDE_SPLIT_RE.split(markdown_text)
+    raw_slides = _split_slides(markdown_text)
 
     cover_title = "Presentation"
     cover_content = ""

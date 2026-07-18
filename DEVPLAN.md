@@ -3253,3 +3253,53 @@ mantengono `type` assente.
   senza pagina bianca successiva.
 - Tutti i test passano in `md2`; port a `guidance`/`forestvalley`
   completato in `md2-templates`; deck skill deployata.
+
+## M106: `---` dentro un code fence spezza la slide ✅
+
+**Sintomo, trovato su un deck reale.** Una slide che mostra l'anatomia di un
+file `SKILL.md` contiene un blocco di codice con dentro il frontmatter YAML:
+
+    ```markdown
+    ---
+    name: bandonet
+    ---
+    ```
+
+md2 ha prodotto **quattro pagine** al posto di una, due delle quali senza
+titolo (`Slide 15`, `Slide 16`): i `---` del frontmatter sono stati letti come
+separatori di slide pur essendo dentro un fence.
+
+**Causa.** `_SLIDE_SPLIT_RE = re.compile(r'\n+[ \t]*---[ \t]*\n+')` è una
+`re.split()` sul testo intero: non ha alcuna nozione di blocchi di codice.
+Qualsiasi riga di soli tre trattini spezza, ovunque si trovi.
+
+**Perché nessun workaround dell'autore funziona.** Verificati tutti e tre prima
+di aprire il milestone: indentare i trattini **non** aiuta (il pattern ammette
+`[ \t]*` in testa); usare `<pre><code>` invece di un fence markdown **non**
+aiuta (lo split avviene prima di qualunque parsing HTML); usare `~~~` al posto
+dei backtick **non** aiuta. L'unico modo di scriverlo oggi è aggiungere del
+testo dopo i trattini, il che falsifica l'esempio.
+
+**Fix.** Sostituire la `re.split()` con uno scanner riga per riga che tiene
+lo stato del fence. Regole applicate:
+- apre un fence una riga che inizia con almeno tre backtick o tre tilde;
+- lo chiude **solo** una riga con lo stesso carattere, di lunghezza pari o
+  maggiore, e senza info string dopo (regola CommonMark: ` ```python ` apre, non chiude);
+- dentro un fence, una riga di tre trattini è testo, non un separatore;
+- fuori da un fence il comportamento resta identico a prima, incluse
+  l'indentazione ammessa e l'assorbimento delle righe vuote adiacenti.
+
+**Tasks:**
+- [x] `md2/core.py`: `_split_slides()` fence-aware; `_SLIDE_SPLIT_RE` rimosso (usato solo lì)
+- [x] `tests/unit/test_m106_fence_separator.py`: `---` dentro ``` e dentro ~~~ non spezza; fence con info string non chiude; separatori veri fuori dal fence spezzano ancora; fence non chiuso non ingoia il resto del documento
+- [x] Suite completa verde, nessuna regressione
+- [x] `install.sh`, commit, push
+
+**Fuori scope, consapevolmente.** `extract_og_description()` ha lo stesso
+`line == '---'` cieco ai fence, ma legge solo la regione cover e si ferma
+comunque alle prime due righe non vuote: perché il difetto si manifesti
+servirebbe una cover che apre un fence contenente tre trattini. Non vale la
+modifica di comportamento.
+
+**Done when:** un blocco di codice che contiene `---` produce una sola slide,
+e i separatori veri continuano a funzionare.
