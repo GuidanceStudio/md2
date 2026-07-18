@@ -3028,3 +3028,143 @@ gli stessi sintomi potenziali; vale la stessa fix.
 - Re-render del deck Fastweb mostra tabelle complete senza scrollbar
   e senza colonne troncate, indipendentemente dal workaround in
   `render.sh`.
+
+## M103: Bar chart non riempie la larghezza + Column x-labels sovrapposte
+
+**Bug segnalato** in `~/Documents/notes/subaru/md2-chart-bug.md` sul
+template `guidance` (repo separato `md2-templates`), landscape 16:9,
+stampa PDF Chromium. Due bug distinti, entrambi confermati riprodursi
+**anche col template `default` di questo repo** (non è quindi solo un
+disallineamento del template `guidance` — è un bug in md2 core).
+Verifica: render di una mini-deck con dati identici al file di bug
+(`Trazione integrale / AWD: 4.7`, `Outdoor / montagna: 4.3`, `Comfort
+di marcia: 3.2`, `Consumi: 1.0`, `Prezzo: 1.4`), stampata a PDF via
+Chromium headless e ispezionata a 200dpi.
+
+### Bug A — bar chart: barre non riempiono la larghezza disponibile
+
+**Causa reale** (diversa da quella ipotizzata nel file di bug, che
+sospettava un problema di calc() CSS): `core.py` righe 416-430. Il
+branch `chart_type == "bar"` normalizza `--size` contro
+`domain_range = _nice_ticks(data_min, data_max)` — lo stesso
+meccanismo di "tick arrotondati" usato da column per il suo Y-axis
+**visibile**. Ma bar non mostra alcun asse (`has_yaxis` esclude
+esplicitamente `"bar"`), quindi questo arrotondamento è invisibile
+all'utente: per un valore massimo 4.7, `_nice_ticks(0, 4.7)` produce
+`[0, 2, 4, 6, 8]` → `domain_max = 8` → la barra più lunga (4.7) rende
+`--size: 0.5875`, riempiendo solo il 59% della larghezza invece di
+~100%, con un margine vuoto inspiegabile a destra e le barre piccole
+(1.0, 1.4) che sembrano schegge sottili.
+
+Verificato empiricamente: nel render di prova la barra da 4.7 termina
+esattamente al 59% della larghezza della card (matematica confermata
+con `_nice_ticks(0, 4.7) == [0, 2, 4, 6, 8]`).
+
+**Approccio:** per `chart_type == "bar"` (solo), calcolare
+`domain_min`/`domain_max` direttamente dagli estremi reali dei dati
+(`min(min(all_values), 0)` / `max(max(all_values), 0)`), senza
+passare da `_nice_ticks`. Column mantiene il proprio arrotondamento
+per i tick del suo Y-axis (visibile), ma la normalizzazione della
+lunghezza barra per bar non ha alcun beneficio dall'arrotondamento —
+non essendoci un asse da rendere leggibile, l'unico effetto è sprecare
+larghezza. Le formule floating-bar (`--start`/`--size`/`zero_frac`)
+restano identiche, solo con un dominio non-paddato.
+
+### Bug B — column chart: etichette X si sovrappongono
+
+**Causa reale:** `md2/templates/default/style.css`, regola
+`.md2-chart-xlabels span { flex: 1 1 0; min-width: 0; text-align:
+center; overflow: visible; white-space: nowrap; }`. Ogni etichetta
+riceve una fetta di larghezza uguale indipendentemente dal proprio
+contenuto (`flex-basis: 0`), non va mai a capo (`nowrap`) e non viene
+clippata (`overflow: visible`) — quindi un'etichetta più larga della
+propria fetta (es. "Trazione integrale / AWD" in un chart a 5
+colonne) sbórda visivamente nell'etichetta adiacente, producendo testo
+sovrapposto/illeggibile.
+
+Verificato visivamente: crop a 200dpi del render di prova mostra
+"Trazione integrale / AWD" e "Outdoor / montagna" letteralmente
+sovrapposte carattere su carattere.
+
+**Approccio:** `white-space: nowrap` → `white-space: normal` (+
+`word-break: break-word` difensivo) così le etichette lunghe vanno a
+capo dentro la propria fetta invece di sbordare in quella vicina —
+stesso comportamento già usato senza problemi dalle etichette `<th>`
+native di bar (a sinistra, multi-riga).
+
+**Tasks:**
+- [x] `core.py`: branch `chart_type == "bar"` — dominio dagli estremi
+      reali dei dati, non da `_nice_ticks`.
+- [x] `style.css`: `.md2-chart-xlabels span` — `white-space: normal` +
+      `word-break: break-word`.
+- [x] Test di regressione: bar chart con max non-tondo (4.7) → la
+      barra più grande ha `--size: 1` (o vicinissimo).
+- [x] Test di regressione: CSS contiene `white-space: normal` per
+      `.md2-chart-xlabels span`.
+- [x] Re-render del deck di prova (bar + column) a PDF, conferma
+      visiva a 200dpi che entrambi i bug sono risolti.
+- [x] Full test suite, nessuna regressione.
+- [x] `bash install.sh` per sincronizzare `~/.md2/templates/default/`.
+- [x] Port dello stesso fix CSS (`white-space: normal`) ai template
+      `guidance` e `forestvalley` in `md2-templates` (repo separato),
+      + reinstall + re-render del deck originale del bug report.
+
+**Done when:**
+- La barra più lunga di un bar chart con valori non-tondi riempie
+  (quasi) il 100% della larghezza disponibile.
+- Le etichette X di un column chart con nomi lunghi vanno a capo
+  invece di sovrapporsi.
+- Tutti i test passano.
+- Il fix è propagato sia a `md2/templates/default` sia ai template
+  `guidance`/`forestvalley` di `md2-templates`.
+
+## M104: Bar chart — label lunghe coperte dalla barra adiacente
+
+**Bug segnalato** durante la verifica di M103 su un deck reale (Subaru
+BEV benchmark), template `guidance`, `:::chart bar` con label come
+"Trazione integrale / AWD". Le etichette di categoria (native `<th>` di
+Charts.css, a sinistra) non vanno a capo: il testo prosegue oltre la
+colonna riservata e viene visivamente coperto dalla barra colorata
+adiacente ("Trazione integral" leggibile, il resto sparisce sotto la
+barra blu).
+
+**Causa reale:** `md2/templates/default/style.css`, regola
+`.md2-chart .charts-css.bar tbody tr th { align-items: center;
+vertical-align: middle; }`. La libreria Charts.css (vendor,
+`charts.min.css`) rende questo `<th>` un contenitore
+`position: absolute; width: var(--labels-size)` (130px, fissato dalla
+nostra regola `.charts-css.bar { --labels-size: 130px; ... }`) con
+`display: flex; flex-direction: row`. Senza `white-space: normal` né
+`flex-wrap: wrap` espliciti sul nostro override, il testo non va a
+capo entro i 130px riservati: eccede lateralmente e viene coperto dal
+`<td>` della barra, che si posiziona subito dopo (`margin-inline-start:
+calc(-1 * var(--labels-size) - ...)`) e ha uno sfondo colorato sopra.
+
+Verificato: aggiungendo `white-space: normal; overflow-wrap: break-word;
+flex-wrap: wrap;` alla stessa regola, l'etichetta va a capo su 2 righe
+dentro i 130px e la sovrapposizione sparisce — stesso pattern già
+risolto per le xlabels del column chart in M103, qui applicato al
+`<th>` nativo del bar chart.
+
+**Approccio:** aggiungere le tre proprietà mancanti alla regola
+esistente. Nessun'altra modifica: `--labels-size: 130px` resta
+invariato, la riga height (`min-height: 40px` sulla `tr`) è già
+sufficiente per 2 righe di testo alla dimensione font attuale.
+
+**Tasks:**
+- [x] `style.css`: `.md2-chart .charts-css.bar tbody tr th` — aggiunto
+      `white-space: normal; overflow-wrap: break-word; flex-wrap: wrap;`.
+- [x] Test di regressione: bar chart con label lunga, verifica che la
+      label wrappi (nessuna singola riga più larga di `--labels-size`
+      nel DOM/CSS — test sul contenuto CSS, analogo a M103).
+- [x] Re-render del deck di prova, conferma visiva che le label vadano
+      a capo senza sovrapposizione con la barra.
+- [x] Full test suite, nessuna regressione.
+- [x] `bash install.sh` per sincronizzare `~/.md2/templates/default/`.
+- [x] Port dello stesso fix a `guidance`/`forestvalley` in
+      `md2-templates` (CSS identica, stesso bug presente).
+
+**Done when:**
+- Le etichette lunghe del bar chart vanno a capo entro la colonna
+  riservata, senza essere coperte dalla barra.
+- Tutti i test passano, in `md2` e in `md2-templates`.
