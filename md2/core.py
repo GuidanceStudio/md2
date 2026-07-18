@@ -55,6 +55,18 @@ _COLUMNS_DIRECTIVE_RE = re.compile(
     r'^:::columns\n(.*?)\n:::[ \t]*$',
     re.MULTILINE | re.DOTALL
 )
+# M105: a :::chapter fence wraps ONE whole slide's content and turns it
+# into an "act divider" slide. Matched against a single (already stripped)
+# slide's text — the fence must span the entire slide, so only an explicit
+# :::chapter triggers a chapter (a bare `# ` H1 in an ordinary slide, i.e.
+# the hero-stat pattern, is left untouched).
+_CHAPTER_DIRECTIVE_RE = re.compile(
+    r'\A:::chapter[ \t]*\n(.*?)\n[ \t]*:::[ \t]*\Z',
+    re.DOTALL
+)
+# A single-hash H1 line inside the fence (the `## ` H2 case never matches
+# because `#` must be followed by whitespace).
+_CHAPTER_H1_RE = re.compile(r'^#[ \t]+(.+?)[ \t]*$')
 _CHART_DIV_RE = re.compile(
     r'<div class="md2-chart" data-chart-type="([\w-]+)"'
     r'(?:\s+data-chart-title="([^"]*)")?\s*'
@@ -707,6 +719,35 @@ def process_markdown(text):
     return result, has_charts
 
 
+def _parse_chapter(inner_text):
+    """Parse the inside of a :::chapter fence (M105).
+
+    Returns (title, subtitle_md):
+    - title: text of the `# ` H1 line (the chapter title).
+    - subtitle_md: everything else inside the fence (or "" if none),
+      rendered later through the markdown+bleach pipeline.
+
+    If no `# ` H1 is present the whole block is treated as the subtitle,
+    with an empty title.
+    """
+    lines = inner_text.split('\n')
+    h1_idx = None
+    title = ""
+    for idx, line in enumerate(lines):
+        m = _CHAPTER_H1_RE.match(line)
+        if m:
+            h1_idx = idx
+            title = m.group(1).strip()
+            break
+
+    if h1_idx is None:
+        return "", inner_text.strip()
+
+    rest = lines[:h1_idx] + lines[h1_idx + 1:]
+    subtitle_md = "\n".join(rest).strip()
+    return title, subtitle_md
+
+
 def prepare_context(markdown_text, metadata=None):
     """
     Parses markdown into a context dict for template rendering.
@@ -737,6 +778,27 @@ def prepare_context(markdown_text, metadata=None):
     slides_data = []
     for i, slide_text in enumerate(raw_slides[1:]):
         slide_text = slide_text.strip()
+
+        # M105: a whole-slide :::chapter fence becomes an act-divider slide.
+        chapter_match = _CHAPTER_DIRECTIVE_RE.match(slide_text)
+        if chapter_match:
+            chapter_title, subtitle_md = _parse_chapter(
+                chapter_match.group(1)
+            )
+            subtitle_html = ""
+            if subtitle_md:
+                subtitle_html, sub_has_charts = process_markdown(subtitle_md)
+                if sub_has_charts:
+                    has_charts = True
+            slides_data.append({
+                "id": f"slide-{i}",
+                "title": chapter_title or f"Slide {i + 1}",
+                "type": "chapter",
+                "subtitle": subtitle_html,
+                "content": "",
+            })
+            continue
+
         lines = slide_text.split('\n')
         slide_title = f"Slide {i + 1}"
         slide_body = slide_text
