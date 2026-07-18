@@ -29,7 +29,9 @@ def test_contains_dark_mode():
 
 def test_contains_responsive():
     css = generate_css()
-    assert "@media (max-width: 768px)" in css
+    # M70: mobile media queries are qualified with `screen and` so they never
+    # leak into the print/PDF stylesheet.
+    assert "@media screen and (max-width: 768px)" in css
 
 
 def test_contains_css_variables():
@@ -154,7 +156,8 @@ def test_progress_bar_style():
 
 def test_tablet_breakpoint():
     css = generate_css()
-    assert "@media (max-width: 1024px)" in css
+    # M70: qualified with `screen and` (print stylesheet must stay clean).
+    assert "@media screen and (max-width: 1024px)" in css
 
 
 def test_max_width_content():
