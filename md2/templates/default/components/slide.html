@@ -1,1 +1,1 @@
-<div class="slide" id="{{ slide.id }}"><h2>{{ slide.title }}</h2><div class="content">{{ slide.content }}</div></div>
+{% if slide.type == 'chapter' %}<div class="slide chapter" id="{{ slide.id }}"><div class="chapter-inner"><h1 class="chapter-title">{{ slide.title }}</h1><hr class="chapter-rule">{% if slide.subtitle %}<div class="chapter-subtitle">{{ slide.subtitle }}</div>{% endif %}</div></div>{% else %}<div class="slide" id="{{ slide.id }}"><h2>{{ slide.title }}</h2><div class="content">{{ slide.content }}</div></div>{% endif %}
