@@ -3168,3 +3168,88 @@ sufficiente per 2 righe di testo alla dimensione font attuale.
 - Le etichette lunghe del bar chart vanno a capo entro la colonna
   riservata, senza essere coperte dalla barra.
 - Tutti i test passano, in `md2` e in `md2-templates`.
+
+## M105: Chapter cover — nuovo tipo di slide divisore d'atto (`:::chapter`) ✅
+
+**Contesto:** i deck multi-sezione non avevano un divisore "pesante" per
+aprire un atto/capitolo. Esisteva solo il *section divider* leggero
+(pattern 2: `## H2` + una riga di contesto), che vive nel flusso normale
+delle slide. Serve una slide dedicata — a tutta altezza, allineata a
+sinistra, centrata verticalmente — che segnali visivamente l'inizio di
+una macro-sezione senza però sembrare la cover. Il design è LOCKED.
+
+**Sintassi di authoring** — un fence che avvolge il contenuto di UNA
+slide:
+
+```
+:::chapter
+02 · Applicazioni
+# Le applicazioni
+Cosa potete automatizzare, in concreto
+:::
+```
+
+Regola di parsing dentro il fence: la riga `# ` H1 = **titolo**; le
+righe non vuote PRIMA dell'H1 = **kicker** (opzionale); il contenuto
+DOPO l'H1 = **sottotitolo** (opzionale, reso con la pipeline
+markdown+bleach normale). Solo un fence `:::chapter` esplicito attiva il
+capitolo — un `# ` H1 nudo in una slide ordinaria (pattern "hero stat")
+NON deve diventare un capitolo.
+
+**Comportamento core:** per una slide `:::chapter` si imposta
+`slide["type"]="chapter"`, `slide["title"]=<testo H1>` (così la nav in
+sidebar la mostra), più `slide["kicker"]` e `slide["subtitle"]`
+(sottotitolo come HTML reso). Il fence viene rimosso. Le slide ordinarie
+mantengono `type` assente.
+
+**Tasks:**
+- [x] `core.py`: parsing `:::chapter` + campi `type`/`kicker`/`subtitle`
+      nel loop di `prepare_context` (regex `_CHAPTER_DIRECTIVE_RE` +
+      helper `_parse_chapter`, stesso spirito dei preprocessori
+      `:::chart`/`:::columns`).
+- [x] Template ×3 (`default`, `guidance`, `forestvalley`): branch
+      `{% if slide.type == 'chapter' %}` in `components/slide.html` +
+      regole `.slide.chapter` in `style.css`, clonate/adattate dalle
+      regole `.cover` di ciascun template così da restare on-brand
+      (accent: `#3498db`/`#34d399`/`#ff1f4a`; font titolo: quello della
+      cover di ciascun template). Il branch capitolo in `guidance`
+      OMETTE lo slide-head/logo.
+- [x] Screen: `min-height:100vh`, flex column, `justify-content:center`
+      (centrato verticale), `align-items:flex-start` + `text-align:left`
+      (allineato a sinistra) con padding sinistro generoso. `.chapter-
+      kicker` piccolo/uppercase/spaziato/accent; `.chapter-title` un
+      passo sotto il titolo cover (`clamp(1.6rem,4vw,2.6rem)`);
+      `.chapter-rule` corto (3.5rem) a sinistra; `.chapter-subtitle`
+      attenuato.
+- [x] Print: `.slide.chapter::before, .slide.chapter::after { content:
+      none; }` (uccide footer/numero pagina come fa `.cover`) +
+      `.slide.chapter { page-break-after: always; min-height: auto; }`
+      (+ `counter-increment: none` dove il template numera le pagine)
+      per non tracimare in una seconda pagina bianca. Left alignment
+      mantenuto anche in print.
+- [x] `tests/unit/test_m105_chapter_cover.py` in stile M103/M104
+      (assert sul contenuto): (a) `:::chapter` rende `class="slide
+      chapter"` con titolo/kicker/sottotitolo negli elementi giusti;
+      (b) una slide `## ` ordinaria NON prende la classe chapter;
+      (c) una slide hero-stat (`# ` H1 in slide normale) NON è
+      classificata come chapter; (d) i tre `style.css` contengono
+      `.slide.chapter` E la soppressione footer in print. 9 test, verdi.
+- [x] Verifica funzionale: deck di prova reso coi 3 template in
+      HTML+PDF, conferma classe chapter sul divisore, assente
+      sull'hero-stat, PDF a 4 pagine senza pagine bianche dopo il
+      capitolo. Sample `examples/chapter-cover.md` aggiunto.
+- [x] Deck skill: pattern "2b. Chapter cover" in `slide-patterns.md`
+      (+ riga nella quick-selection guide), `:::chapter` in
+      `md2-cheatsheet.md`, sanity-check in `prompt.md`; deploy via
+      `install.sh --force`.
+
+**Done when:**
+- Una slide `:::chapter` rende `<div class="slide chapter">` con kicker,
+  titolo (`h1.chapter-title`), regola e sottotitolo negli elementi
+  attesi; una slide ordinaria e una hero-stat NON prendono la classe.
+- Le regole `.slide.chapter` esistono e sono on-brand nei tre template
+  (`default` in `md2`, `guidance`/`forestvalley` in `md2-templates`).
+- Il PDF di un capitolo occupa esattamente una pagina, senza footer e
+  senza pagina bianca successiva.
+- Tutti i test passano in `md2`; port a `guidance`/`forestvalley`
+  completato in `md2-templates`; deck skill deployata.

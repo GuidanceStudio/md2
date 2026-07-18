@@ -128,6 +128,31 @@ body {
 }
 .cover p { line-height: 1.6; font-size: 1.1rem; color: var(--cover-text-color); }
 
+/* Chapter Cover Slide (M105) — act divider. Cloned from .cover but
+   left-aligned and one type-step smaller so it never reads as the cover. */
+.slide.chapter {
+    min-height: 100vh;
+    display: flex; flex-direction: column;
+    justify-content: center; align-items: flex-start;
+    text-align: left;
+    padding: 60px 40px 40px 40px;
+    box-sizing: border-box;
+}
+.chapter-inner { width: 100%; max-width: 46rem; }
+.chapter-title {
+    font-size: clamp(1.6rem, 4vw, 2.6rem);
+    line-height: 1.15; font-weight: 700;
+    color: var(--cover-title-color); margin: 0;
+}
+.chapter-rule {
+    width: 3.5rem; height: 3px; border: none;
+    background: #3498db; margin: 1.5rem 0;
+}
+.chapter-subtitle {
+    font-size: 1.1rem; line-height: 1.6;
+    color: var(--cover-text-color); max-width: 42rem;
+}
+
 /* General Content */
 .slide p, .slide li, .slide td { line-height: 1.6; font-size: clamp(0.95rem, 2vh, 1.25rem); color: var(--text-color); }
 .slide p { margin-bottom: 1em; }
@@ -577,6 +602,15 @@ body.dark-mode .md2-chart .charts-css { color: var(--text-color); }
     }
     .slide:last-child { page-break-after: avoid; }
     .cover { height: auto; page-break-after: always; }
+
+    /* M105: chapter divider — one full page, vertically centered; no footer,
+       no blank second page. Fills the page like .cover so the flex centering shows. */
+    .slide.chapter { min-height: 95vh; height: auto; page-break-after: always; }
+    .slide.chapter::before, .slide.chapter::after { content: none; }
+    .slide.chapter .chapter-rule {
+        print-color-adjust: exact !important;
+        -webkit-print-color-adjust: exact !important;
+    }
 
     /* Selective color reset — layout elements only, NOT charts */
     body, #main, .slide, .cover,
