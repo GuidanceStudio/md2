@@ -9,7 +9,6 @@ def _get_style_css():
 def test_chart_wrapper_has_box_shadow():
     """Chart wrapper has box-shadow like tables."""
     css = _get_style_css()
-    # .md2-chart should have box-shadow
     assert "md2-chart" in css
     assert "box-shadow" in css.split(".md2-chart")[1].split("}")[0]
 

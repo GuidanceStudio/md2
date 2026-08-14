@@ -17,7 +17,6 @@ def test_line_chart_has_start_end():
         ":::"
     )
     html, _ = process_markdown(md)
-    # Should have --start for line segments
     assert "--start" in html
     # Should still have --size or --end (Charts.css supports both)
     assert "--size" in html or "--end" in html

@@ -74,10 +74,8 @@ def test_small_positive_bar_also_uses_above():
         r'<span class="(data[^"]*)">([^<]+)</span>', html
     )
     classes_by_value = {v: c for c, v in spans}
-    # Small positive (5) gets outside + above
     assert "outside" in classes_by_value.get("5", "")
     assert "above" in classes_by_value.get("5", "")
-    # Large positive (100) keeps the plain inside-bar 'data' class
     assert classes_by_value.get("100") == "data"
 
 

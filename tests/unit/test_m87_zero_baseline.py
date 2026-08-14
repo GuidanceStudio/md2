@@ -31,7 +31,6 @@ def test_zero_value_no_span_after_m91():
         r'<span class="(data[^"]*)">([^<]+)</span>', html
     )
     classes_by_value = {v: c for c, v in spans}
-    # Only "10" present; "0" not in the spans dict
     assert classes_by_value.get("10") == "data"
     assert "0" not in classes_by_value
 
@@ -78,7 +77,6 @@ def test_zero_class_css_styling():
     assert "text-shadow: none" in body or "text-shadow:none" in body, (
         f".data.zero should clear text-shadow, got: {body!r}"
     )
-    # Muted via opacity (ghost effect)
     assert re.search(r'opacity:\s*0\.[0-7]', body), (
         f".data.zero should set opacity < 0.7 for ghost effect, got: {body!r}"
     )

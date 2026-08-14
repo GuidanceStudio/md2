@@ -9,7 +9,6 @@ def _get_style_css():
 def test_chart_td_has_padding():
     """Chart td elements have padding for data value breathing room."""
     css = _get_style_css()
-    # Should have a padding rule on chart td
     assert "md2-chart" in css
     assert "padding" in css
 
@@ -29,7 +28,6 @@ def test_chart_wrapper_asymmetric_padding():
     # The .md2-chart rule should NOT have uniform padding: 20px
     chart_section = css[css.index(".md2-chart"):]
     chart_block = chart_section[:chart_section.index("}") + 1]
-    # Should not be simple "padding: 20px" — should be asymmetric
     assert "padding:" in chart_block
     assert "padding: 20px" not in chart_block
 

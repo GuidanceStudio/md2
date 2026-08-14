@@ -15,8 +15,6 @@ def _get_style_css():
 def test_bar_row_spacing_in_css():
     """Bar multi-dataset has CSS rule for inter-row spacing."""
     css = _get_style_css()
-    # Should have a rule on .bar tbody tr or table that adds padding/margin
-    # between rows of different metrics
     assert re.search(
         r'\.bar[^{]*tbody[^{]*tr[^{]*\{[^}]*(padding|margin|border-spacing)',
         css,
@@ -33,7 +31,6 @@ def test_bar_label_vertical_centered():
     css = _get_style_css()
     # Charts.css uses align-items for label cells. Our override or
     # default should ensure vertical-align center.
-    # Check that we have a rule for .bar tbody tr th with alignment
     assert re.search(
         r'\.bar[^{]*tr[^{]*th[^{]*\{[^}]*(align-items|vertical-align)',
         css,
@@ -76,8 +73,6 @@ def test_legend_margin_top_set():
 def test_legend_bullets_use_palette_colors():
     """Legend li elements have CSS rules that use palette colors."""
     css = _get_style_css()
-    # Should have rules like .legend li:nth-child(1) { ... var(--md2-color-1) }
-    # or .legend li.legend-item-1 { ... }
     assert re.search(
         r'\.legend[^{]*(?:li|::before)[^{]*\{[^}]*var\(--md2-color-',
         css,

@@ -35,10 +35,8 @@ def test_nice_ticks_80_exact():
 def test_nice_ticks_clustered_data_not_from_zero():
     """Clustered data [50000, 60000] does NOT start from 0."""
     ticks = _nice_ticks(50000, 60000)
-    # Should start somewhere below 50000 (not 0)
     assert ticks[0] > 0
     assert ticks[0] <= 50000
-    # Last tick should be >= 60000
     assert ticks[-1] >= 60000
     # The range should be narrow (not 0-80000)
     assert ticks[-1] - ticks[0] <= 30000
@@ -104,11 +102,9 @@ def test_line_chart_clustered_data_yaxis_non_zero_start():
     html, _ = process_markdown(md)
     yaxis_match = re.search(r'<div class="md2-chart-yaxis">(.+?)</div>', html, re.DOTALL)
     tick_texts = re.findall(r'<span[^>]*>([^<]*)</span>', yaxis_match.group(1))
-    # Bottom tick should NOT be "0"
     assert tick_texts[-1] != "0"
     # Bottom tick should be less than 50000 (data min)
     assert int(tick_texts[-1]) < 50000
-    # Top tick should be >= 60000
     assert int(tick_texts[0]) >= 60000
 
 

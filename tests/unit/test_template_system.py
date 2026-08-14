@@ -53,9 +53,7 @@ def test_init_templates_overwrites(tmp_templates):
     assert marker.exists()
 
     _init_templates()
-    # Marker should be gone (dir was recreated)
     assert not marker.exists()
-    # Template files should still be there
     assert (tmp_templates / "default" / "base.html").exists()
 
 
@@ -109,7 +107,6 @@ def test_render_html_with_custom_template_extending_default(tmp_templates):
     html = render_html(SAMPLE_MD, template_dir=custom)
     assert "Test" in html
     assert "Slide 1" in html
-    # Sidebar should be absent
     assert 'id="sidebar"' not in html
 
 

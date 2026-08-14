@@ -17,7 +17,6 @@ def test_nice_ticks_round_number():
     assert len(ticks) == 5
     assert ticks[0] == 0
     assert ticks[-1] >= 10000
-    # Ticks should be monotonically increasing
     assert all(ticks[i] < ticks[i+1] for i in range(4))
 
 
@@ -183,5 +182,4 @@ def test_css_wrapper_no_more_big_padding():
     )
     if match:
         block = match.group(1)
-        # Should not have padding-top: 56px anymore
         assert "56px" not in block or "padding-top" not in block

@@ -30,7 +30,6 @@ def test_multi_dataset_global_normalization():
     )
     html, _ = process_markdown(md)
     sizes = _get_sizes(html)
-    # Global max = 100, so values are normalized to their ratio of 100
     assert 0.02 in sizes  # Deploy/week Q3 = 2/100
     assert 0.12 in sizes  # Deploy/week Q1 = 12/100
     assert 0.62 in sizes  # Test Coverage Q3 = 62/100
@@ -65,7 +64,6 @@ def test_zero_value_emits_empty_td():
         ":::"
     )
     html, _ = process_markdown(md)
-    # The zero cell exists in the chart structure
     assert "--size: 0" in html
     # No `<span class="data">0</span>` (or any span) in the zero cell
     import re
@@ -87,7 +85,6 @@ def test_zero_value_still_has_td():
         ":::"
     )
     html, _ = process_markdown(md)
-    # Both rows should have td elements
     assert html.count("<td ") == 2
 
 
@@ -102,6 +99,5 @@ def test_multi_dataset_all_zeros_column():
         ":::"
     )
     html, _ = process_markdown(md)
-    # Should not crash, zeros produce --size: 0
     assert "--size: 0" in html
     assert "--size: 1" in html

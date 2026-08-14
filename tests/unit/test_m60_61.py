@@ -12,7 +12,6 @@ def _get_style_css():
 def test_column_data_is_white():
     """Column chart .data has white color (text is inside the colored bar)."""
     css = _get_style_css()
-    # Find a rule like ".column .data" with #fff
     assert re.search(
         r'\.column\s+\.data[^{]*\{[^}]*(?:#fff|white)',
         css,

@@ -64,7 +64,6 @@ def test_chapter_slide_renders_chapter_class_and_parts():
     assert 'class="slide chapter"' in html
     assert '<h1 class="chapter-title">Le applicazioni</h1>' in html
     assert 'class="chapter-rule"' in html
-    # no kicker element is ever emitted
     assert 'chapter-kicker' not in html
     # subtitle goes through the markdown+bleach pipeline (bold survives)
     m = re.search(r'<div class="chapter-subtitle">(.*?)</div>', html, re.DOTALL)
@@ -94,7 +93,6 @@ def test_chapter_subtitle_omitted_when_absent():
     html = render_html("# Cover\n\n---\n\n:::chapter\n# Solo titolo\n:::")
     assert 'class="slide chapter"' in html
     assert '<h1 class="chapter-title">Solo titolo</h1>' in html
-    # optional subtitle not emitted; no kicker element anywhere
     assert '<div class="chapter-subtitle">' not in html
     assert 'chapter-kicker' not in html
 

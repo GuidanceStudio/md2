@@ -37,7 +37,6 @@ def test_pie_has_constrained_size():
     pie_section = css[css.index(".charts-css.pie"):]
     pie_block = pie_section[:pie_section.index("}") + 1]
     assert "aspect-ratio" in pie_block
-    # Uses viewport units, not fixed px
     assert "vh" in pie_block or "vw" in pie_block
 
 
@@ -99,6 +98,5 @@ def test_chart_sizing_in_rendered_html(tmp_path):
     )
     assert result.returncode == 0, f"md2 failed: {result.stdout}{result.stderr}"
     html = (tmp_path / "test.html").read_text(encoding="utf-8")
-    # CSS should contain pie sizing rules
     assert ".charts-css.pie" in html
     assert "height" in html

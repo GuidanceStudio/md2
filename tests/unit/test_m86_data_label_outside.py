@@ -35,7 +35,6 @@ def test_small_positive_bar_gets_outside_class():
         f"small bar (value=5) should have 'outside' class; got "
         f"{classes_by_value!r}"
     )
-    # Big bar stays plain "data"
     assert classes_by_value.get("100", "") == "data", (
         f"big bar (value=100) should have plain 'data' class; got "
         f"{classes_by_value!r}"
@@ -130,7 +129,6 @@ def test_outside_data_css_uses_text_color():
     assert has_text_color, (
         f".data.outside should use a text-color token, got: {body!r}"
     )
-    # text-shadow should be removed (or empty)
     assert "text-shadow: none" in body or "text-shadow:none" in body, (
         f".data.outside should clear text-shadow, got: {body!r}"
     )

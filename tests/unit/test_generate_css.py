@@ -18,7 +18,6 @@ def test_css_contains_default_theme_values():
 def test_generate_css_accepts_theme_config():
     """generate_css accepts theme_config for backward compat (ignored)."""
     css = generate_css({"bg_color": "#000000"})
-    # CSS is now a static file, theme_config is ignored
     assert "#f9f9f9" in css  # still default values
 
 
@@ -27,10 +26,8 @@ def test_contains_dark_mode():
     assert "body.dark-mode" in css
 
 
-def test_contains_responsive():
+def test_responsive_media_query_scoped_to_screen():
     css = generate_css()
-    # M70: mobile media queries are qualified with `screen and` so they never
-    # leak into the print/PDF stylesheet.
     assert "@media screen and (max-width: 768px)" in css
 
 
@@ -154,9 +151,8 @@ def test_progress_bar_style():
     assert "#progress-bar" in css
 
 
-def test_tablet_breakpoint():
+def test_tablet_breakpoint_scoped_to_screen():
     css = generate_css()
-    # M70: qualified with `screen and` (print stylesheet must stay clean).
     assert "@media screen and (max-width: 1024px)" in css
 
 
@@ -180,7 +176,6 @@ def test_print_stylesheet():
 def test_print_hides_sidebar():
     css = generate_css()
     assert "#sidebar" in css
-    # The print block should hide sidebar
     assert "display: none !important" in css
 
 

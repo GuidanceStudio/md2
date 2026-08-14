@@ -71,7 +71,6 @@ def test_bar_still_uses_data_max():
         ":::"
     )
     html, _ = process_markdown(md)
-    # Max value 100 should produce --size: 1 (normalized to data max)
     assert "--size: 1" in html
     assert "--size: 0.5" in html
 

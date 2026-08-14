@@ -70,7 +70,6 @@ def test_pie_chart_renders_normally():
         ":::"
     )
     html, _ = process_markdown(md)
-    # Pie emits md2-pie-label spans for slice labels
     assert "md2-pie-label" in html or "<li>" in html
 
 
@@ -87,9 +86,7 @@ def test_zero_in_multi_series_handled():
     )
     html, _ = process_markdown(md)
     spans = re.findall(r'<span class="data[^"]*">([^<]+)</span>', html)
-    # Non-zero cells keep their spans
     assert "10" in spans
     assert "5" in spans
     assert "8" in spans
-    # Zero cell does not emit a span
     assert "0" not in spans

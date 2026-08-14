@@ -29,7 +29,6 @@ def test_pie_has_legend_with_values():
     )
     html, _ = process_markdown(md)
     assert "charts-css legend" in html
-    # Legend should contain both the label and the value
     assert "R&amp;D" in html or "R&D" in html
     assert "48" in html
     assert "Sales" in html

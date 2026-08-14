@@ -75,7 +75,6 @@ def test_columns_no_conflict_with_slide_separator():
     """--- inside :::columns is NOT treated as column separator (no conflict)."""
     md = ":::columns\n\n:::col\nText with --- horizontal rule\n\n:::col\nRight\n\n:::"
     result = preprocess_columns(md)
-    # Should still produce 2 columns, --- is just markdown content
     assert result.count('class="md2-col"') == 2
 
 

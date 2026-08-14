@@ -104,7 +104,6 @@ def test_multiline_segments_multiple_tds_per_row():
         ":::"
     )
     html, _ = process_markdown(md)
-    # 1 segment row, 2 tds (one per series)
     assert _count_segment_rows(html) == 1
     m = re.search(r"<tbody>(.*?)</tbody>", html, re.DOTALL)
     tds = re.findall(r"<td\b", m.group(1))

@@ -2959,7 +2959,7 @@ normalizzato ~2.7 → arrotondato a 5 → step 50k → asse di 200k. I dati
 - Asse del cashflow trimestrale comprimibile (es. ±60k invece di
   ±100k per dati ±55k).
 
-## M70: Mobile media query leaks into print — qualify con `screen and` ✅
+## M107: Mobile media query leaks into print — qualify con `screen and` ✅
 
 **Bug osservato:** sul deck telco (`<deck-project>/`)
 le slide con tabelle markdown vengono renderizzate nel PDF stampato
@@ -3029,7 +3029,7 @@ gli stessi sintomi potenziali; vale la stessa fix.
   e senza colonne troncate, indipendentemente dal workaround in
   `render.sh`.
 
-## M103: Bar chart non riempie la larghezza + Column x-labels sovrapposte
+## M103: Bar chart non riempie la larghezza + Column x-labels sovrapposte ✅
 
 **Bug segnalato** in `<notes-dir>/md2-chart-bug.md` sul
 template `guidance` (repo separato `md2-templates`), landscape 16:9,
@@ -3118,7 +3118,7 @@ native di bar (a sinistra, multi-riga).
 - Il fix è propagato sia a `md2/templates/default` sia ai template
   `guidance`/`forestvalley` di `md2-templates`.
 
-## M104: Bar chart — label lunghe coperte dalla barra adiacente
+## M104: Bar chart — label lunghe coperte dalla barra adiacente ✅
 
 **Bug segnalato** durante la verifica di M103 su un deck reale (automotive
 BEV benchmark), template `guidance`, `:::chart bar` con label come
@@ -3295,11 +3295,46 @@ lo stato del fence. Regole applicate:
 - [x] Suite completa verde, nessuna regressione
 - [x] `install.sh`, commit, push
 
-**Fuori scope, consapevolmente.** `extract_og_description()` ha lo stesso
-`line == '---'` cieco ai fence, ma legge solo la regione cover e si ferma
-comunque alle prime due righe non vuote: perché il difetto si manifesti
-servirebbe una cover che apre un fence contenente tre trattini. Non vale la
-modifica di comportamento.
+**Deviazioni:**
+- Fuori scope, consapevolmente: `extract_og_description()` ha lo stesso
+  `line == '---'` cieco ai fence, ma legge solo la regione cover e si ferma
+  comunque alle prime due righe non vuote — perché il difetto si manifesti
+  servirebbe una cover che apre un fence contenente tre trattini. Non vale
+  la modifica di comportamento.
 
 **Done when:** un blocco di codice che contiene `---` produce una sola slide,
 e i separatori veri continuano a funzionare.
+
+## M108: Devplan compliance pass — done markers, duplicate ID, test comment cleanup ✅
+
+**Why:** M103/M104 sono ticchettati per intero e già spediti (commit
+`279f47f`) ma la heading non porta ✅; l'ID "M70" è usato due volte per
+lavori scollegati; 98 commenti nei test ripetono l'assert che li segue
+senza aggiungere informazione.
+
+**Approccio:**
+1. `✅` sulle heading M103/M104 (verificato contro `git log`/`git show`).
+2. Rinominare il secondo "M70" (mobile media query, ~line 2962) nel
+   prossimo ID libero dopo il massimo del file — nessun file/test-name
+   dipende da quell'ID per numero.
+3. Convertire il paragrafo libero sotto M106 in un blocco `**Deviazioni:**`.
+4. In `tests/`, cancellare solo i commenti che restano una pura ripetizione
+   dell'assert sottostante; tenere quelli che spiegano un valore di
+   fixture, una soglia, o un invariante non ovvio dal codice — o
+   rinominare il test quando è il nome a dover portare quell'informazione.
+
+**Tasks:**
+- [x] Heading ✅ su M103/M104
+- [x] Rinominare il duplicato M70 → M107
+- [x] M106: paragrafo libero → blocco Deviazioni
+- [x] Sweep dei 98 commenti sopra un assert in `tests/`: elimina quelli
+      che restatano, tieni quelli con informazione reale (65 eliminati,
+      33 tenuti; 3 test rinominati dove il nome doveva portare
+      l'informazione)
+- [x] Suite completa verde (495 passed)
+- [x] Commit & push
+
+**Done when:** nessuna heading pienamente ticchettata resta senza ✅ nel
+range toccato, l'ID duplicato non compare più, il paragrafo di M106 è in
+un blocco Deviazioni, e i commenti restanti sopra un assert in `tests/`
+portano tutti informazione che il nome del test non può già portare.

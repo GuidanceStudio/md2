@@ -107,7 +107,6 @@ def test_xlabels_outside_chart_body():
 
 def test_css_labels_size_zero_for_line_area():
     css = _css()
-    # Should set --labels-size: 0 for line/area
     assert re.search(
         r"\.charts-css\.line[^{]*\{[^}]*--labels-size:\s*0",
         css,

@@ -18,7 +18,6 @@ def _get_print_block():
 def test_print_css_no_global_star_reset():
     """Print CSS does NOT use * { color: #000; background: #fff }."""
     print_css = _get_print_block()
-    # Should not have a wildcard * reset for color/background
     assert not re.search(r'\*\s*\{[^}]*color\s*:\s*#000', print_css), \
         "Print CSS should not use * { color: #000 } global reset"
 
@@ -44,7 +43,6 @@ def test_print_css_columns_preserved():
 def test_print_css_layout_elements_reset():
     """Layout elements (body, slide, etc.) get color reset in print."""
     print_css = _get_print_block()
-    # Should have selective reset for slide text elements
     assert "slide" in print_css
     assert "color" in print_css
 
