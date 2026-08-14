@@ -10,7 +10,6 @@ def _get_style_css():
 def test_bar_has_min_height():
     """Bar chart rows have a minimum height for visibility."""
     css = _get_style_css()
-    # Should have a rule for bar tr or bar td with min-height
     assert re.search(r'\.bar.*?min-height', css, re.DOTALL)
 
 

@@ -51,7 +51,6 @@ def test_pie_slices_sum_to_one():
     # Find all --end values
     ends = re.findall(r'--end:\s*([\d.]+)', html)
     assert len(ends) == 3
-    # Last slice should end at 1.0
     assert float(ends[-1]) == 1.0
 
 

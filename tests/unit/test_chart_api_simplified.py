@@ -98,7 +98,6 @@ def test_chart_pie_has_legend_with_values():
     )
     html, _ = process_markdown(md)
     # Pie no longer shows data inside slices (illegible rotated labels).
-    # Instead it has a legend with label + value.
     assert "charts-css legend" in html
     assert "50" in html
     assert "30" in html
@@ -175,9 +174,7 @@ def test_chart_title_from_h3():
         ":::"
     )
     html, _ = process_markdown(md)
-    # Title should appear in the chart somehow (as heading or caption)
     assert "Platform Metrics" in html
-    # And NOT as a separate H3 outside the chart
     assert "<h3>Platform Metrics</h3>" not in html
 
 

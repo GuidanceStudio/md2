@@ -114,9 +114,8 @@ def test_output_has_print_stylesheet(tmp_path):
     assert "page-break-after" in html
 
 
-def test_sidebar_open_by_default(tmp_path):
+def test_sidebar_no_autocollapse_via_local_storage(tmp_path):
     html = _cli_html(tmp_path)
-    # Should NOT contain localStorage restore that auto-collapses sidebar
     assert "localStorage.getItem" not in html
 
 

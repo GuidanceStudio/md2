@@ -10,7 +10,6 @@ def _get_style_css():
 def test_bar_data_is_white():
     """Bar chart .data has white color (text inside bars)."""
     css = _get_style_css()
-    # Find a rule .bar .data or .md2-chart .charts-css.bar .data
     assert re.search(r'\.bar[^{]*\.data[^{]*\{[^}]*#fff', css) \
         or re.search(r'\.bar\s+\.data[^{]*\{[^}]*#fff', css)
 

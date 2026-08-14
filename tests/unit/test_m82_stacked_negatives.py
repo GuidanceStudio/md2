@@ -33,7 +33,6 @@ def test_stacked_column_with_negatives_drops_stacked_class(capsys):
     assert "stacked" not in classes, (
         f"stacked class must be dropped when data has negatives, got {classes}"
     )
-    # Warning emitted to stderr
     assert (
         "stacked" in captured.err.lower()
         and ("negative" in captured.err.lower() or "negativ" in captured.err.lower())

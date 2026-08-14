@@ -10,7 +10,6 @@ def _get_style_css():
 def test_column_tr_has_padding_inline():
     """Column chart tr has padding-inline to create gap between categories."""
     css = _get_style_css()
-    # Should have a rule on .column tbody tr with padding-inline or margin-inline
     assert re.search(
         r'\.column\s+tbody\s+tr[^{]*\{[^}]*(padding-inline|margin-inline)',
         css,

@@ -30,7 +30,6 @@ def test_column_all_positive_uses_zero_start():
     # zero_frac = 0, so start = 0 and size = v/max.
     tds = re.findall(r'<td style="([^"]+)">', html)
     assert len(tds) == 2, f"expected 2 column <td>, got {tds}"
-    # Both should have --start: 0 and --size proportional to value.
     assert "--start: 0" in tds[0] and "--size: 1" in tds[0]
     assert "--start: 0" in tds[1] and "--size: 0.5" in tds[1]
 
@@ -129,7 +128,6 @@ def test_column_zero_value_keeps_category_label():
         ":::"
     )
     html, _ = process_markdown(md)
-    # All three labels appear in the rendered HTML
     assert ">Alpha<" in html
     assert ">Beta<" in html
     assert ">Gamma<" in html
@@ -149,7 +147,6 @@ def test_column_zero_value_no_data_label():
     )
     html, _ = process_markdown(md)
     data_spans = re.findall(r'<span class="data[^"]*">([^<]*)</span>', html)
-    # "10" is still rendered; "0" is not
     assert "10" in data_spans
     assert "0" not in data_spans
 

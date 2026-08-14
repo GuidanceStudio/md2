@@ -185,7 +185,6 @@ def test_chart_invalid_type():
     md = ":::chart invalid_type\n| A | B |\n|---|---|\n| x | 10 |\n:::"
     result, has_charts = preprocess_chart_directives(md)
     assert has_charts is False
-    # Content is preserved but not wrapped as chart
     assert "| A | B |" in result
 
 

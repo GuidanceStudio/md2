@@ -22,7 +22,6 @@ def test_nice_ticks_all_negative():
     assert len(ticks) == 5
     assert ticks[0] <= -30, f"first tick {ticks[0]} should be ≤ -30"
     assert ticks[-1] >= 0, f"last tick {ticks[-1]} should be ≥ 0"
-    # Strictly increasing
     assert all(ticks[i] < ticks[i + 1] for i in range(4))
 
 
@@ -159,7 +158,6 @@ def test_column_all_positive_size_values_unchanged():
         ":::"
     )
     html, _ = process_markdown(md)
-    # Existing rendering: max=100 → A: --size: 1, B: --size: 0.5
     assert "--size: 1" in html
     assert "--size: 0.5" in html
 
@@ -170,8 +168,6 @@ def test_yaxis_css_applies_to_column_and_bar():
     """`.md2-chart-yaxis` CSS rules must NOT be scoped to line/area only —
     column and bar chart need them too."""
     css = _get_style_css()
-    # Find the .md2-chart-yaxis selector. It must exist and not exclude
-    # column/bar via :not(.column) or similar.
     assert ".md2-chart-yaxis" in css, "expected .md2-chart-yaxis in stylesheet"
     # Heuristic: the rule should not contain `.line` / `.area` only-prefixes
     # blocking column/bar. We search for any `.md2-chart-yaxis` rule lines

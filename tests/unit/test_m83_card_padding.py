@@ -80,7 +80,6 @@ def test_aging_chart_with_zero_category_renders_cleanly():
         assert cat in html, f"expected category label {cat!r} in HTML"
     # ">90 gg" gets HTML-escaped to "&gt;"
     assert "90 gg" in html
-    # Wrapped in chart-body with yaxis
     assert 'class="md2-chart-body"' in html
     assert 'class="md2-chart-yaxis"' in html
 

@@ -73,7 +73,6 @@ def test_nested_markdown():
 def test_multiple_separators_consecutive():
     md = "# T\n\n---\n\n---\n\n---\n\n## Final\nContent"
     result = render_presentation(md)
-    # Should not crash
     assert result["title"] == "T"
 
 
@@ -94,7 +93,6 @@ def test_title_html_escaped(tmp_path):
         capture_output=True, text=True, cwd=str(tmp_path)
     )
     html = (tmp_path / "esc.html").read_text(encoding="utf-8")
-    # OG meta content should have escaped quotes/angles
     assert '&quot;' in html or '&#x27;' in html or '&amp;' in html
 
 

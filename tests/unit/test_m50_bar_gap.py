@@ -19,7 +19,6 @@ def test_bar_no_border_spacing():
 def test_bar_tr_has_margin_top():
     """Bar chart has margin-top on tr:not(:first-child) for gap."""
     css = _get_style_css()
-    # Should have a rule like .bar tbody tr:not(:first-child) { margin-top: ... }
     assert re.search(
         r'\.bar\s+tbody\s+tr:not\(:first-child\)[^{]*\{[^}]*margin-top:\s*\d+px',
         css,
