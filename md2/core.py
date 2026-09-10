@@ -1,8 +1,10 @@
+import base64
 import html
 import math
 import re
 import sys
 from pathlib import Path
+from urllib.parse import unquote, urlparse
 
 from ._compat import tomllib
 
@@ -895,3 +897,161 @@ def get_jinja_env(template_dir=None):
         loader=FileSystemLoader(str(template_dir)),
         autoescape=False,
     )
+
+
+# --- Image embedding (opt-in, --embed-images) --------------------------------
+
+# Only images below this size are embedded silently; above it md2 warns, because
+# the payload is repeated once per occurrence in the HTML and a template logo on
+# every slide multiplies fast. The fix is a right-sized asset, not a flag.
+EMBED_WARN_BYTES = 64 * 1024
+
+_EMBED_MIME = {
+    ".png": "image/png",
+    ".jpg": "image/jpeg",
+    ".jpeg": "image/jpeg",
+    ".gif": "image/gif",
+    ".svg": "image/svg+xml",
+    ".webp": "image/webp",
+    ".avif": "image/avif",
+    ".ico": "image/x-icon",
+}
+
+# src="..." / href="..." in <img>/<link>, and url(...) inside inline CSS.
+_EMBED_REF_RE = re.compile(
+    r"""(?P<prefix>(?:src|href)\s*=\s*(?P<q>["'])|url\(\s*(?P<uq>["']?))"""
+    r"""(?P<ref>[^"')\s>]+)"""
+    r"""(?P<suffix>(?P=q)|(?P=uq)\s*\))""",
+    re.IGNORECASE | re.VERBOSE,
+)
+
+
+class EmbedError(Exception):
+    """A local image reference could not be embedded."""
+
+def _image_pixel_size(raw, suffix):
+    """Pixel dimensions of an image, read from its header. Returns (w, h) or None.
+
+    Header parsing only, so md2 stays dependency-free: the size is what makes an
+    oversized asset recognisable ("5001x5001" says it, "303 KB" does not), and it
+    is not worth a Pillow dependency to obtain.
+    """
+    try:
+        if suffix == ".png" and raw[:8] == b"\x89PNG\r\n\x1a\n":
+            # IHDR is the first chunk: width and height are big-endian uint32 at 16 and 20.
+            return (
+                int.from_bytes(raw[16:20], "big"),
+                int.from_bytes(raw[20:24], "big"),
+            )
+        if suffix == ".gif" and raw[:3] == b"GIF":
+            return (
+                int.from_bytes(raw[6:8], "little"),
+                int.from_bytes(raw[8:10], "little"),
+            )
+        if suffix in (".jpg", ".jpeg") and raw[:2] == b"\xff\xd8":
+            i = 2
+            while i + 9 < len(raw):
+                if raw[i] != 0xFF:
+                    i += 1
+                    continue
+                marker = raw[i + 1]
+                if marker in (0xD8, 0xD9) or 0xD0 <= marker <= 0xD7 or marker == 0x01:
+                    i += 2
+                    continue
+                seg_len = int.from_bytes(raw[i + 2:i + 4], "big")
+                # SOFn carries the frame size; C4/C8/CC are not frame headers.
+                if 0xC0 <= marker <= 0xCF and marker not in (0xC4, 0xC8, 0xCC):
+                    return (
+                        int.from_bytes(raw[i + 7:i + 9], "big"),
+                        int.from_bytes(raw[i + 5:i + 7], "big"),
+                    )
+                i += 2 + seg_len
+    except (IndexError, ValueError):
+        return None
+    return None
+
+
+def _embed_resolve(ref, base_dir):
+    """Return a Path for a local image reference, or None if it is not one."""
+    lowered = ref.strip().lower()
+    if lowered.startswith(("http://", "https://", "data:", "//", "#", "mailto:")):
+        return None
+    if lowered.startswith("file://"):
+        path = Path(unquote(urlparse(ref).path))
+    else:
+        path = Path(unquote(ref))
+        if not path.is_absolute():
+            path = (base_dir / path).resolve()
+    if path.suffix.lower() not in _EMBED_MIME:
+        return None
+    return path
+
+
+def embed_local_images(html_text, base_dir):
+    """Inline every local image reference in *html_text* as a data URI.
+
+    Opt-in counterpart of the ``--embed-images`` flag. Rewrites ``src``/``href``
+    attributes and CSS ``url(...)`` references that point at a local image file,
+    leaving remote URLs and existing ``data:`` URIs untouched. The result opens
+    on any machine and needs no server, which a ``file://`` reference does not:
+    it resolves only where that exact path exists.
+
+    A reference that cannot be read raises :class:`EmbedError`. It is not
+    skipped: a silently missing image ships a broken deck while reporting
+    success, which is the failure this flag exists to prevent.
+
+    Returns ``(html, warnings)`` — warnings is a list of human-readable strings
+    about payloads large enough to be worth a smaller asset.
+    """
+    base_dir = Path(base_dir)
+    cache = {}
+    counts = {}
+    missing = []
+
+    def _replace(match):
+        ref = match.group("ref")
+        try:
+            path = _embed_resolve(ref, base_dir)
+        except (ValueError, OSError):
+            return match.group(0)
+        if path is None:
+            return match.group(0)
+        if path not in cache:
+            if not path.is_file():
+                missing.append((ref, path))
+                return match.group(0)
+            raw = path.read_bytes()
+            mime = _EMBED_MIME[path.suffix.lower()]
+            cache[path] = (
+                f"data:{mime};base64,{base64.b64encode(raw).decode('ascii')}",
+                len(raw),
+                _image_pixel_size(raw, path.suffix.lower()),
+            )
+        counts[path] = counts.get(path, 0) + 1
+        uri = cache[path][0]
+        prefix, suffix = match.group("prefix"), match.group("suffix")
+        return f"{prefix}{uri}{suffix}"
+
+    out = _EMBED_REF_RE.sub(_replace, html_text)
+
+    if missing:
+        lines = "\n".join(f"  {ref} -> {path}" for ref, path in missing)
+        raise EmbedError(
+            "--embed-images: these image references do not resolve to a readable "
+            f"file:\n{lines}\n"
+            "Nothing was written. Fix the paths (or the template that emits them) "
+            "and re-run."
+        )
+
+    warnings = []
+    for path, n in sorted(counts.items(), key=lambda kv: -cache[kv[0]][1] * kv[1]):
+        _, size, px = cache[path]
+        if size < EMBED_WARN_BYTES:
+            continue
+        dims = f"{px[0]}x{px[1]}, " if px else ""
+        warnings.append(
+            f"{path.name} is {dims}{size // 1024} KB and appears {n} time(s): "
+            f"~{size * n // 1024} KB of the output. Displayed images rarely need "
+            "more than ~1000px on the long side; a smaller asset is the fix."
+        )
+    return out, warnings

@@ -632,3 +632,86 @@ nell'archivio; nessuna milestone con task non ticchettati è stata
 archiviata; entrambi i file di archivio verificati riga per riga contro
 `git cat-file -e`.
 
+## M110: `--embed-images` — HTML autonomo, opt-in ✅
+
+**Why:** un deck reso con un template che referenzia i propri asset con un
+path assoluto (`<img src="file:///home/<utente>/.md2/templates/<nome>/assets/logo.png">`,
+scritto a mano nei `components/` del template) mostra il logo solo sulla
+macchina dove quel file esiste. Aperto da un tablet, da un collega o da un
+browser che non è il tuo, è un riquadro vuoto — e l'HTML non dice che manca
+qualcosa. Serviva un modo per produrre un file che si apre dappertutto senza
+montare un server: incorporare le immagini.
+
+Non di default: incorporare gonfia il file, e un deck che resta dov'è non ne
+ha bisogno. Chi lo manda in giro lo chiede.
+
+**Approccio:** `embed_local_images(html, base_dir)` in `core.py`, chiamata dal
+CLI dopo il rendering solo con `--embed-images`. Una passata regex su
+`src=`/`href=` e sugli `url(...)` del CSS inline; i riferimenti relativi si
+risolvono sulla cartella del markdown, che è dove un autore che scrive
+`![](img/x.png)` li intende. `http(s)`, `data:`, `//`, `#` e `mailto:`
+restano intatti.
+
+**Un file mancante è errore, non un salto.** Exit 1, il nome del riferimento e
+il path tentato in stderr, e **l'HTML non viene scritto**. Un'immagine che
+sparisce in silenzio consegna un deck rotto dichiarando successo: è
+esattamente il caso che questa flag esiste per evitare, e la stessa scelta che
+`render.sh` della skill `deck` documenta per il suo hook `--post-html`.
+
+**Nessun ridimensionamento, nessun Pillow.** md2 ha quattro dipendenze e
+nessuna è Pillow: non se ne aggiunge una per una flag opzionale. Al posto del
+resize c'è un avviso quando il carico è sproporzionato — dimensioni in pixel,
+peso, occorrenze e i KB che ne derivano. Un logo 5001×5001 da 303 KB ripetuto
+su sedici slide fa 6,7 MB di output: la correzione è l'asset, non la flag.
+
+Due ragioni per cui il resize automatico sarebbe peggio, decise con Paolo
+(10/09/2026):
+
+1. **Degrada in silenzio quello che non deve degradare.** Un logo a 40px
+   sopporta qualunque riduzione, uno screenshot o una mappa no. Un file grosso
+   è un problema visibile; un'immagine impastata dentro un deck consegnato non
+   lo è.
+2. **md2 non sa a che dimensione l'immagine viene mostrata** — sta nel CSS del
+   template. Un massimo forfettario è un'ipotesi, e sulle copertine è quella
+   sbagliata.
+
+**Prova che l'avviso è la scelta giusta:** correggere l'asset del template ha
+alleggerito anche il **PDF** (708 → 334 KB), che non passa dall'embed —
+chromium legge il file locale. Un resize al momento dell'embed avrebbe lasciato
+`logo.png` a 5001×5001 nel template e il PDF al doppio del peso. Se il caso
+ricapita su un asset non correggibile, la via è `--embed-max-px N` esplicita
+con Pillow come dipendenza opzionale, non un resize di default.
+
+**Nota su cosa arriva davvero all'output:** bleach blocca il protocollo
+`file:` sulle immagini scritte nel markdown (`![](file://...)` perde il `src`).
+I path assoluti che si vedono nell'output vengono quindi solo dai template, che
+non passano dal sanitizer. Le immagini d'autore ci arrivano come riferimenti
+relativi, e quelle vengono incorporate. Entrambi i vettori sono coperti dai
+test.
+
+**Tasks:**
+- [x] `embed_local_images()` + `EmbedError` + `EMBED_WARN_BYTES` in `md2/core.py`
+- [x] Flag `--embed-images` in `md2/cli.py`, spenta per default, con exit 1 e
+      nessuna scrittura se un riferimento non risolve
+- [x] `tests/unit/test_m110_embed_images.py` — 10 casi: file URI assoluto,
+      riferimento relativo, `url()` nel CSS, remoti e `data:` lasciati stare,
+      file mancante che solleva ed è nominato, avviso sul carico grande, CLI
+      spenta per default, CLI su immagine relativa, CLI su asset di template,
+      CLI che fallisce senza scrivere
+- [x] Suite completa verde (456 test)
+- [x] README: documentare la flag e quando serve (tabella opzioni + sezione
+      dedicata con i due comportamenti)
+- [x] Deploy: `./install.sh` — verificato con `md2 --help`
+- [x] Avviso con le **dimensioni in pixel**, lette dall'header (PNG via IHDR, GIF
+      via header, JPEG via marker SOFn) senza aggiungere dipendenze. Motivo: «303
+      KB» non dice se l'asset è sbagliato, «5001x5001» sì. Il messaggio chiude con
+      il riferimento utile: `Displayed images rarely need more than ~1000px on the
+      long side`
+- [x] Verificato end-to-end sul deck reale: incorporato, nessun riferimento
+      `file://` residuo, PDF invariato a 16 pagine A4 orizzontale. L'avviso è
+      scattato con il testo atteso (`logo.png is 303 KB and appears 16 time(s):
+      ~4859 KB of the output`) e ha portato a correggere l'asset del template
+      `guidance`: `logo.png` da 5001×5001 / 303 KB a 600×600 / 48 KB (mostrato
+      a 150px in copertina e 40px sulle slide). HTML da 6,7 MB a 1,2 MB.
+      Originale salvato in `~/.md2/templates/guidance/logo-original-5001px.png.bak`.
+

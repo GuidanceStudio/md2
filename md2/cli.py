@@ -9,6 +9,8 @@ from .core import (
     prepare_context,
     extract_og_description,
     get_jinja_env,
+    embed_local_images,
+    EmbedError,
     BUNDLED_TEMPLATES_DIR,
 )
 from .palettes import resolve_colors, generate_palette_css
@@ -112,6 +114,15 @@ def main():
     parser.add_argument("--dark", action="store_true", default=None, help="Use dark theme as default")
     parser.add_argument("--template", metavar="NAME", help="Template name from ~/.md2/templates/")
     parser.add_argument("--init-templates", action="store_true", help="(Re)initialize default template in ~/.md2/templates/")
+    parser.add_argument(
+        "--embed-images",
+        action="store_true",
+        help=(
+            "Inline local images as base64 data URIs, so the HTML opens on any "
+            "machine with no server and no missing files. Off by default: it makes "
+            "the file bigger, and a deck that stays put does not need it."
+        ),
+    )
     args = parser.parse_args()
 
     if args.init_templates:
@@ -133,6 +144,20 @@ def main():
     full_html = render_html(
         content, lang=args.lang, dark_mode=args.dark, template_dir=template_dir,
     )
+
+    if args.embed_images:
+        # Resolve relative references against the markdown file's directory, which
+        # is where an author writing ![](img/x.png) means them to be.
+        try:
+            full_html, warnings = embed_local_images(full_html, filepath.resolve().parent)
+        except EmbedError as exc:
+            # Nothing is written: a deck with silently missing images reports success
+            # and ships broken, which is the failure this flag exists to prevent.
+            print(f"Error: {exc}", file=sys.stderr)
+            sys.exit(1)
+        for w in warnings:
+            print(f"Warning: {w}", file=sys.stderr)
+
     output_filename.write_text(full_html, encoding="utf-8")
 
     print(f"Success! Generated '{output_filename}'")
