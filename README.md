@@ -55,6 +55,35 @@ Se hai installato lo script globalmente, puoi generare la presentazione HTML dir
 | `--dark`           | off     | Usa il tema scuro come default                     |
 | `--template NOME`  | —       | Usa un template da `~/.md2/templates/NOME/`        |
 | `--init-templates` | —       | (Re)copia il template default in `~/.md2/templates/` |
+| `--embed-images`   | off     | Incorpora le immagini locali come data URI base64   |
+
+#### `--embed-images`
+
+Di default l'HTML generato **referenzia** le immagini locali: quelle scritte nel
+markdown come percorso relativo, e quelle che il template mette nel proprio
+markup (tipicamente il logo, con un percorso assoluto). Il file si apre
+correttamente solo sulla macchina dove quei percorsi esistono.
+
+Con `--embed-images` le immagini locali vengono incorporate nell'HTML in
+base64: il file diventa autonomo e si apre su qualunque macchina, senza server
+e senza immagini mancanti. Restano referenziate le risorse remote (`http(s)`) e
+quelle già in `data:`.
+
+Quando serve: il deck lo mandi via mail, lo apri da un tablet, lo guarda
+qualcun altro. Quando non serve: resta dov'è, e allora il file resta leggero.
+
+Due comportamenti da conoscere:
+
+- **Un'immagine che non risolve è un errore.** md2 esce con codice 1, nomina il
+  riferimento e il percorso tentato, e **non scrive l'HTML**. Un'immagine che
+  sparisce in silenzio produrrebbe un deck rotto con un messaggio di successo.
+- **Nessun ridimensionamento.** L'immagine viene incorporata così com'è, una
+  volta per ogni occorrenza: un logo pesante ripetuto su ogni slide moltiplica.
+  Sopra i 64 KB md2 avvisa su stderr indicando **dimensioni in pixel**, peso e
+  occorrenze — le dimensioni sono il dato che rende riconoscibile un asset
+  sbagliato: «5001×5001» lo dice, «303 KB» no. Le legge dall'header del file,
+  senza dipendenze aggiuntive. La correzione è usare un asset delle dimensioni
+  giuste, non una flag.
 
 ### Sviluppo (Locale)
 In alternativa, usa il target `run` di `make` specificando il file Markdown:
