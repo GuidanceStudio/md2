@@ -716,7 +716,7 @@ test.
       Originale salvato in `~/.md2/templates/guidance/logo-original-5001px.png.bak`.
 
 
-## M111: Contesto del template — front matter, numero di pagina, capitolo, occhiello
+## M111: Contesto del template — front matter, numero di pagina, capitolo, occhiello ✅
 
 **Why:** un template oggi riceve solo titolo, copertina e slide. Cliente,
 oggetto, data, numero di pagina e capitolo corrente non gli arrivano, quindi
@@ -733,18 +733,24 @@ riga `^ testo` immediatamente sopra `## Titolo` diventa `slide.eyebrow` ed esce
 dal contenuto. Il template default non cambia aspetto.
 
 **Tasks:**
-- [ ] `meta` e `total_pages` nel contesto; stringhe escaped, liste annidate (es. `cover_meta`) escaped elemento per elemento
-- [ ] `number`, `chapter`, `chapter_n`, `chapter_total` sulle slide
-- [ ] Riga `^ ` sopra `## ` → `slide.eyebrow`; una riga `^ ` non seguita da `## ` resta testo
-- [ ] Test: unit — `tests/unit/test_m111_template_context.py` (meta escaped, numerazione con e senza capitoli, occhiello presente/assente/orfano)
-- [ ] README: sezione sulle variabili disponibili ai template
-- [ ] Portare in `md2/templates/default/style.css` il blocco print della numerazione pagine, aggiunto a mano solo in `~/.md2/templates/default/style.css` (17 righe, mai committato): `./install.sh` lo cancellerebbe
-- [ ] Deploy: `./install.sh`, verificato con `md2 --help`
-- [ ] Commit & push
+- [x] `meta` e `total_pages` nel contesto; stringhe escaped, liste annidate (es. `cover_meta`) escaped elemento per elemento
+- [x] `number`, `chapter`, `chapter_n`, `chapter_total` sulle slide
+- [x] Riga `^ ` sopra `## ` → `slide.eyebrow`; una riga `^ ` non seguita da `## ` resta testo
+- [x] Test: unit — `tests/unit/test_m111_template_context.py` (meta escaped, numerazione con e senza capitoli, occhiello presente/assente/orfano)
+- [x] README: sezione sulle variabili disponibili ai template
+- [x] Portare in `md2/templates/default/style.css` il blocco print della numerazione pagine, aggiunto a mano solo in `~/.md2/templates/default/style.css` (17 righe, mai committato): `./install.sh` lo cancellerebbe
+- [x] Deploy: `./install.sh`, verificato con `md2 --help`
+- [x] Commit & push
 
 **Done when:** un template di prova che stampa `{{ meta.client }}`,
 `{{ slide.number }}/{{ total_pages }}`, `{{ slide.chapter.title }}` e
 `{{ slide.eyebrow }}` mostra i valori attesi, e `make test` è verde.
+
+**Deviations:**
+- `slide.eyebrow` vale `""` quando manca, non `None`: Jinja stampa `None` come testo, `chapter` resta `None` perché `{{ slide.chapter.title }}` su `None` stampa vuoto.
+- `chapter.title` è il testo del `# ` del capitolo (`""` se assente), non il ripiego "Slide N" usato per la sidebar.
+- Il template default non mostra l'occhiello (`slide.html` invariato). Il suo contatore di stampa salta copertina e slide chapter, quindi non coincide con `slide.number`.
+- README: la tabella delle variabili ora include anche chiavi esistenti mai documentate (`type`, `subtitle`, `palette`, `colors`).
 
 ## M112: `:::columns` fino a 4 colonne, stile `cards` e colonna `highlight`
 
