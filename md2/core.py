@@ -58,9 +58,14 @@ _CHART_TYPES_SHOW_DATA = {
 }
 _CHART_TITLE_RE = re.compile(r'^#{1,6}\s+(.+?)$', re.MULTILINE)
 _COLUMNS_DIRECTIVE_RE = re.compile(
-    r'^:::columns\n(.*?)\n:::[ \t]*$',
+    r'^:::columns(?:[ \t]([^\n]*))?\n(.*?)\n:::[ \t]*$',
     re.MULTILINE | re.DOTALL
 )
+_COL_MARKER_RE = re.compile(r'^:::col(?:[ \t]([^\n]*))?\n', re.MULTILINE)
+# Modifier words become classes only when whitelisted; any other word is dropped.
+_COLUMNS_MODIFIERS = {'cards'}
+_COL_MODIFIERS = {'highlight'}
+_MAX_COLUMNS = 4
 # M105: a :::chapter fence wraps ONE whole slide's content and turns it
 # into an "act divider" slide. Matched against a single (already stripped)
 # slide's text — the fence must span the entire slide, so only an explicit
@@ -287,34 +292,44 @@ def preprocess_chart_directives(markdown_text):
     return result, has_charts
 
 
-def preprocess_columns(markdown_text):
-    """Find :::columns ... ::: blocks and convert to two-column HTML layout.
+def _classes(base, words, allowed):
+    return " ".join([base] + [w for w in (words or "").split() if w in allowed])
 
-    Columns are delimited by :::col markers inside the block. Content in
-    each column is parsed as markdown independently. If no :::col marker
-    is found, the block is left unchanged (no column effect).
+
+def preprocess_columns(markdown_text):
+    """Find :::columns ... ::: blocks and convert them to a 2-4 column layout.
+
+    Columns are delimited by :::col markers inside the block; content past the
+    fourth column is dropped. Each column is parsed as markdown independently.
+    `:::columns cards` and `:::col highlight` add the matching class. The count
+    class `md2-cols-N` appears from three columns up: two is the base layout.
+    With fewer than two columns the block's content is returned without the
+    column effect.
     """
     def _replace_columns(match):
-        content = match.group(1)
+        content = match.group(2)
 
-        # Split on :::col markers
-        parts = re.split(r'\n*:::col\n', content)
+        # [text before the first marker, words1, body1, words2, body2, ...]
+        pieces = _COL_MARKER_RE.split(content)
+        columns = [(None, pieces[0])] + list(zip(pieces[1::2], pieces[2::2]))
+        columns = [(words, body) for words, body in columns if body.strip()]
 
-        # First part (before any :::col) is discarded if empty
-        col_contents = [p for p in parts if p.strip()]
-
-        if len(col_contents) < 2:
-            # Not enough columns — no column effect
+        if len(columns) < 2:
             return content
 
-        # Take first two columns only (max 2)
+        columns = columns[:_MAX_COLUMNS]
         cols_html = []
-        for part in col_contents[:2]:
-            col_md = part.strip()
-            col_html = markdown.markdown(col_md, extensions=MD_EXTENSIONS)
-            cols_html.append(f'<div class="md2-col">{col_html}</div>')
+        for words, body in columns:
+            col_html = markdown.markdown(body.strip(), extensions=MD_EXTENSIONS)
+            cols_html.append(
+                f'<div class="{_classes("md2-col", words, _COL_MODIFIERS)}">{col_html}</div>'
+            )
 
-        return f'<div class="md2-columns">{"".join(cols_html)}</div>'
+        base = "md2-columns"
+        if len(columns) > 2:
+            base += f" md2-cols-{len(columns)}"
+        wrapper_class = _classes(base, match.group(1), _COLUMNS_MODIFIERS)
+        return f'<div class="{wrapper_class}">{"".join(cols_html)}</div>'
 
     return _COLUMNS_DIRECTIVE_RE.sub(_replace_columns, markdown_text)
 
