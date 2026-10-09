@@ -153,6 +153,16 @@ body {
     color: var(--cover-text-color); max-width: 42rem;
 }
 
+/* :::statement slide — one large sentence, no title, vertically centered */
+.slide.statement {
+    display: flex; flex-direction: column; justify-content: center;
+}
+.slide.statement .content { width: 100%; }
+.slide.statement .content > p {
+    font-size: clamp(1.6rem, 4.5vh, 2.8rem); line-height: 1.3;
+    font-weight: 600; color: var(--cover-title-color);
+}
+
 /* General Content */
 .slide p, .slide li, .slide td { line-height: 1.6; font-size: clamp(0.95rem, 2vh, 1.25rem); color: var(--text-color); }
 .slide p { margin-bottom: 1em; }
@@ -488,6 +498,35 @@ body.dark-mode .md2-chart .charts-css { color: var(--text-color); }
     box-shadow: inset 0 0 0 1px var(--blockquote-accent);
 }
 
+/* :::take — tinted box with an accent rule; :::take Label adds a small caps heading */
+.md2-take {
+    background: var(--code-bg); border-left: 4px solid var(--blockquote-accent);
+    border-radius: 0 8px 8px 0; padding: 16px 24px; margin: 20px 0;
+}
+.md2-take > :first-child { margin-top: 0; }
+.md2-take > :last-child { margin-bottom: 0; }
+.md2-label {
+    font-size: 0.8rem; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.08em; color: var(--blockquote-accent); margin-bottom: 8px;
+}
+
+/* :::source — small secondary line */
+.slide .md2-source p { font-size: 0.85rem; opacity: 0.7; margin: 8px 0; }
+
+/* :::timeline — the list becomes a row of steps on a line, one dot per step */
+.md2-timeline > ol, .md2-timeline > ul {
+    display: flex; list-style: none; padding: 0; margin: 30px 0 20px;
+}
+.md2-timeline li {
+    flex: 1; min-width: 0; position: relative;
+    padding: 22px 16px 0 0; border-top: 2px solid var(--slide-border);
+}
+.md2-timeline li::before {
+    content: ""; position: absolute; top: -7px; left: 0;
+    width: 12px; height: 12px; border-radius: 50%;
+    background: var(--blockquote-accent);
+}
+
 /* Images */
 .slide img {
     max-width: 100%; height: auto; display: block;
@@ -675,8 +714,19 @@ body.dark-mode .md2-chart .charts-css { color: var(--text-color); }
         -webkit-print-color-adjust: exact !important;
     }
 
-    /* Prevent page breaks inside charts and columns */
-    .md2-chart, .md2-columns {
+    /* Take boxes print white with their accent rule: the .slide p reset above
+       paints paragraphs white, which would stripe a tinted box */
+    .md2-take { background: #fff !important; }
+    .md2-timeline li::before {
+        print-color-adjust: exact !important;
+        -webkit-print-color-adjust: exact !important;
+    }
+
+    /* Statement slide fills its page so the sentence stays centered */
+    .slide.statement { min-height: 95vh; height: auto; }
+
+    /* Prevent page breaks inside charts, columns and blocks */
+    .md2-chart, .md2-columns, .md2-take, .md2-timeline {
         break-inside: avoid;
         page-break-inside: avoid;
     }
@@ -712,6 +762,8 @@ body.dark-mode .md2-chart .charts-css { color: var(--text-color); }
         margin: 30px 0; width: 100%;
     }
     .md2-columns { flex-direction: column; }
+    .md2-timeline > ol, .md2-timeline > ul { flex-direction: column; gap: 12px; }
+    .slide.statement .content > p { font-size: 1.4rem; }
 }
 
 /* Print: one slide = one page, and every content page carries its number bottom-right.

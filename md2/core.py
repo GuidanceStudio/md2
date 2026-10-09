@@ -66,13 +66,18 @@ _COL_MARKER_RE = re.compile(r'^:::col(?:[ \t]([^\n]*))?\n', re.MULTILINE)
 _COLUMNS_MODIFIERS = {'cards'}
 _COL_MODIFIERS = {'highlight'}
 _MAX_COLUMNS = 4
-# M105: a :::chapter fence wraps ONE whole slide's content and turns it
-# into an "act divider" slide. Matched against a single (already stripped)
-# slide's text — the fence must span the entire slide, so only an explicit
-# :::chapter triggers a chapter (a bare `# ` H1 in an ordinary slide, i.e.
-# the hero-stat pattern, is left untouched).
-_CHAPTER_DIRECTIVE_RE = re.compile(
-    r'\A:::chapter[ \t]*\n(.*?)\n[ \t]*:::[ \t]*\Z',
+# A block directive closes on the first bare `:::` line after its opening, and
+# the name must be followed by whitespace or the line end (`:::takeaway` is text).
+_BLOCK_DIRECTIVE_RE = re.compile(
+    r'^:::(take|source|timeline)(?:[ \t]+([^\n]*?))?[ \t]*\n(.*?)^:::[ \t]*$',
+    re.MULTILINE | re.DOTALL
+)
+# A :::chapter or :::statement fence wraps ONE whole slide's content and sets
+# the slide's type. Matched against a single (already stripped) slide's text —
+# the fence must span the entire slide, so a bare `# ` H1 in an ordinary slide
+# (the hero-stat pattern) is never a chapter.
+_SLIDE_FENCE_RE = re.compile(
+    r'\A:::(chapter|statement)[ \t]*\n(.*?)\n[ \t]*:::[ \t]*\Z',
     re.DOTALL
 )
 # A single-hash H1 line inside the fence (the `## ` H2 case never matches
@@ -332,6 +337,26 @@ def preprocess_columns(markdown_text):
         return f'<div class="{wrapper_class}">{"".join(cols_html)}</div>'
 
     return _COLUMNS_DIRECTIVE_RE.sub(_replace_columns, markdown_text)
+
+
+def preprocess_blocks(markdown_text):
+    """Convert :::take, :::source and :::timeline blocks to classed divs.
+
+    The inner markdown is rendered on its own and wrapped in
+    `<div class="md2-<name>">`; a label after the name becomes a leading
+    `<div class="md2-label">`. Any other `:::name` is left as text. Runs before
+    preprocess_columns, so a block's closing `:::` inside a :::col never closes
+    the columns.
+    """
+    def _replace_block(match):
+        name, label, inner = match.groups()
+        label_html = f'<div class="md2-label">{html.escape(label)}</div>' if label else ""
+        inner_html = markdown.markdown(inner.strip(), extensions=MD_EXTENSIONS)
+        # Blank lines around the div keep it a raw HTML block for the outer pass,
+        # even when the directive sits right under a paragraph line.
+        return f'\n\n<div class="md2-{name}">{label_html}{inner_html}</div>\n\n'
+
+    return _BLOCK_DIRECTIVE_RE.sub(_replace_block, markdown_text)
 
 
 def transform_charts(html_content):
@@ -734,6 +759,7 @@ def process_markdown(text):
     Returns (html_string, has_charts) tuple.
     """
     text, has_charts = preprocess_chart_directives(text)
+    text = preprocess_blocks(text)
     text = preprocess_columns(text)
     raw_html = markdown.markdown(text, extensions=MD_EXTENSIONS)
     sanitized = sanitize_html(raw_html)
@@ -806,6 +832,16 @@ def _split_slides(markdown_text):
     return segments
 
 
+def _first_text_line(html_content):
+    """First non-empty line of an HTML fragment's text, still HTML-escaped.
+
+    Stripping with bleach puts every block element on its own line, so a block
+    label never runs into the text after it.
+    """
+    text = bleach.clean(html_content, tags=[], strip=True)
+    return next((line.strip() for line in text.split('\n') if line.strip()), "")
+
+
 def _escape_meta(value):
     """HTML-escape every string in a front-matter value, at any depth.
 
@@ -830,6 +866,7 @@ def prepare_context(markdown_text, metadata=None):
     Each slide carries 'number' (the cover is page 1), 'chapter' ({n, title}
     of the latest :::chapter so far, None before the first) and 'eyebrow'
     ("" when absent); chapter slides add 'chapter_n' and 'chapter_total'.
+    A whole-slide :::chapter or :::statement fence sets 'type' to that name.
     """
     if metadata is None:
         metadata = {}
@@ -859,12 +896,25 @@ def prepare_context(markdown_text, metadata=None):
     for i, slide_text in enumerate(raw_slides[1:]):
         slide_text = slide_text.strip()
 
-        # M105: a whole-slide :::chapter fence becomes an act-divider slide.
-        chapter_match = _CHAPTER_DIRECTIVE_RE.match(slide_text)
-        if chapter_match:
-            chapter_title, subtitle_md = _parse_chapter(
-                chapter_match.group(1)
-            )
+        fence = _SLIDE_FENCE_RE.match(slide_text)
+        if fence and fence.group(1) == "statement":
+            content, statement_has_charts = process_markdown(fence.group(2))
+            if statement_has_charts:
+                has_charts = True
+            slides_data.append({
+                "id": f"slide-{i}",
+                "number": i + 2,
+                "title": _first_text_line(content) or f"Slide {i + 1}",
+                "type": "statement",
+                "content": content,
+                "eyebrow": "",
+                "chapter": chapter,
+            })
+            continue
+
+        # A whole-slide :::chapter fence becomes an act-divider slide.
+        if fence:
+            chapter_title, subtitle_md = _parse_chapter(fence.group(2))
             subtitle_html = ""
             if subtitle_md:
                 subtitle_html, sub_has_charts = process_markdown(subtitle_md)
