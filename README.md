@@ -432,7 +432,7 @@ Ogni tipo di grafico ha dimensioni di default sensate:
 
 ### Layout a colonne
 
-Usa `:::columns` con `:::col` per affiancare contenuti in due colonne:
+Usa `:::columns` con `:::col` per affiancare contenuti in colonne, da due a quattro:
 
 ```
 :::columns
@@ -453,7 +453,40 @@ Testo nella colonna sinistra.
 :::
 ```
 
-Ogni `:::col` delimita l'inizio di una colonna (massimo 2). Su mobile (< 768px) le colonne si impilano verticalmente. In stampa restano affiancate.
+Ogni `:::col` delimita l'inizio di una colonna (massimo 4: dalla quinta in poi il contenuto viene scartato). Su mobile (< 768px) le colonne si impilano verticalmente. In stampa restano affiancate.
+
+#### Card e colonna in evidenza
+
+La riga d'apertura accetta il modificatore `cards`, che rende ogni colonna un riquadro con sfondo, bordo e angoli arrotondati, tutti alla stessa altezza. Una singola colonna si mette in evidenza con `:::col highlight`, che la borda col colore d'accento:
+
+```
+:::columns cards
+
+:::col
+# 3
+Mercati presidiati
+
+:::col highlight
+# 12
+Clienti attivi
+
+:::col
+# 40%
+Quota export
+
+:::
+```
+
+Un `# ` dentro una colonna resta un titolo `h1`: è il template a decidere come mostrarlo (nel default è un titolo normale).
+
+| Sintassi | Classe generata |
+|----------|-----------------|
+| `:::columns` con 2 colonne | `md2-columns` |
+| `:::columns` con 3 o 4 colonne | `md2-columns md2-cols-3` / `md2-cols-4` |
+| `:::columns cards` | aggiunge `cards` |
+| `:::col highlight` | `md2-col highlight` |
+
+Le parole non riconosciute su `:::columns` e `:::col` vengono ignorate e non generano classi. I template personalizzati possono stilare queste classi a piacere.
 
 ### Blocchi di codice
 

@@ -468,11 +468,25 @@ body {
 .md2-chart ul.legend li:nth-child(10)::before { background: var(--md2-color-10); }
 body.dark-mode .md2-chart .charts-css { color: var(--text-color); }
 
-/* Columns layout */
+/* Columns layout: two to four equal columns (md2-cols-3/-4 from three up) */
 .md2-columns {
     display: flex; gap: 30px; align-items: flex-start; margin: 20px 0;
 }
 .md2-col { flex: 1; min-width: 0; }
+.md2-columns.md2-cols-3, .md2-columns.md2-cols-4 { gap: 20px; }
+
+/* :::columns cards — equal-height boxes; :::col highlight marks one with the accent */
+.md2-columns.cards { align-items: stretch; }
+.md2-columns.cards > .md2-col {
+    background: var(--sidebar-bg); border: 1px solid var(--table-border);
+    border-radius: 10px; padding: 20px 24px; box-sizing: border-box;
+}
+.md2-columns.cards > .md2-col > :first-child { margin-top: 0; }
+.md2-columns.cards > .md2-col > :last-child { margin-bottom: 0; }
+.md2-columns.cards > .md2-col.highlight {
+    border-color: var(--blockquote-accent);
+    box-shadow: inset 0 0 0 1px var(--blockquote-accent);
+}
 
 /* Images */
 .slide img {
@@ -653,6 +667,13 @@ body.dark-mode .md2-chart .charts-css { color: var(--text-color); }
 
     /* Columns: preserve side-by-side layout */
     .md2-columns { display: flex; gap: 20px; }
+
+    /* Cards print as white boxes; exact colors keep the highlight accent */
+    .md2-columns.cards > .md2-col {
+        background: #fff !important; border-color: #999;
+        print-color-adjust: exact !important;
+        -webkit-print-color-adjust: exact !important;
+    }
 
     /* Prevent page breaks inside charts and columns */
     .md2-chart, .md2-columns {

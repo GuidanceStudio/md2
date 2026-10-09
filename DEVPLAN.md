@@ -752,7 +752,7 @@ dal contenuto. Il template default non cambia aspetto.
 - Il template default non mostra l'occhiello (`slide.html` invariato). Il suo contatore di stampa salta copertina e slide chapter, quindi non coincide con `slide.number`.
 - README: la tabella delle variabili ora include anche chiavi esistenti mai documentate (`type`, `subtitle`, `palette`, `colors`).
 
-## M112: `:::columns` fino a 4 colonne, stile `cards` e colonna `highlight`
+## M112: `:::columns` fino a 4 colonne, stile `cards` e colonna `highlight` ✅
 
 **Why:** le griglie di 3–4 card (agenda, KPI, dimensioni) sono il componente più
 frequente dei deck Guidance Deck System v5 (43 card nei due deck di riferimento),
@@ -768,16 +768,22 @@ raggio). Un `# ` dentro una colonna resta `h1`: è il template a stilarlo come
 numero grande.
 
 **Tasks:**
-- [ ] `_COLUMNS_DIRECTIVE_RE` e lo split su `:::col` estesi a modificatori e 4 colonne
-- [ ] Classi `md2-cols-N`, `cards`, `highlight` con whitelist dei modificatori
-- [ ] CSS nel default `md2/templates/default/style.css` per 3–4 colonne e `cards`, regole mobile sotto `screen and`
-- [ ] Test: unit — `tests/unit/test_m112_columns_cards.py` (2/3/4/5 colonne, modificatori validi e sconosciuti, `:::columns` senza parole invariato)
-- [ ] Test: `tests/unit/test_columns.py` verde senza modifiche
-- [ ] Deploy: `./install.sh`
-- [ ] Commit & push
+- [x] `_COLUMNS_DIRECTIVE_RE` e lo split su `:::col` estesi a modificatori e 4 colonne
+- [x] Classi `md2-cols-N`, `cards`, `highlight` con whitelist dei modificatori
+- [x] CSS nel default `md2/templates/default/style.css` per 3–4 colonne e `cards`, regole mobile sotto `screen and`
+- [x] Test: unit — `tests/unit/test_m112_columns_cards.py` (2/3/4/5 colonne, modificatori validi e sconosciuti, `:::columns` senza parole invariato)
+- [x] Test: `tests/unit/test_columns.py` verde senza modifiche
+- [x] Deploy: `./install.sh`
+- [x] Commit & push
 
 **Done when:** `:::columns cards` con tre `:::col`, di cui una `:::col highlight`,
 rende tre card affiancate nel template default, e `make test` è verde.
+
+**Deviations:**
+- `md2-cols-N` solo da 3 colonne: con 2 il wrapper resta `class="md2-columns"`, che `tests/unit/test_columns.py` verifica alla lettera. Due colonne sono il layout base.
+- Nessuna nuova regola mobile: lo stack esistente sotto `@media screen and (max-width: 768px)` copre già 3–4 colonne e card.
+- Aggiunta una regola print per le card (sfondo bianco, bordo grigio, `print-color-adjust: exact`): senza, in dark mode la card stamperebbe scura sotto il testo forzato a nero.
+- Il marcatore `:::col` è riconosciuto solo a inizio riga (prima anche a metà riga).
 
 ## M113: Direttive `:::take`, `:::source`, `:::timeline` e slide `:::statement`
 
