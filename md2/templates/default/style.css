@@ -692,3 +692,20 @@ body.dark-mode .md2-chart .charts-css { color: var(--text-color); }
     }
     .md2-columns { flex-direction: column; }
 }
+
+/* Print: one slide = one page, and every content page carries its number bottom-right.
+   The cover is excluded from the count, so the number a reader sees matches the number a
+   cross-reference in the text points at. Mirrors the forestvalley and guidance templates. */
+@media print {
+    .slide { position: relative; counter-increment: pagenum; }
+    #main { counter-reset: pagenum; }
+    .cover { counter-increment: none; }
+    .slide::after {
+        content: counter(pagenum);
+        position: absolute; right: 0; bottom: 6mm;
+        font-size: 9pt; color: #6a7282;
+    }
+    .cover::after { content: none; }
+    .slide.chapter { counter-increment: none; }
+    .slide.chapter::after { content: none; }
+}

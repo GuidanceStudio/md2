@@ -188,6 +188,8 @@ Contenuto della presentazione...
 
 I flag CLI (`--lang`, `--dark`) hanno priorità sul frontmatter quando specificati esplicitamente.
 
+Qualunque altro campo (per esempio `client = "Acme"` o `cover_meta = [["Per", "Acme"], ["A cura di", "Guidance"]]`) viene ignorato da md2 e passato ai template come `meta.<campo>`: vedi [Variabili di contesto](#variabili-di-contesto).
+
 ## Palette colori
 
 md2 include 6 palette predefinite: `default`, `warm`, `cool`, `mono`, `vivid`, `pastel`.
@@ -260,6 +262,17 @@ Contenuto slide 2
 ### Titolo slide
 
 Il primo `## H2` di ogni sezione diventa il titolo della slide e la voce corrispondente nella sidebar di navigazione. Se una sezione non ha `## H2`, viene chiamata "Slide N".
+
+### Occhiello
+
+Una riga `^ testo` come prima riga della slide, immediatamente sopra il `## H2`, diventa l'occhiello della slide: esce dal contenuto e arriva al template come `slide.eyebrow`.
+
+```markdown
+^ 04 · Mercato
+## Dimensione del mercato
+```
+
+Se la riga `^ ` non è seguita subito da un `## ` (riga vuota in mezzo, testo normale, o occhiello sotto il titolo), resta testo della slide. Il template default non mostra l'occhiello: serve a template che lo prevedono.
 
 ### Sotto-sezioni
 
@@ -542,20 +555,50 @@ Questo template eredita tutto dal default e rimuove sidebar e controlli. Puoi so
 
 Queste variabili sono disponibili in tutti i template:
 
-| Variabile          | Tipo    | Descrizione                                |
-|--------------------|---------|--------------------------------------------|
-| `title`            | string  | Titolo della presentazione (HTML-escaped)  |
-| `og_description`   | string  | Meta description per Open Graph            |
-| `lang`             | string  | Attributo lang (`it`, `en`, ...)            |
-| `dark_mode`        | bool    | `true` se `--dark` è attivo                |
-| `cover.title`      | string  | Titolo della copertina                     |
-| `cover.content`    | string  | HTML del contenuto della copertina         |
-| `slides`           | list    | Lista delle slide                          |
-| `slides[].id`      | string  | ID HTML della slide (`slide-0`, `slide-1`) |
-| `slides[].title`   | string  | Titolo della slide                         |
-| `slides[].content` | string  | HTML del contenuto della slide             |
-| `palette_css`      | string  | CSS con variabili `--md2-color-N`          |
-| `has_charts`       | bool    | `true` se il documento contiene grafici    |
+| Variabile                 | Tipo         | Descrizione                                                                 |
+|---------------------------|--------------|-----------------------------------------------------------------------------|
+| `title`                   | string       | Titolo della presentazione (HTML-escaped)                                   |
+| `og_description`          | string       | Meta description per Open Graph                                             |
+| `lang`                    | string       | Attributo lang (`it`, `en`, ...)                                            |
+| `dark_mode`               | bool         | `true` se `--dark` è attivo                                                 |
+| `meta`                    | dict         | Frontmatter completo; ogni stringa HTML-escaped, anche dentro liste e tabelle; numeri, booleani e date invariati. `{}` senza frontmatter |
+| `total_pages`             | int          | Pagine del deck: copertina + slide                                          |
+| `cover.title`             | string       | Titolo della copertina (HTML-escaped)                                       |
+| `cover.content`           | string       | HTML del contenuto della copertina                                          |
+| `slides`                  | list         | Lista delle slide                                                           |
+| `slides[].id`             | string       | ID HTML della slide (`slide-0`, `slide-1`)                                  |
+| `slides[].number`         | int          | Numero di pagina: la copertina è 1, la prima slide 2                        |
+| `slides[].title`          | string       | Titolo della slide                                                          |
+| `slides[].content`        | string       | HTML del contenuto della slide (`""` per le slide `:::chapter`)             |
+| `slides[].eyebrow`        | string       | Occhiello da una riga `^ ` (HTML-escaped); `""` se la slide non lo ha       |
+| `slides[].type`           | string       | `"chapter"` per le slide `:::chapter`, assente per le slide normali          |
+| `slides[].subtitle`       | string       | Solo slide `:::chapter`: HTML del testo sotto il `# ` del capitolo          |
+| `slides[].chapter`        | dict o None  | Capitolo in corso: l'ultima slide `:::chapter` fin qui, lei compresa. `None` prima del primo capitolo |
+| `slides[].chapter.n`      | int          | Posizione del capitolo, da 1                                                |
+| `slides[].chapter.title`  | string       | Testo del `# ` del capitolo (`""` se il capitolo non ne ha)                 |
+| `slides[].chapter_n`      | int          | Solo slide `:::chapter`: posizione del capitolo, da 1                       |
+| `slides[].chapter_total`  | int          | Solo slide `:::chapter`: numero di capitoli nel deck                        |
+| `palette`                 | string       | Nome della palette (`"default"` se non indicata)                            |
+| `colors`                  | list o None  | Campo `colors` del frontmatter, non escaped                                 |
+| `palette_css`             | string       | CSS con variabili `--md2-color-N`                                           |
+| `has_charts`              | bool         | `true` se il documento contiene grafici                                     |
+
+Esempio: intestazione con il cliente, numero di pagina e occhiello che ripiega sul capitolo in corso.
+
+```jinja2
+{% for slide in slides %}
+<div class="slide" id="{{ slide.id }}">
+  <header>{{ meta.client }}</header>
+  {% if slide.eyebrow %}<p class="eyebrow">{{ slide.eyebrow }}</p>
+  {% elif slide.chapter %}<p class="eyebrow">{{ "%02d"|format(slide.chapter.n) }} · {{ slide.chapter.title }}</p>{% endif %}
+  <h2>{{ slide.title }}</h2>
+  <div class="content">{{ slide.content }}</div>
+  <footer>{{ slide.number }}/{{ total_pages }}</footer>
+</div>
+{% endfor %}
+```
+
+Un campo assente stampa una stringa vuota (`{{ meta.client }}` senza `client` nel frontmatter), così come `{{ slide.chapter.title }}` prima del primo capitolo.
 
 ### Aggiornare il template default
 

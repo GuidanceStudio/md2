@@ -73,6 +73,9 @@ _CHAPTER_DIRECTIVE_RE = re.compile(
 # A single-hash H1 line inside the fence (the `## ` H2 case never matches
 # because `#` must be followed by whitespace).
 _CHAPTER_H1_RE = re.compile(r'^#[ \t]+(.+?)[ \t]*$')
+# An eyebrow is a `^ text` line, honoured only as a slide's first line and
+# only when the very next line is its `## ` title.
+_EYEBROW_RE = re.compile(r'^\^[ \t]+(.+?)[ \t]*$')
 _CHART_DIV_RE = re.compile(
     r'<div class="md2-chart" data-chart-type="([\w-]+)"'
     r'(?:\s+data-chart-title="([^"]*)")?\s*'
@@ -788,10 +791,30 @@ def _split_slides(markdown_text):
     return segments
 
 
+def _escape_meta(value):
+    """HTML-escape every string in a front-matter value, at any depth.
+
+    Templates render with autoescape off, so a client name such as
+    `R&D <lab>` would otherwise reach the page as markup.
+    """
+    if isinstance(value, str):
+        return html.escape(value)
+    if isinstance(value, list):
+        return [_escape_meta(v) for v in value]
+    if isinstance(value, dict):
+        return {k: _escape_meta(v) for k, v in value.items()}
+    return value
+
+
 def prepare_context(markdown_text, metadata=None):
     """
     Parses markdown into a context dict for template rendering.
-    Returns a dict with 'title', 'cover', 'slides', and frontmatter fields.
+
+    Returns 'title', 'cover', 'slides', 'meta' (the escaped front matter),
+    'total_pages' (cover + slides), 'palette', 'colors' and 'has_charts'.
+    Each slide carries 'number' (the cover is page 1), 'chapter' ({n, title}
+    of the latest :::chapter so far, None before the first) and 'eyebrow'
+    ("" when absent); chapter slides add 'chapter_n' and 'chapter_total'.
     """
     if metadata is None:
         metadata = {}
@@ -816,6 +839,8 @@ def prepare_context(markdown_text, metadata=None):
 
     has_charts = False
     slides_data = []
+    chapter = None
+    chapter_slides = []
     for i, slide_text in enumerate(raw_slides[1:]):
         slide_text = slide_text.strip()
 
@@ -830,20 +855,35 @@ def prepare_context(markdown_text, metadata=None):
                 subtitle_html, sub_has_charts = process_markdown(subtitle_md)
                 if sub_has_charts:
                     has_charts = True
-            slides_data.append({
+            chapter = {"n": len(chapter_slides) + 1, "title": chapter_title}
+            slide = {
                 "id": f"slide-{i}",
+                "number": i + 2,
                 "title": chapter_title or f"Slide {i + 1}",
                 "type": "chapter",
                 "subtitle": subtitle_html,
                 "content": "",
-            })
+                "eyebrow": "",
+                "chapter": chapter,
+                "chapter_n": chapter["n"],
+            }
+            chapter_slides.append(slide)
+            slides_data.append(slide)
             continue
 
         lines = slide_text.split('\n')
         slide_title = f"Slide {i + 1}"
         slide_body = slide_text
+        # "" rather than None: Jinja prints None as the text "None", so an
+        # unguarded {{ slide.eyebrow }} would show it on every plain slide.
+        eyebrow = ""
 
-        if lines and lines[0].startswith('## '):
+        eyebrow_match = _EYEBROW_RE.match(lines[0])
+        if eyebrow_match and len(lines) > 1 and lines[1].startswith('## '):
+            eyebrow = html.escape(eyebrow_match.group(1))
+            lines = lines[1:]
+
+        if lines[0].startswith('## '):
             slide_title = lines[0][3:].strip()
             slide_body = '\n'.join(lines[1:])
 
@@ -852,9 +892,15 @@ def prepare_context(markdown_text, metadata=None):
             has_charts = True
         slides_data.append({
             "id": f"slide-{i}",
+            "number": i + 2,
             "title": slide_title,
-            "content": content
+            "content": content,
+            "eyebrow": eyebrow,
+            "chapter": chapter,
         })
+
+    for slide in chapter_slides:
+        slide["chapter_total"] = len(chapter_slides)
 
     cover_clean, cover_has_charts = process_markdown(cover_content)
     if cover_has_charts:
@@ -867,6 +913,8 @@ def prepare_context(markdown_text, metadata=None):
             "content": cover_clean
         },
         "slides": slides_data,
+        "meta": _escape_meta(metadata),
+        "total_pages": 1 + len(slides_data),
         "palette": metadata.get("palette", "default"),
         "colors": metadata.get("colors"),
         "has_charts": has_charts,
