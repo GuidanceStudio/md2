@@ -715,3 +715,87 @@ test.
       a 150px in copertina e 40px sulle slide). HTML da 6,7 MB a 1,2 MB.
       Originale salvato in `~/.md2/templates/guidance/logo-original-5001px.png.bak`.
 
+
+## M111: Contesto del template — front matter, numero di pagina, capitolo, occhiello
+
+**Why:** un template oggi riceve solo titolo, copertina e slide. Cliente,
+oggetto, data, numero di pagina e capitolo corrente non gli arrivano, quindi
+l'intestazione "Guidance × cliente", la numerazione NN/TT e l'occhiello
+"04 · capitolo" del template `guidance-modern` (md2-templates M114) non si
+possono generare.
+
+**Approccio:** `prepare_context` (`md2/core.py:791`) espone `meta` (front matter
+completo, stringhe HTML-escaped come già il `title` in `md2/cli.py`),
+`total_pages` (copertina + slide) e, per ogni slide, `number` (la copertina è 1)
+e `chapter` = `{n, title}` dell'ultimo `:::chapter` incontrato (`None` prima del
+primo). Le slide chapter ricevono `chapter_n` e `chapter_total`. Occhiello: una
+riga `^ testo` immediatamente sopra `## Titolo` diventa `slide.eyebrow` ed esce
+dal contenuto. Il template default non cambia aspetto.
+
+**Tasks:**
+- [ ] `meta` e `total_pages` nel contesto; stringhe escaped, liste annidate (es. `cover_meta`) escaped elemento per elemento
+- [ ] `number`, `chapter`, `chapter_n`, `chapter_total` sulle slide
+- [ ] Riga `^ ` sopra `## ` → `slide.eyebrow`; una riga `^ ` non seguita da `## ` resta testo
+- [ ] Test: unit — `tests/unit/test_m111_template_context.py` (meta escaped, numerazione con e senza capitoli, occhiello presente/assente/orfano)
+- [ ] README: sezione sulle variabili disponibili ai template
+- [ ] Portare in `md2/templates/default/style.css` il blocco print della numerazione pagine, aggiunto a mano solo in `~/.md2/templates/default/style.css` (17 righe, mai committato): `./install.sh` lo cancellerebbe
+- [ ] Deploy: `./install.sh`, verificato con `md2 --help`
+- [ ] Commit & push
+
+**Done when:** un template di prova che stampa `{{ meta.client }}`,
+`{{ slide.number }}/{{ total_pages }}`, `{{ slide.chapter.title }}` e
+`{{ slide.eyebrow }}` mostra i valori attesi, e `make test` è verde.
+
+## M112: `:::columns` fino a 4 colonne, stile `cards` e colonna `highlight`
+
+**Why:** le griglie di 3–4 card (agenda, KPI, dimensioni) sono il componente più
+frequente dei deck Guidance Deck System v5 (43 card nei due deck di riferimento),
+e `preprocess_columns` (`md2/core.py:287`) ne tiene al massimo due.
+
+**Approccio:** `:::columns [parole]` accetta modificatori sulla riga d'apertura
+(`cards`), `:::col [parola]` accetta `highlight`. Output:
+`<div class="md2-columns md2-cols-N cards">` con N fra 2 e 4 (dalla quinta in poi
+scartate, come oggi la terza) e `<div class="md2-col highlight">`. I modificatori
+sono in whitelist; una parola sconosciuta viene ignorata. Nel default
+`style.css`: griglia a N colonne e un aspetto `cards` minimo (sfondo, bordo,
+raggio). Un `# ` dentro una colonna resta `h1`: è il template a stilarlo come
+numero grande.
+
+**Tasks:**
+- [ ] `_COLUMNS_DIRECTIVE_RE` e lo split su `:::col` estesi a modificatori e 4 colonne
+- [ ] Classi `md2-cols-N`, `cards`, `highlight` con whitelist dei modificatori
+- [ ] CSS nel default `md2/templates/default/style.css` per 3–4 colonne e `cards`, regole mobile sotto `screen and`
+- [ ] Test: unit — `tests/unit/test_m112_columns_cards.py` (2/3/4/5 colonne, modificatori validi e sconosciuti, `:::columns` senza parole invariato)
+- [ ] Test: `tests/unit/test_columns.py` verde senza modifiche
+- [ ] Deploy: `./install.sh`
+- [ ] Commit & push
+
+**Done when:** `:::columns cards` con tre `:::col`, di cui una `:::col highlight`,
+rende tre card affiancate nel template default, e `make test` è verde.
+
+## M113: Direttive `:::take`, `:::source`, `:::timeline` e slide `:::statement`
+
+**Why:** box "Il punto" (89 occorrenze nei deck di riferimento), riga fonte (82),
+timeline a fasi e slide statement non hanno sintassi. L'unica via oggi è HTML
+grezzo, dentro cui il markdown non viene interpretato.
+
+**Approccio:** un solo preprocessore per i blocchi contenitore `:::take
+[etichetta]`, `:::source` e `:::timeline`, chiamato in `process_markdown`
+**prima** di `preprocess_columns`: così il `:::` di chiusura di un blocco dentro
+una `:::col` non chiude le colonne. Rende il markdown interno e lo avvolge in
+`<div class="md2-<nome>">`, con `<div class="md2-label">etichetta</div>` in testa
+se c'è l'argomento. Nomi in whitelist; un `:::nome` sconosciuto resta testo.
+`:::statement` a slide intera segue la strada di `:::chapter`
+(`_CHAPTER_DIRECTIVE_RE`, `md2/core.py:69`): slide `type: 'statement'` con
+contenuto renderizzato e titolo della sidebar preso dalla prima riga di testo.
+
+**Tasks:**
+- [ ] Preprocessore dei blocchi contenitore: whitelist `take`, `source`, `timeline`, etichetta opzionale
+- [ ] `:::statement` a slide intera → `type: 'statement'`; `components/slide.html` del default lo rende senza `h2`
+- [ ] CSS minimo nel default per `.md2-take`, `.md2-source`, `.md2-timeline`, `.slide.statement`
+- [ ] Test: unit — `tests/unit/test_m113_block_directives.py` (etichetta sì/no, markdown interno, nome sconosciuto, blocco dentro `:::col`, statement e titolo sidebar)
+- [ ] Deploy: `./install.sh`
+- [ ] Commit & push
+
+**Done when:** un deck con i quattro costrutti rende ciascuno nel proprio `div` o
+nella propria slide, con il markdown interno interpretato, e `make test` è verde.
