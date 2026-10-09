@@ -785,7 +785,7 @@ rende tre card affiancate nel template default, e `make test` è verde.
 - Aggiunta una regola print per le card (sfondo bianco, bordo grigio, `print-color-adjust: exact`): senza, in dark mode la card stamperebbe scura sotto il testo forzato a nero.
 - Il marcatore `:::col` è riconosciuto solo a inizio riga (prima anche a metà riga).
 
-## M113: Direttive `:::take`, `:::source`, `:::timeline` e slide `:::statement`
+## M113: Direttive `:::take`, `:::source`, `:::timeline` e slide `:::statement` ✅
 
 **Why:** box "Il punto" (89 occorrenze nei deck di riferimento), riga fonte (82),
 timeline a fasi e slide statement non hanno sintassi. L'unica via oggi è HTML
@@ -802,12 +802,19 @@ se c'è l'argomento. Nomi in whitelist; un `:::nome` sconosciuto resta testo.
 contenuto renderizzato e titolo della sidebar preso dalla prima riga di testo.
 
 **Tasks:**
-- [ ] Preprocessore dei blocchi contenitore: whitelist `take`, `source`, `timeline`, etichetta opzionale
-- [ ] `:::statement` a slide intera → `type: 'statement'`; `components/slide.html` del default lo rende senza `h2`
-- [ ] CSS minimo nel default per `.md2-take`, `.md2-source`, `.md2-timeline`, `.slide.statement`
-- [ ] Test: unit — `tests/unit/test_m113_block_directives.py` (etichetta sì/no, markdown interno, nome sconosciuto, blocco dentro `:::col`, statement e titolo sidebar)
-- [ ] Deploy: `./install.sh`
-- [ ] Commit & push
+- [x] Preprocessore dei blocchi contenitore: whitelist `take`, `source`, `timeline`, etichetta opzionale
+- [x] `:::statement` a slide intera → `type: 'statement'`; `components/slide.html` del default lo rende senza `h2`
+- [x] CSS minimo nel default per `.md2-take`, `.md2-source`, `.md2-timeline`, `.slide.statement`
+- [x] Test: unit — `tests/unit/test_m113_block_directives.py` (etichetta sì/no, markdown interno, nome sconosciuto, blocco dentro `:::col`, statement e titolo sidebar)
+- [x] README: i quattro costrutti nella sezione sulla sintassi, `"statement"` nella tabella delle variabili
+- [x] Deploy: `./install.sh`, verificato con `md2 --help` e `diff` dei template installati
+- [x] Commit & push
 
 **Done when:** un deck con i quattro costrutti rende ciascuno nel proprio `div` o
 nella propria slide, con il markdown interno interpretato, e `make test` è verde.
+
+**Deviations:**
+- Titolo sidebar della slide statement preso dal testo dell'HTML renderizzato (bleach senza tag), non da regex sul markdown: esce HTML-escaped, a differenza dei titoli `## ` delle slide normali.
+- `_CHAPTER_DIRECTIVE_RE` diventa `_SLIDE_FENCE_RE`, condiviso da `:::chapter` e `:::statement`.
+- Regole print aggiunte: box `take` su fondo bianco (il reset `.slide p` dipinge di bianco i paragrafi e righerebbe uno sfondo colorato), puntini della timeline con `print-color-adjust: exact`, slide statement a `min-height: 95vh` come le chapter, `break-inside: avoid` su take e timeline.
+- Un blocco aperto e mai chiuso resta testo; uno chiuso subito (`:::take` seguito da `:::`) dà un `div` vuoto.

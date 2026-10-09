@@ -488,6 +488,48 @@ Un `# ` dentro una colonna resta un titolo `h1`: è il template a decidere come 
 
 Le parole non riconosciute su `:::columns` e `:::col` vengono ignorate e non generano classi. I template personalizzati possono stilare queste classi a piacere.
 
+### Box, fonte e timeline
+
+Tre blocchi contenitore racchiudono markdown normale fra una riga d'apertura e una riga `:::` da sola. Il contenuto viene interpretato (grassetto, liste, link) e avvolto in un `div` con la classe del blocco:
+
+```
+:::take Il punto
+Tre mercati su cinque crescono **oltre il 10%**.
+:::
+
+:::timeline
+1. Analisi
+2. Pilota
+3. Rollout
+:::
+
+:::source
+Fonte: ISTAT, 2025
+:::
+```
+
+| Sintassi | Uso | HTML generato |
+|----------|-----|---------------|
+| `:::take` | Box con il messaggio chiave della slide | `<div class="md2-take">` |
+| `:::source` | Riga della fonte, piccola e attenuata | `<div class="md2-source">` |
+| `:::timeline` | Una lista disposta come fasi su una linea orizzontale | `<div class="md2-timeline">` |
+
+Il testo dopo il nome diventa un'etichetta in testa al blocco: `:::take Il punto` produce `<div class="md2-take"><div class="md2-label">Il punto</div>…</div>`. Vale per tutti e tre i blocchi. Il blocco si chiude alla prima riga `:::` da sola, e funziona anche dentro una `:::col`. Un `:::nome` diverso da questi tre resta testo.
+
+Nel template default `take` è un riquadro colorato con un bordo d'accento a sinistra e l'etichetta in maiuscolo piccolo, `source` una riga piccola, `timeline` una riga di fasi con un punto ciascuna. Su mobile la timeline si impila; in stampa il box `take` esce su fondo bianco.
+
+### Slide statement
+
+Una slide racchiusa per intero in `:::statement` diventa una slide senza titolo, con il testo in grande:
+
+```
+:::statement
+Il **70%** dei clienti arriva dal web.
+:::
+```
+
+Il recinto deve coprire tutta la slide, dal primo all'ultimo rigo; dentro una slide con altro contenuto `:::statement` resta testo. Nella sidebar la slide prende come titolo la prima riga di testo, senza marcatori markdown (qui "Il 70% dei clienti arriva dal web."), o "Slide N" se non c'è testo. Dentro la slide si possono usare gli altri blocchi, per esempio una `:::source` sotto la frase.
+
 ### Blocchi di codice
 
 Fenced code blocks con ` ```linguaggio ``` `. Il linguaggio viene usato come attributo class per eventuale syntax highlighting.
@@ -602,9 +644,9 @@ Queste variabili sono disponibili in tutti i template:
 | `slides[].id`             | string       | ID HTML della slide (`slide-0`, `slide-1`)                                  |
 | `slides[].number`         | int          | Numero di pagina: la copertina è 1, la prima slide 2                        |
 | `slides[].title`          | string       | Titolo della slide                                                          |
-| `slides[].content`        | string       | HTML del contenuto della slide (`""` per le slide `:::chapter`)             |
+| `slides[].content`        | string       | HTML del contenuto della slide (`""` per le slide `:::chapter`; per le `:::statement` il contenuto del recinto) |
 | `slides[].eyebrow`        | string       | Occhiello da una riga `^ ` (HTML-escaped); `""` se la slide non lo ha       |
-| `slides[].type`           | string       | `"chapter"` per le slide `:::chapter`, assente per le slide normali          |
+| `slides[].type`           | string       | `"chapter"` per le slide `:::chapter`, `"statement"` per le `:::statement`, assente per le slide normali |
 | `slides[].subtitle`       | string       | Solo slide `:::chapter`: HTML del testo sotto il `# ` del capitolo          |
 | `slides[].chapter`        | dict o None  | Capitolo in corso: l'ultima slide `:::chapter` fin qui, lei compresa. `None` prima del primo capitolo |
 | `slides[].chapter.n`      | int          | Posizione del capitolo, da 1                                                |
