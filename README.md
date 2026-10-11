@@ -357,14 +357,14 @@ Sintassi standard con `|` e `---`. L'allineamento colonne è supportato (`:---`,
 Usa la direttiva `:::chart` per trasformare una tabella markdown in un grafico visuale. La sintassi è:
 
 ```
-:::chart TIPO [--opzioni...]
+:::chart TIPO [--title "…"]
 | Intestazione | Colonna Dati |
 |--------------|--------------|
 | Etichetta    | Valore       |
 :::
 ```
 
-La prima colonna è sempre l'etichetta (asse delle categorie). Le colonne successive sono i dati. Se ci sono più colonne dati, il grafico diventa automaticamente multi-dataset.
+La prima colonna è sempre l'etichetta (asse delle categorie). Le colonne successive sono i dati. Se ci sono più colonne dati, il grafico diventa automaticamente multi-dataset. La riga di allineamento può usare `---:`, `:---:` o `:---` come in una tabella normale: il grafico non cambia.
 
 #### Tipi di grafico
 
@@ -375,23 +375,29 @@ La prima colonna è sempre l'etichetta (asse delle categorie). Le colonne succes
 | `line`   | Grafico a linea — trend e andamenti                  |
 | `line filled` | Linea con riempimento sotto la curva (era `area`) |
 | `pie`    | Grafico a torta — proporzioni (solo singola serie)   |
+| `stacked-bar` | Barre orizzontali con le serie impilate in un'unica barra per riga |
+| `stacked-column` | Barre verticali con le serie impilate in un'unica colonna per riga |
 
-> `:::chart area` resta supportato come alias di `:::chart line filled` per retro-compatibilità.
+> `:::chart area` resta supportato come alias di `:::chart line filled` per retro-compatibilità. I tipi `stacked-*` con valori negativi vengono disegnati affiancati, con un avviso sul terminale.
 
 #### Opzioni
 
 | Opzione       | Effetto                                               |
 |---------------|-------------------------------------------------------|
-| `--labels`    | Mostra le etichette (prima colonna) sugli assi        |
-| `--legend`    | Mostra legenda sotto il grafico (per multi-dataset)   |
-| `--stacked`   | Barre/colonne impilate anziché affiancate             |
-| `--show-data` | Mostra i valori numerici al passaggio del mouse       |
-| `--title "…"` | Aggiunge un titolo/caption sopra il grafico           |
+| `--title "…"` | Titolo sopra il grafico. Un `# Titolo` dentro il blocco fa lo stesso; se ci sono entrambi vale `--title` |
+
+Etichette, legenda e valori non hanno opzioni, perché md2 li decide dal tipo e dai dati:
+
+- le etichette della prima colonna sono sempre visibili;
+- la legenda compare quando ci sono più colonne dati, con i loro nomi; la torta ha sempre la legenda con i nomi delle fette;
+- i valori sono scritti su barre e colonne; linea e area mostrano invece l'asse graduato, la torta scrive il valore dentro le fette grandi e lo mette in legenda per quelle sotto il 6%.
+
+L'impilamento si ottiene con i tipi `stacked-bar` e `stacked-column`. Altre parole che iniziano con `--` vengono ignorate.
 
 #### Esempio: singola serie
 
 ```
-:::chart bar --labels --title "Vendite per prodotto"
+:::chart bar --title "Vendite per prodotto"
 | Prodotto | Vendite |
 |----------|---------|
 | Widget A | 50      |
@@ -403,7 +409,7 @@ La prima colonna è sempre l'etichetta (asse delle categorie). Le colonne succes
 #### Esempio: multi-dataset con legenda
 
 ```
-:::chart column --labels --legend
+:::chart column
 | Trimestre | Entrate | Uscite |
 |-----------|---------|--------|
 | Q1        | 100     | 80     |
@@ -444,7 +450,7 @@ Testo nella colonna sinistra.
 - Punto due
 
 :::col
-:::chart bar --labels
+:::chart bar
 | A | B |
 |---|---|
 | x | 50 |

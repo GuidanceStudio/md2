@@ -819,7 +819,7 @@ nella propria slide, con il markdown interno interpretato, e `make test` è verd
 - Regole print aggiunte: box `take` su fondo bianco (il reset `.slide p` dipinge di bianco i paragrafi e righerebbe uno sfondo colorato), puntini della timeline con `print-color-adjust: exact`, slide statement a `min-height: 95vh` come le chapter, `break-inside: avoid` su take e timeline.
 - Un blocco aperto e mai chiuso resta testo; uno chiuso subito (`:::take` seguito da `:::`) dà un `div` vuoto.
 
-## M118: Le tabelle di `:::chart` con riga di allineamento mantengono i valori
+## M118: Le tabelle di `:::chart` con riga di allineamento mantengono i valori ✅
 
 **Why:** una tabella dentro `:::chart` con `|---|---:|` esce come grafico vuoto
 (0 celle, nessun `--size`); la stessa tabella con `|---|---|` dà le barre.
@@ -838,14 +838,17 @@ etichette, legenda e valori sono automatici e che l'impilamento viene dai tipi
 `stacked-*`.
 
 **Tasks:**
-- [ ] Celle con attributi di allineamento riconosciute da `transform_charts`, per tutti i tipi di grafico
-- [ ] Test: unit — `tests/unit/test_m118_chart_aligned_table.py` (bar, column, line, pie con `---:` e `:---:`; stesso output della tabella senza allineamento)
-- [ ] README: tabella opzioni di `:::chart` ed esempi senza le quattro opzioni ignorate
-- [ ] Deploy: `./install.sh`
-- [ ] Commit & push
+- [x] Celle con attributi di allineamento riconosciute da `transform_charts`, per tutti i tipi di grafico
+- [x] Test: unit — `tests/unit/test_m118_chart_aligned_table.py` (bar, column, line, pie con `---:` e `:---:`; stesso output della tabella senza allineamento)
+- [x] README: tabella opzioni di `:::chart` ed esempi senza le quattro opzioni ignorate
+- [x] Deploy: `./install.sh`
+- [x] Commit & push
 
 **Done when:** la tabella con `|---|---:|` produce lo stesso grafico della tabella
 senza allineamento, e `make test` è verde.
+
+**Deviations:**
+- README: la tabella dei tipi non elencava `stacked-bar` e `stacked-column`; aggiunti, con la nota sui valori negativi.
 
 ## M119: `<br>` nel titolo di copertina e titoli di capitolo puliti negli occhielli
 
