@@ -79,3 +79,10 @@ M104 | Bar chart — label lunghe coperte dalla barra adiacente | 2026-07-18 | 8
 M105 | Chapter cover — nuovo tipo di slide divisore d'atto (`:::chapter`) | 2026-07-18 | 56a2549
 M106 | `---` dentro un code fence spezza la slide | 2026-07-18 | e1bfcc5
 M108 | Devplan compliance pass — done markers, duplicate ID, test comment cleanup | 2026-08-14 | deecb0b
+M109 | Archive closed milestones — DEVPLAN.md e DEVPLAN_UI.md | 2026-08-14 | 43561b4
+M110 | `--embed-images` — HTML autonomo, opt-in | 2026-09-10 | d7a5d40
+M111 | Contesto del template — front matter, numero di pagina, capitolo, occhiello | 2026-10-09 | abb7a5e
+M112 | `:::columns` fino a 4 colonne, stile `cards` e colonna `highlight` | 2026-10-09 | 0bbc875
+M113 | Direttive `:::take`, `:::source`, `:::timeline` e slide `:::statement` | 2026-10-09 | f9c9475
+M118 | Le tabelle di `:::chart` con riga di allineamento mantengono i valori | 2026-10-11 | 136cffa
+M119 | `<br>` nel titolo di copertina e titoli di capitolo puliti negli occhielli | 2026-10-11 | a2c9ec5
