@@ -818,3 +818,59 @@ nella propria slide, con il markdown interno interpretato, e `make test` è verd
 - `_CHAPTER_DIRECTIVE_RE` diventa `_SLIDE_FENCE_RE`, condiviso da `:::chapter` e `:::statement`.
 - Regole print aggiunte: box `take` su fondo bianco (il reset `.slide p` dipinge di bianco i paragrafi e righerebbe uno sfondo colorato), puntini della timeline con `print-color-adjust: exact`, slide statement a `min-height: 95vh` come le chapter, `break-inside: avoid` su take e timeline.
 - Un blocco aperto e mai chiuso resta testo; uno chiuso subito (`:::take` seguito da `:::`) dà un `div` vuoto.
+
+## M118: Le tabelle di `:::chart` con riga di allineamento mantengono i valori
+
+**Why:** una tabella dentro `:::chart` con `|---|---:|` esce come grafico vuoto
+(0 celle, nessun `--size`); la stessa tabella con `|---|---|` dà le barre.
+Allineare a destra le colonne numeriche è l'abitudine normale di chi scrive
+tabelle, quindi il grafico sparisce proprio nei deck scritti con cura.
+(M114–M117 sono milestone di md2-templates, stessa numerazione.)
+
+**Approccio:** `transform_charts` (`md2/core.py`) estrae celle e intestazioni con
+regex che presumono `<td>`/`<th>` senza attributi, mentre l'estensione `tables`
+aggiunge `style="text-align: right;"` alle colonne allineate. Le regex devono
+accettare attributi sulle celle, oppure l'allineamento va tolto dalla tabella
+prima della trasformazione, perché nel grafico non serve. Nel README la tabella
+delle opzioni di `:::chart` documenta `--labels`, `--legend`, `--stacked` e
+`--show-data` come attive, ma md2 le legge e le ignora: va riscritta dicendo che
+etichette, legenda e valori sono automatici e che l'impilamento viene dai tipi
+`stacked-*`.
+
+**Tasks:**
+- [ ] Celle con attributi di allineamento riconosciute da `transform_charts`, per tutti i tipi di grafico
+- [ ] Test: unit — `tests/unit/test_m118_chart_aligned_table.py` (bar, column, line, pie con `---:` e `:---:`; stesso output della tabella senza allineamento)
+- [ ] README: tabella opzioni di `:::chart` ed esempi senza le quattro opzioni ignorate
+- [ ] Deploy: `./install.sh`
+- [ ] Commit & push
+
+**Done when:** la tabella con `|---|---:|` produce lo stesso grafico della tabella
+senza allineamento, e `make test` è verde.
+
+## M119: `<br>` nel titolo di copertina e titoli di capitolo puliti negli occhielli
+
+**Why:** nel titolo di copertina un `<br>` esce come testo letterale, sia sulla
+pagina sia nel `<title>`, perché `md2/cli.py` lo passa a `html.escape`; i titoli
+lunghi non si possono spezzare dove serve. Nel titolo di un `:::chapter`,
+invece, il `<br>` resta grezzo e finisce in ogni occhiello `NN · titolo` di quel
+capitolo.
+
+**Approccio:** `cover.title` diventa HTML sanificato con bleach, con `br` come
+unico tag ammesso, così le copertine dei template (tutte usano
+`{{ cover.title }}`) mostrano l'a capo. `title`, usato per `<title>` e
+`og:title`, resta testo semplice e il `<br>` diventa uno spazio.
+`slides[].chapter.title` passa in testo semplice con la stessa regola, mentre la
+slide di capitolo mantiene l'a capo nel proprio `h1`. Il README documenta la
+sintassi di `:::chapter`, rimasta fuori da M105.
+
+**Tasks:**
+- [ ] `cover.title` HTML sanificato (solo `br`); `title` testo semplice con `<br>` → spazio
+- [ ] `slides[].chapter.title` testo semplice; `h1` della slide di capitolo invariato
+- [ ] Test: unit — `tests/unit/test_m119_title_breaks.py` (copertina, `<title>`, front matter `title`, capitolo e occhiello, tag diversi da `br` rimossi)
+- [ ] README: sezione `:::chapter` e nota sul `<br>` nei titoli
+- [ ] Deploy: `./install.sh`
+- [ ] Commit & push
+
+**Done when:** `title = "Analisi di mercato<br>Nord Italia"` va a capo sulla
+copertina, dà `<title>Analisi di mercato Nord Italia</title>`, e `make test` è
+verde.
