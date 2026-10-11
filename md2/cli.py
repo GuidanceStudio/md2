@@ -1,5 +1,4 @@
 import argparse
-import html
 import shutil
 import sys
 from pathlib import Path
@@ -12,6 +11,8 @@ from .core import (
     embed_local_images,
     EmbedError,
     BUNDLED_TEMPLATES_DIR,
+    title_html,
+    title_text,
 )
 from .palettes import resolve_colors, generate_palette_css
 
@@ -63,8 +64,8 @@ def render_html(markdown_text, lang=None, dark_mode=None, template_dir=None):
     metadata, body = parse_frontmatter(markdown_text)
     context = prepare_context(body, metadata=metadata)
 
-    og_description = extract_og_description(body, context["title"])
-    safe_title = html.escape(context["title"])
+    raw_title = context["title"]
+    og_description = extract_og_description(body, raw_title)
 
     # Resolve lang: caller > frontmatter > default "it"
     resolved_lang = lang if lang is not None else metadata.get("lang", "it")
@@ -77,14 +78,14 @@ def render_html(markdown_text, lang=None, dark_mode=None, template_dir=None):
     palette_css = generate_palette_css(colors, dark_colors)
 
     context.update({
-        "title": safe_title,
+        "title": title_text(raw_title),
         "og_description": og_description,
         "lang": resolved_lang,
         "dark_mode": resolved_dark,
         "palette_css": palette_css,
     })
-    # Escape cover title consistently
-    context["cover"]["title"] = safe_title
+    # The cover h1 keeps <br> line breaks; <title> and og:title get plain text.
+    context["cover"]["title"] = title_html(raw_title)
 
     # Multi-path loader for cross-template inheritance:
     # 1. The specific template dir (so its base.html and own includes resolve)

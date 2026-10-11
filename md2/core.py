@@ -86,6 +86,9 @@ _CHAPTER_H1_RE = re.compile(r'^#[ \t]+(.+?)[ \t]*$')
 # An eyebrow is a `^ text` line, honoured only as a slide's first line and
 # only when the very next line is its `## ` title.
 _EYEBROW_RE = re.compile(r'^\^[ \t]+(.+?)[ \t]*$')
+# A line break in any spelling (<br>, <br/>, <br />, <BR>), with the whitespace
+# around it.
+_BR_RE = re.compile(r'\s*<br\b[^>]*>\s*', re.IGNORECASE)
 _CHART_DIV_RE = re.compile(
     r'<div class="md2-chart" data-chart-type="([\w-]+)"'
     r'(?:\s+data-chart-title="([^"]*)")?\s*'
@@ -846,6 +849,19 @@ def _first_text_line(html_content):
     return next((line.strip() for line in text.split('\n') if line.strip()), "")
 
 
+def title_html(raw):
+    """A title as HTML: `<br>` kept in any spelling, every other tag removed."""
+    return bleach.clean(raw, tags=['br'], attributes={}, strip=True)
+
+
+def title_text(raw):
+    """A title as escaped plain text: each `<br>` and the spaces around it become one space.
+
+    Quotes are escaped too, so the result is safe inside an attribute (og:title).
+    """
+    return html.escape(html.unescape(_BR_RE.sub(' ', title_html(raw))))
+
+
 def _escape_meta(value):
     """HTML-escape every string in a front-matter value, at any depth.
 
@@ -868,8 +884,9 @@ def prepare_context(markdown_text, metadata=None):
     Returns 'title', 'cover', 'slides', 'meta' (the escaped front matter),
     'total_pages' (cover + slides), 'palette', 'colors' and 'has_charts'.
     Each slide carries 'number' (the cover is page 1), 'chapter' ({n, title}
-    of the latest :::chapter so far, None before the first) and 'eyebrow'
-    ("" when absent); chapter slides add 'chapter_n' and 'chapter_total'.
+    of the latest :::chapter so far, title as plain text, None before the
+    first) and 'eyebrow' ("" when absent); chapter slides add 'chapter_n' and
+    'chapter_total'. 'title' and 'cover.title' are the raw title text.
     A whole-slide :::chapter or :::statement fence sets 'type' to that name.
     """
     if metadata is None:
@@ -924,11 +941,13 @@ def prepare_context(markdown_text, metadata=None):
                 subtitle_html, sub_has_charts = process_markdown(subtitle_md)
                 if sub_has_charts:
                     has_charts = True
-            chapter = {"n": len(chapter_slides) + 1, "title": chapter_title}
+            # The chapter slide's own h1 keeps the line break; the title every
+            # later slide carries is plain text, for one-line eyebrows.
+            chapter = {"n": len(chapter_slides) + 1, "title": title_text(chapter_title)}
             slide = {
                 "id": f"slide-{i}",
                 "number": i + 2,
-                "title": chapter_title or f"Slide {i + 1}",
+                "title": title_html(chapter_title) or f"Slide {i + 1}",
                 "type": "chapter",
                 "subtitle": subtitle_html,
                 "content": "",
@@ -1003,7 +1022,9 @@ def extract_og_description(markdown_text, fallback_title):
             og_desc_lines.append(line)
         if len(og_desc_lines) >= 2:
             break
-    return html.escape(' '.join(og_desc_lines)[:200] if og_desc_lines else fallback_title)
+    if og_desc_lines:
+        return html.escape(_BR_RE.sub(' ', ' '.join(og_desc_lines))[:200])
+    return title_text(fallback_title)
 
 
 def get_jinja_env(template_dir=None):

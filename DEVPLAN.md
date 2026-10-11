@@ -850,7 +850,7 @@ senza allineamento, e `make test` è verde.
 **Deviations:**
 - README: la tabella dei tipi non elencava `stacked-bar` e `stacked-column`; aggiunti, con la nota sui valori negativi.
 
-## M119: `<br>` nel titolo di copertina e titoli di capitolo puliti negli occhielli
+## M119: `<br>` nel titolo di copertina e titoli di capitolo puliti negli occhielli ✅
 
 **Why:** nel titolo di copertina un `<br>` esce come testo letterale, sia sulla
 pagina sia nel `<title>`, perché `md2/cli.py` lo passa a `html.escape`; i titoli
@@ -867,13 +867,17 @@ slide di capitolo mantiene l'a capo nel proprio `h1`. Il README documenta la
 sintassi di `:::chapter`, rimasta fuori da M105.
 
 **Tasks:**
-- [ ] `cover.title` HTML sanificato (solo `br`); `title` testo semplice con `<br>` → spazio
-- [ ] `slides[].chapter.title` testo semplice; `h1` della slide di capitolo invariato
-- [ ] Test: unit — `tests/unit/test_m119_title_breaks.py` (copertina, `<title>`, front matter `title`, capitolo e occhiello, tag diversi da `br` rimossi)
-- [ ] README: sezione `:::chapter` e nota sul `<br>` nei titoli
-- [ ] Deploy: `./install.sh`
-- [ ] Commit & push
+- [x] `cover.title` HTML sanificato (solo `br`); `title` testo semplice con `<br>` → spazio
+- [x] `slides[].chapter.title` testo semplice; `h1` della slide di capitolo invariato
+- [x] Test: unit — `tests/unit/test_m119_title_breaks.py` (copertina, `<title>`, front matter `title`, capitolo e occhiello, tag diversi da `br` rimossi)
+- [x] README: sezione `:::chapter` e nota sul `<br>` nei titoli
+- [x] Deploy: `./install.sh`
+- [x] Commit & push
 
 **Done when:** `title = "Analisi di mercato<br>Nord Italia"` va a capo sulla
 copertina, dà `<title>Analisi di mercato Nord Italia</title>`, e `make test` è
 verde.
+
+**Deviations:**
+- L'`h1` della slide di capitolo tiene l'a capo ma passa anch'esso da bleach con il solo `br` ammesso: prima riceveva il titolo grezzo, con qualunque tag.
+- Anche `og_description` trasforma il `<br>` in spazio, sia nel testo della copertina sia nel ripiego sul titolo, che ora coincide con `title`.

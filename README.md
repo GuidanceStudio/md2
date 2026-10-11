@@ -247,6 +247,14 @@ md2 converte un singolo file `.md` in una presentazione HTML. Il file è diviso 
 
 La prima sezione (prima del primo `---`) è la **copertina**. Il primo `# H1` diventa il titolo della presentazione e della pagina HTML. Il testo sotto appare centrato nella slide di copertina. Se non c'è un `# H1`, il titolo di default è "Presentation".
 
+Un titolo lungo si spezza con `<br>` (vale anche `<br/>` o `<br />`), nel `# H1` come nel campo `title` del front matter:
+
+```markdown
+# Analisi di mercato<br>Nord Italia
+```
+
+La copertina va a capo in quel punto. Il titolo della pagina (`<title>`, `og:title`) e la descrizione Open Graph ricevono uno spazio al posto del `<br>`: `Analisi di mercato Nord Italia`. Gli altri tag HTML nel titolo vengono rimossi.
+
 ### Separatore slide
 
 Usa `---` su una riga separata, con **righe vuote sopra e sotto**, per separare le slide:
@@ -273,6 +281,25 @@ Una riga `^ testo` come prima riga della slide, immediatamente sopra il `## H2`,
 ```
 
 Se la riga `^ ` non è seguita subito da un `## ` (riga vuota in mezzo, testo normale, o occhiello sotto il titolo), resta testo della slide. Il template default non mostra l'occhiello: serve a template che lo prevedono.
+
+### Slide di capitolo
+
+Una slide racchiusa per intero in `:::chapter` apre un capitolo: è una slide divisoria con il titolo in grande e un testo facoltativo sotto.
+
+```markdown
+:::chapter
+# Il mercato<br>oggi
+Dimensioni, crescita e **concorrenti**
+:::
+```
+
+- Il recinto deve coprire tutta la slide, dalla prima all'ultima riga; dentro una slide con altro contenuto `:::chapter` resta testo.
+- La riga `# ` è il titolo del capitolo: diventa l'`h1` della slide e la voce nella sidebar. Un capitolo senza `# ` non ha titolo e nella sidebar compare come "Slide N".
+- Tutto il resto del recinto, comprese le righe sopra il `# `, è il sottotitolo: markdown normale, interpretato.
+- Ogni slide di capitolo riceve `chapter_n` (la sua posizione, da 1) e `chapter_total` (i capitoli del deck), con cui un template scrive per esempio "Parte 2 di 4".
+- Ogni slide, dal capitolo fino al capitolo successivo, porta `slide.chapter` con `n` e `title`. Un template può comporre da qui l'occhiello delle slide che non hanno una riga `^ `, per esempio `01 · Il mercato oggi` (vedi l'esempio in [Variabili di contesto](#variabili-di-contesto)).
+
+Un `<br>` nel titolo del capitolo va a capo nell'`h1` della slide di capitolo; in `slide.chapter.title` diventa uno spazio, così l'occhiello resta su una riga. Gli altri tag HTML vengono rimossi in entrambi. Il template default mostra la slide di capitolo ma non l'occhiello.
 
 ### Sotto-sezioni
 
@@ -339,7 +366,7 @@ Una nota a piè di pagina[^1].
 
 | Livello    | Uso                                              |
 |------------|--------------------------------------------------|
-| `# H1`    | Titolo della presentazione (solo nella copertina) |
+| `# H1`    | Titolo della presentazione (nella copertina) o del capitolo (in `:::chapter`) |
 | `## H2`   | Titolo della slide (uno per slide)                |
 | `### H3`  | Sotto-sezione dentro una slide                    |
 | `#### H4` | Sotto-sezione di livello inferiore                |
@@ -638,25 +665,25 @@ Queste variabili sono disponibili in tutti i template:
 
 | Variabile                 | Tipo         | Descrizione                                                                 |
 |---------------------------|--------------|-----------------------------------------------------------------------------|
-| `title`                   | string       | Titolo della presentazione (HTML-escaped)                                   |
+| `title`                   | string       | Titolo della presentazione in testo semplice (HTML-escaped): ogni `<br>` diventa uno spazio, gli altri tag sono rimossi. `meta.title` invece riporta il `<br>` come testo |
 | `og_description`          | string       | Meta description per Open Graph                                             |
 | `lang`                    | string       | Attributo lang (`it`, `en`, ...)                                            |
 | `dark_mode`               | bool         | `true` se `--dark` è attivo                                                 |
 | `meta`                    | dict         | Frontmatter completo; ogni stringa HTML-escaped, anche dentro liste e tabelle; numeri, booleani e date invariati. `{}` senza frontmatter |
 | `total_pages`             | int          | Pagine del deck: copertina + slide                                          |
-| `cover.title`             | string       | Titolo della copertina (HTML-escaped)                                       |
+| `cover.title`             | string       | Titolo della copertina in HTML: `<br>` ammesso, gli altri tag rimossi        |
 | `cover.content`           | string       | HTML del contenuto della copertina                                          |
 | `slides`                  | list         | Lista delle slide                                                           |
 | `slides[].id`             | string       | ID HTML della slide (`slide-0`, `slide-1`)                                  |
 | `slides[].number`         | int          | Numero di pagina: la copertina è 1, la prima slide 2                        |
-| `slides[].title`          | string       | Titolo della slide                                                          |
+| `slides[].title`          | string       | Titolo della slide; per le slide `:::chapter` HTML con il solo `<br>` ammesso |
 | `slides[].content`        | string       | HTML del contenuto della slide (`""` per le slide `:::chapter`; per le `:::statement` il contenuto del recinto) |
 | `slides[].eyebrow`        | string       | Occhiello da una riga `^ ` (HTML-escaped); `""` se la slide non lo ha       |
 | `slides[].type`           | string       | `"chapter"` per le slide `:::chapter`, `"statement"` per le `:::statement`, assente per le slide normali |
 | `slides[].subtitle`       | string       | Solo slide `:::chapter`: HTML del testo sotto il `# ` del capitolo          |
 | `slides[].chapter`        | dict o None  | Capitolo in corso: l'ultima slide `:::chapter` fin qui, lei compresa. `None` prima del primo capitolo |
 | `slides[].chapter.n`      | int          | Posizione del capitolo, da 1                                                |
-| `slides[].chapter.title`  | string       | Testo del `# ` del capitolo (`""` se il capitolo non ne ha)                 |
+| `slides[].chapter.title`  | string       | Testo del `# ` del capitolo in testo semplice (HTML-escaped, `<br>` → spazio); `""` se il capitolo non ne ha |
 | `slides[].chapter_n`      | int          | Solo slide `:::chapter`: posizione del capitolo, da 1                       |
 | `slides[].chapter_total`  | int          | Solo slide `:::chapter`: numero di capitoli nel deck                        |
 | `palette`                 | string       | Nome della palette (`"default"` se non indicata)                            |
