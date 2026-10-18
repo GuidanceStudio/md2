@@ -3,6 +3,7 @@ import html
 import math
 import re
 import sys
+import textwrap
 from pathlib import Path
 from urllib.parse import unquote, urlparse
 
@@ -48,7 +49,7 @@ _CHART_DIRECTIVE_RE = re.compile(
 )
 _VALID_CHART_TYPES = {
     'bar', 'column', 'line', 'area', 'pie',
-    'stacked-bar', 'stacked-column',
+    'stacked-bar', 'stacked-column', 'radar',
 }
 # Chart types that show data values directly on the chart
 # (pie uses a legend with values instead, since slice labels would be rotated)
@@ -366,6 +367,229 @@ def preprocess_blocks(markdown_text):
     return _BLOCK_DIRECTIVE_RE.sub(_replace_block, markdown_text)
 
 
+# Beyond this magnitude the axis and radar geometry overflow a float; such a
+# value is treated like inf. NaN fails the comparison too.
+_MAX_CHART_VALUE = 1e300
+_RADAR_RADIUS = 100
+_RADAR_RINGS = 5
+_RADAR_MAX_SERIES = 4
+_RADAR_MAX_AXES = 12
+_RADAR_LABEL_GAP = 12
+_RADAR_LABEL_MARGIN = 4
+_RADAR_LABEL_CHARS = 12
+# Label font in viewBox units: 13 renders at the x-labels' 0.85rem when the SVG
+# is drawn at 1:1, which a 260px-tall radar in a half-page column is.
+_RADAR_FONT = 13
+_RADAR_LINE_HEIGHT = 15
+# No font metrics at render time: the viewBox is sized from an average glyph
+# width, and the SVG overflows visibly, so a wide label is never clipped.
+_RADAR_CHAR_WIDTH = 0.6 * _RADAR_FONT
+# Hidden inline rather than by a template class, so the table stays hidden in
+# templates that predate the radar. It wraps the table in a div because a table
+# treats width and height as minimums and would still take its full size.
+_VISUALLY_HIDDEN = (
+    "position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; "
+    "border: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap"
+)
+
+
+def _radar_ring_step(largest):
+    """The smallest of 1, 2, 2.5, 5 × 10^k at or above `largest` / rings (4 → 1, 37 → 10, 2 → 0.5)."""
+    raw = largest / _RADAR_RINGS
+    if raw <= 0:
+        return 1
+    magnitude = 10 ** math.floor(math.log10(raw))
+    normalized = round(raw / magnitude, 9)
+    return next(nice for nice in (1, 2, 2.5, 5, 10) if nice >= normalized) * magnitude
+
+
+def _plain_text(cell_html):
+    """A table cell's HTML as plain, unescaped text."""
+    return html.unescape(re.sub(r"<[^>]*>", "", cell_html)).strip()
+
+
+def _svg_num(value, digits=2):
+    value = round(value, digits) + 0.0  # + 0.0 turns -0.0 into 0.0
+    return str(int(value)) if value == int(value) else f"{value:.{digits}f}".rstrip("0")
+
+
+def _radar_chart(chart_title, table_html, headers, data_rows, parsed_values):
+    """A `:::chart radar` as an inline SVG, drawn from numbers and escaped text only.
+
+    The first column gives the axes, clockwise from 12 o'clock; each further
+    column is a series. The SVG carries presentation attributes (currentColor,
+    opacities) so it reads without template CSS; any `.md2-radar*` rule
+    overrides them. The source table stays, visually hidden, for screen readers.
+    """
+    def warn(message):
+        print(f"md2 warning: chart type 'radar' {message}", file=sys.stderr)
+
+    if len(data_rows) > _RADAR_MAX_AXES:
+        warn(f"draws at most twelve axes; got {len(data_rows)}, drawing the first twelve.")
+        data_rows = data_rows[:_RADAR_MAX_AXES]
+    n_series = len(data_rows[0][1])
+    if any(len(values) > n_series for _, values in data_rows):
+        warn(f"takes its series from the first row ({n_series}); "
+             f"values beyond it in later rows are not drawn.")
+    if n_series > _RADAR_MAX_SERIES:
+        warn(f"draws at most four series; got {n_series}, drawing the first four.")
+        n_series = _RADAR_MAX_SERIES
+    # A hand-written table can end a row early; the missing cells read as 0.
+    series = [
+        [row[j] if j < len(row) else 0 for row in parsed_values[:len(data_rows)]]
+        for j in range(n_series)
+    ]
+    if any(v < 0 for values in series for v in values):
+        warn("has negative values; they are drawn at 0.")
+        series = [[max(v, 0) for v in values] for values in series]
+    step = _radar_ring_step(max((v for values in series for v in values), default=0))
+    end = step * _RADAR_RINGS
+
+    n = len(data_rows)
+    units = [(math.sin(2 * math.pi * i / n), -math.cos(2 * math.pi * i / n)) for i in range(n)]
+
+    def polygon(radii):
+        return " ".join(
+            f"{_svg_num(r * ux)},{_svg_num(r * uy)}" for r, (ux, uy) in zip(radii, units)
+        )
+
+    R = _RADAR_RADIUS
+    rings = [
+        f'<polygon class="md2-radar-ring" points="{polygon([R * k / _RADAR_RINGS] * n)}"/>'
+        for k in range(1, _RADAR_RINGS + 1)
+    ]
+    spokes = [
+        f'<line class="md2-radar-spoke" x1="0" y1="0" '
+        f'x2="{_svg_num(R * ux)}" y2="{_svg_num(R * uy)}"/>'
+        for ux, uy in units
+    ]
+    shapes = [
+        f'<polygon class="md2-radar-series md2-radar-series-{j}" '
+        f'style="color: var(--md2-color-{j})" '
+        f'points="{polygon([R * v / end for v in values])}" fill="currentColor" '
+        f'fill-opacity="0.15" stroke="currentColor" stroke-width="2" '
+        f'stroke-linejoin="round"/>'
+        for j, values in enumerate(series, start=1)
+    ]
+    # Each scale value sits just inside its ring, beside the first spoke.
+    ticks = [
+        f'<text class="md2-radar-tick" x="4" y="{_svg_num(-R * k / _RADAR_RINGS + 11)}">'
+        f'{_svg_num(step * k, 6)}</text>'
+        for k in range(1, _RADAR_RINGS + 1)
+    ]
+
+    # Each label is laid out as a box from estimated glyph widths. Labels on the
+    # vertical axis are centred and wrap to the room between their neighbours,
+    # which grow outwards from their own anchors; every other label grows away
+    # from the plot on its side. Same-side labels that still collide are pushed
+    # apart vertically, away from the horizontal midline.
+    reach = R + _RADAR_LABEL_GAP
+    boxes = []
+    for i, ((label, _), (ux, uy)) in enumerate(zip(data_rows, units)):
+        axial = abs(ux) < 1e-9
+        anchor = "middle" if axial else "start" if ux > 0 else "end"
+        chars = _RADAR_LABEL_CHARS
+        if axial:
+            room = 2 * reach * abs(units[(i + 1) % n][0]) - 2 * _RADAR_LABEL_MARGIN
+            chars = min(2 * _RADAR_LABEL_CHARS, max(1, int(room // _RADAR_CHAR_WIDTH)))
+        lines = [
+            line
+            for part in _BR_RE.split(label)
+            for line in textwrap.wrap(_plain_text(part), chars, break_long_words=False)
+        ] or [""]
+        ax, ay = reach * ux, reach * uy
+        spread = (len(lines) - 1) * _RADAR_LINE_HEIGHT
+        # Above the plot the block sits on the anchor, below it hangs from it,
+        # at the sides it is centred on it (uy runs -1 at the top to 1 at the bottom).
+        # The em fractions approximate cap height and descent.
+        y = ay + 0.35 * _RADAR_FONT - spread / 2 + uy * (spread / 2 + 0.6 * _RADAR_FONT)
+        width = max(len(line) for line in lines) * _RADAR_CHAR_WIDTH
+        x0 = {"middle": ax - width / 2, "start": ax, "end": ax - width}[anchor]
+        boxes.append({
+            "anchor": anchor, "lines": lines, "ax": ax, "uy": uy, "y": y,
+            "x0": x0, "x1": x0 + width,
+            "top": y - 0.8 * _RADAR_FONT, "bottom": y + spread + 0.3 * _RADAR_FONT,
+        })
+
+    def clash(a, b):
+        """How far b must move to clear a by the margin, when their columns overlap."""
+        if a["x0"] >= b["x1"] + _RADAR_LABEL_MARGIN or b["x0"] >= a["x1"] + _RADAR_LABEL_MARGIN:
+            return 0
+        return a["bottom"] + _RADAR_LABEL_MARGIN - b["top"]
+
+    def move(box, dy):
+        for key in ("y", "top", "bottom"):
+            box[key] += dy
+
+    for side in ("start", "end"):
+        column = sorted((b for b in boxes if b["anchor"] == side), key=lambda b: b["uy"])
+        if not column:
+            continue
+        pivot = min(range(len(column)), key=lambda k: abs(column[k]["uy"]))
+        for k in range(pivot + 1, len(column)):
+            shift = max(clash(column[j], column[k]) for j in range(pivot, k))
+            if shift > 0:
+                move(column[k], shift)
+        for k in range(pivot - 1, -1, -1):
+            shift = max(clash(column[k], column[j]) for j in range(k + 1, pivot + 1))
+            if shift > 0:
+                move(column[k], -shift)
+    # A label on the vertical axis cannot always wrap into its room (a single
+    # long word), so it moves away from the plot until it clears every side label.
+    for box in boxes:
+        if box["anchor"] == "middle":
+            sides = [b for b in boxes if b["anchor"] != "middle"]
+            if box["uy"] < 0:
+                shift = max((clash(box, b) for b in sides), default=0)
+                if shift > 0:
+                    move(box, -shift)
+            else:
+                shift = max((clash(b, box) for b in sides), default=0)
+                if shift > 0:
+                    move(box, shift)
+
+    left, top, right, bottom = -R, -R, R, R
+    labels = []
+    for box in boxes:
+        left, right = min(left, box["x0"]), max(right, box["x1"])
+        top, bottom = min(top, box["top"]), max(bottom, box["bottom"])
+        tspans = "".join(
+            f'<tspan x="{_svg_num(box["ax"])}" dy="{0 if i == 0 else _RADAR_LINE_HEIGHT}">'
+            f'{html.escape(line)}</tspan>'
+            for i, line in enumerate(box["lines"])
+        )
+        labels.append(
+            f'<text class="md2-radar-label" x="{_svg_num(box["ax"])}" y="{_svg_num(box["y"])}" '
+            f'text-anchor="{box["anchor"]}">{tspans}</text>'
+        )
+    pad = _RADAR_LABEL_MARGIN
+    view_box = " ".join(
+        _svg_num(v) for v in (left - pad, top - pad, right - left + 2 * pad, bottom - top + 2 * pad)
+    )
+
+    svg = (
+        f'<svg class="md2-radar" viewBox="{view_box}" width="100%" height="260" '
+        f'font-size="{_RADAR_FONT}" fill="currentColor" overflow="visible" aria-hidden="true">'
+        f'<g class="md2-radar-grid" fill="none" stroke="currentColor" stroke-opacity="0.25">'
+        f'{"".join(rings)}{"".join(spokes)}</g>'
+        f'{"".join(shapes)}'
+        f'<g class="md2-radar-scale" font-size="10" fill-opacity="0.7">{"".join(ticks)}</g>'
+        f'<g class="md2-radar-labels">{"".join(labels)}</g>'
+        f'</svg>'
+    )
+    caption = f'<caption>{chart_title}</caption>' if chart_title else ""
+    table = (
+        f'<div class="md2-radar-data" style="{_VISUALLY_HIDDEN}">'
+        f'{table_html.strip().replace("<table>", f"<table>{caption}", 1)}</div>'
+    )
+    legend = ""
+    items = "".join(f"<li>{h}</li>" for h in headers[1:n_series + 1])
+    if n_series > 1 and items:
+        legend = f'<ul class="charts-css legend legend-inline">{items}</ul>'
+    title = f'<div class="md2-chart-title">{chart_title}</div>' if chart_title else ""
+    return f'<div class="md2-chart">{title}{svg}{table}{legend}</div>'
+
+
 def transform_charts(html_content):
     """Post-process HTML to convert marked chart divs into Charts.css structure.
 
@@ -418,16 +642,39 @@ def transform_charts(html_content):
         num_datasets = len(data_rows[0][1]) if data_rows else 0
         is_multiple = num_datasets > 1
 
-        # Parse numeric values into a 2D grid (rows x columns)
+        # Parse numeric values into a 2D grid (rows x columns). A cell that is
+        # not a finite number counts as 0; unless it is empty, the author is
+        # told, because a decimal comma or a stray `n/a` would otherwise draw
+        # a silent zero. Commas are not reinterpreted: 1,000 may be a thousand.
         parsed_values = []
-        for _, values in data_rows:
+        for label, values in data_rows:
             row_vals = []
             for v in values:
                 try:
-                    row_vals.append(float(v.strip()))
-                except (ValueError, TypeError):
-                    row_vals.append(0)
+                    num = float(v.strip())
+                except ValueError:
+                    num = math.nan
+                if not abs(num) <= _MAX_CHART_VALUE:
+                    if v.strip():
+                        print(
+                            f"md2 warning: chart value '{html.unescape(v.strip())}' in row "
+                            f"'{_plain_text(label)}' is not a number md2 can draw; it is drawn as 0. "
+                            f"Write numbers with a decimal point and no thousands separator.",
+                            file=sys.stderr,
+                        )
+                    num = 0
+                row_vals.append(num)
             parsed_values.append(row_vals)
+
+        if raw_type == "radar":
+            if len(data_rows) >= 3:
+                return _radar_chart(chart_title, inner_html, headers, data_rows, parsed_values)
+            print(
+                f"md2 warning: chart type 'radar' needs at least three axes (rows); "
+                f"got {len(data_rows)}, rendering as bar.",
+                file=sys.stderr,
+            )
+            raw_type = chart_type = "bar"
 
         # Flat list and global max for normalization
         all_values = [v for row in parsed_values for v in row]
@@ -458,9 +705,15 @@ def transform_charts(html_content):
         has_yaxis = chart_type in ("line", "area", "column")
         domain_min = domain_max = domain_range = zero_frac = None
         if is_connected:
+            # A 0 among non-negative values belongs on the baseline, so the axis
+            # starts at 0. With nothing above 0 it runs from the lowest value up
+            # to 0, or 0-4 as on a column when every value is 0.
             positive_values = [v for v in all_values if v > 0]
-            data_min = min(positive_values) if positive_values else 0
-            ticks = _nice_ticks(data_min, max_val)
+            if not positive_values:
+                ticks = _nice_ticks(min(all_values), 0)
+            else:
+                floor = 0 if min(all_values) == 0 else min(positive_values)
+                ticks = _nice_ticks(floor, max_val)
             norm_min = ticks[0]
             norm_max = ticks[-1]
             norm_range = norm_max - norm_min if norm_max > norm_min else 1

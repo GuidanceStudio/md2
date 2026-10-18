@@ -478,6 +478,16 @@ body {
 .md2-chart ul.legend li:nth-child(10)::before { background: var(--md2-color-10); }
 body.dark-mode .md2-chart .charts-css { color: var(--text-color); }
 
+/* :::chart radar — an inline SVG md2 draws itself. Its presentation attributes
+   (currentColor, opacities, font sizes) are the fallback; any rule here wins.
+   As tall as a line chart; the plot is centred in the box. */
+.md2-radar {
+    display: block; width: 100%;
+    height: min(260px, 36vh);
+}
+.md2-radar-label { font-weight: 500; }
+.md2-chart .md2-radar ~ ul.legend { margin-top: 12px; }
+
 /* Columns layout: two to four equal columns (md2-cols-3/-4 from three up) */
 .md2-columns {
     display: flex; gap: 30px; align-items: flex-start; margin: 20px 0;

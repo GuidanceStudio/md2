@@ -203,6 +203,37 @@ services:
 
 ---
 
+## 4d. Platform Health by Pillar
+
+:::columns
+:::col
+:::chart radar
+### Health Score (1-5), H1 vs H2
+| Dimension        | H1  | H2  |
+|------------------|-----|-----|
+| Reliability      | 3.8 | 4.4 |
+| Latency          | 3.2 | 4.1 |
+| Developer docs   | 2.9 | 3.7 |
+| Security         | 4.1 | 4.3 |
+| Cost efficiency  | 3.5 | 3.2 |
+| On-call load     | 2.7 | 3.6 |
+:::
+:::col
+:::chart bar
+### Open Incidents per Dimension
+| Dimension        | Incidents |
+|------------------|-----------|
+| Reliability      | 4         |
+| Latency          | 7         |
+| Developer docs   | 3         |
+| Security         | 1         |
+| Cost efficiency  | 2         |
+| On-call load     | 6         |
+:::
+:::
+
+---
+
 ## 5. Roadmap: Phase 1 (Q1 2026)
 
 *Objective: Platform stability and developer experience.*

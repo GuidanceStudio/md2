@@ -589,3 +589,44 @@ gli stessi sintomi potenziali; vale la stessa fix.
   `render.sh`.
 
 ---
+
+## M121: `:::chart radar` — a profile across several dimensions, as inline SVG ✅
+
+**Why:** a deck that compares a subject's profile across five to eight dimensions on one scale
+(two periods, two products, two segments) has no chart for it. Charts.css, which renders every
+other chart type, has no radar. Requested by the operator on 2026-10-18 for a monitoring deck
+that compares two periods dimension by dimension.
+
+**Approach:** `radar` joins the valid chart types, written like the others: the first column
+gives the axes, each further column a series. md2 renders it itself, in `transform_charts`,
+as an inline `<svg>` built from the numbers (no script), so it prints like every other chart:
+five concentric grid polygons with their scale values, one spoke and label per axis, one
+polygon per series with a translucent fill and a stroke in `var(--md2-color-N)`, a legend
+when there is more than one series (the same `ul.legend` as the other charts). The scale
+starts at 0 and ends at the smallest round value at or above the largest one (5 for scores
+from 1 to 5). The source table stays in the chart, visually hidden, for screen readers.
+Fewer than three axes: rendered as `bar`, with a warning on stderr; negative values: drawn
+at 0, with a warning. Square, as tall as a line chart, centred. One to four series, three to
+twelve axes.
+
+**Tasks:**
+- [x] Test: unit — `:::chart radar` is a valid type; the SVG has one grid polygon per ring, one spoke and label per axis, one series polygon per data column with the vertex coordinates the values give; scale end for maxima 4.2, 5, 37, 100; labels HTML-escaped; legend only with two or more series; source table kept and visually hidden
+- [x] Test: unit — fewer than three axes falls back to `bar` with a warning; a negative value is drawn at 0 with a warning; more than four series keeps the first four with a warning
+- [x] Implement in `md2/core.py` (`_VALID_CHART_TYPES`, `transform_charts`); default template styles for `.md2-radar`; `examples/` gains a radar slide; README chart table
+- [x] Test: integration — a deck with a two-series radar beside a bar chart in `:::columns` renders one A4 landscape page per slide in the PDF
+- [x] `bash install.sh`; full suite green
+- [x] Review: radar labels never overlap (3–12 axes), `<br>` breaks a label, a short hand-written row reads as 0; every non-empty non-numeric or non-finite cell warns and counts as 0 in every chart type; tests pin spoke angles, plain-text labels, anchors and wrapping
+- [x] Review: a line/area chart whose data contain 0 (no negatives) starts its axis at 0; all-zero line and column charts get a 0–4 axis; `bash install.sh`; full suite green
+- [x] Second review: a long single word on the vertical axis clears its neighbours; a negative-only line/area runs its axis from the lowest value to 0; values too large to draw warn and count as 0 in every chart type; a short first row of a hand-written radar table warns; no empty legend without a header row; `bash install.sh`; full suite green
+- [x] Commit & push
+
+**Done when:** `:::chart radar` with two series renders a labelled radar with legend in the
+default template, prints on one A4 landscape page beside a second chart, and the fallbacks warn.
+
+**Deviations:**
+- The SVG is as tall as a line chart and wider than tall: its viewBox grows to the labels' estimated extent so the plot stays square. Labels grow away from the plot on their side and wrap at 12 characters; labels on the vertical axis wrap to the room between their neighbours (at most 24); same-side labels that would still collide are pushed apart vertically, and a vertical-axis label that cannot wrap into its room (one long word) moves away from the plot until it clears them; `<br>` in a label starts a new line.
+- Scale: five rings at a round step, the smallest of 1, 2, 2.5, 5 × 10^k at or above max/5; end = 5 × step (4.0→5, 4.2→5, 37→50, 100→100, 2.0→2.5). Added: over twelve axes keeps the first twelve with a warning; a table with no data column draws the grid alone; a short hand-written row reads its missing cells as 0; a short first row warns that later series are not drawn; a table without a header row gets no legend.
+- The source table is hidden by an inline-styled `<div class="md2-radar-data">` around it (a table treats width and height as minimums; inline so templates without radar CSS still hide it).
+- The PDF test is in `tests/live/` and skips without a Chromium-family browser on PATH. `examples/example.html` not regenerated (already stale against `example.md`); README size table corrected to `min(260px, 36vh)` for column/line.
+- All chart types: a non-empty cell that is not a finite number within ±1e300 (`3,8`, `n/a`, `**4**`, `nan`, `inf`, `1e308`) warns on stderr and counts as 0 (commas are not reinterpreted); such values no longer crash. Line/area: data holding a 0 and no negatives start the axis at 0 with zeros on the baseline; with nothing above 0 the axis runs from the lowest value to 0 (0–4 when all are 0, as on a column; was 0–1).
+- Open, not fixed: a `<div>` inside a chart cell truncates the table (pre-existing); the radar's scale end cannot be set by the author, so two 1–5 radars with maxima on either side of 2.5 get different scales.

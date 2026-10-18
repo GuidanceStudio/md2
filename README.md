@@ -404,6 +404,7 @@ La prima colonna è sempre l'etichetta (asse delle categorie). Le colonne succes
 | `pie`    | Grafico a torta — proporzioni (solo singola serie)   |
 | `stacked-bar` | Barre orizzontali con le serie impilate in un'unica barra per riga |
 | `stacked-column` | Barre verticali con le serie impilate in un'unica colonna per riga |
+| `radar`  | Profilo su più dimensioni con la stessa scala: da 3 a 12 assi, fino a 4 serie |
 
 > `:::chart area` resta supportato come alias di `:::chart line filled` per retro-compatibilità. I tipi `stacked-*` con valori negativi vengono disegnati affiancati, con un avviso sul terminale.
 
@@ -417,7 +418,7 @@ Etichette, legenda e valori non hanno opzioni, perché md2 li decide dal tipo e 
 
 - le etichette della prima colonna sono sempre visibili;
 - la legenda compare quando ci sono più colonne dati, con i loro nomi; la torta ha sempre la legenda con i nomi delle fette;
-- i valori sono scritti su barre e colonne; linea e area mostrano invece l'asse graduato, la torta scrive il valore dentro le fette grandi e lo mette in legenda per quelle sotto il 6%.
+- i valori sono scritti su barre e colonne; linea e area mostrano invece l'asse graduato (parte da 0 quando tra i valori c'è uno 0 e nessun valore negativo; con soli valori negativi va dal più basso a 0), la torta scrive il valore dentro le fette grandi e lo mette in legenda per quelle sotto il 6%; il radar scrive la scala sui suoi anelli.
 
 L'impilamento si ottiene con i tipi `stacked-bar` e `stacked-column`. Altre parole che iniziano con `--` vengono ignorate.
 
@@ -445,6 +446,37 @@ L'impilamento si ottiene con i tipi `stacked-bar` e `stacked-column`. Altre paro
 :::
 ```
 
+#### Esempio: radar
+
+```
+:::chart radar --title "Punteggio per dimensione"
+| Dimensione  | 1° semestre | 2° semestre |
+|-------------|-------------|-------------|
+| Prezzo      | 3.8         | 4.2         |
+| Assistenza  | 3.1         | 3.9         |
+| Facilità    | 4.4         | 4.5         |
+| Sicurezza   | 4.0         | 3.7         |
+| Integrazioni| 2.9         | 3.6         |
+:::
+```
+
+Ogni riga è un asse, in senso orario a partire dall'alto; ogni colonna dati è una serie, con un poligono nel suo colore della palette. La scala parte da 0 e ha cinque anelli con i loro valori, a passo tondo: il passo è il più piccolo tra 1, 2, 2.5 e 5 × 10ⁿ che, moltiplicato per cinque, contiene il massimo. Punteggi da 1 a 5 hanno anelli da 1 a 5 (anche con massimo 4 o 3.3), un massimo di 37 arriva a 50, un massimo di 2 a 2.5. I nomi degli assi vanno a capo da soli; un `<br>` nel nome forza l'a capo. Con meno di tre righe il grafico viene disegnato come `bar`; i valori negativi sono disegnati a 0; oltre quattro serie o dodici assi restano i primi. In tutti questi casi md2 scrive un avviso sul terminale.
+
+md2 disegna il radar da sé, come SVG dentro la pagina, senza JavaScript. La tabella di partenza resta nel grafico, nascosta alla vista, per i lettori di schermo. Un template può stilizzarlo con queste classi:
+
+| Classe | Elemento |
+|--------|----------|
+| `.md2-radar` | l'`<svg>` |
+| `.md2-radar-grid` | il gruppo degli anelli e dei raggi |
+| `.md2-radar-ring` | un anello della scala (`<polygon>`, cinque) |
+| `.md2-radar-spoke` | il raggio di un asse (`<line>`) |
+| `.md2-radar-series`, `.md2-radar-series-N` | il poligono di una serie, N da 1 a 4; il colore arriva da `color: var(--md2-color-N)` |
+| `.md2-radar-scale` | il gruppo dei valori della scala |
+| `.md2-radar-tick` | un valore della scala (`<text>`) |
+| `.md2-radar-labels` | il gruppo dei nomi degli assi |
+| `.md2-radar-label` | il nome di un asse (`<text>`, una `<tspan>` per riga) |
+| `.md2-radar-data` | il contenitore della tabella nascosta |
+
 #### Dimensioni
 
 Ogni tipo di grafico ha dimensioni di default sensate:
@@ -452,15 +484,16 @@ Ogni tipo di grafico ha dimensioni di default sensate:
 | Tipo | Altezza | Larghezza |
 |------|---------|-----------|
 | `bar` | automatica (cresce con le righe) | 100% |
-| `column`, `line`, `area` | `min(300px, 40vh)` | 100% |
+| `column`, `line`, `area` | `min(260px, 36vh)` | 100% |
 | `pie` | proporzionale al viewport | `min(50vh, 50vw)` centrato |
+| `radar` | `min(260px, 36vh)` | 100%, grafico centrato |
 
 #### Note
 
-- I valori nelle colonne dati devono essere **numerici**. Valori non numerici vengono trattati come 0.
+- I valori nelle colonne dati devono essere **numerici**, con il punto decimale (`3.8`, non `3,8`) e senza separatore delle migliaia. Una cella non vuota che non è un numero, o è troppo grande da disegnare (`3,8`, `n/a`, `**4**`, `nan`, `1e308`), vale 0 e md2 la segnala sul terminale; una cella vuota vale 0 senza avviso.
 - I grafici usano automaticamente i colori della **palette** del documento (vedi sezione Palette colori).
 - **Charts.css** viene incluso nell'HTML solo quando il documento contiene almeno un grafico — le presentazioni senza grafici non hanno overhead aggiuntivo.
-- Basato su [Charts.css](https://chartscss.org/), una libreria CSS pura senza JavaScript.
+- Basato su [Charts.css](https://chartscss.org/), una libreria CSS pura senza JavaScript. Il radar fa eccezione: è un SVG che md2 genera dai numeri della tabella.
 - In **stampa**, i colori dei grafici vengono preservati (`print-color-adjust: exact`). I grafici non vengono spezzati tra pagine.
 
 ### Layout a colonne
